@@ -216,7 +216,7 @@ function AdminOverview({ user }) {
       <PageHeader
         eyebrow="Platform admin"
         title="Operations overview"
-        subtitle="Activity across the whole Collabcreator platform."
+        subtitle="Activity across the whole Collabhype platform."
         action={
           <Link href="/dashboard/admin/packages">
             <Button size="md" className="!rounded-lg">

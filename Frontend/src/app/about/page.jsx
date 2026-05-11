@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { Stat } from '@/components/ui';
 
 export const metadata = {
-  title: 'About — Collabcreator',
-  description: 'Why we built Collabcreator and what we stand for.',
+  title: 'About — Collabhype',
+  description: 'Why we built Collabhype and what we stand for.',
 };
 
 const VALUES = [
@@ -37,7 +37,7 @@ export default function AboutPage() {
             <span className="text-brand-700">self-serve</span>.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-zinc-600">
-            Collabcreator is a marketplace where brands and creators meet directly — no agency
+            Collabhype is a marketplace where brands and creators meet directly — no agency
             markups, no DM chaos. Built for India, by people who&apos;ve run campaigns at scale.
           </p>
         </div>
@@ -59,7 +59,7 @@ export default function AboutPage() {
               the influencers and your launch date.
             </p>
             <p>
-              Collabcreator replaces that with software. Browse vetted creators, book them like
+              Collabhype replaces that with software. Browse vetted creators, book them like
               you&apos;d book a flight, brief them in-app, approve drafts in two clicks, and only
               pay when posts go live.
             </p>

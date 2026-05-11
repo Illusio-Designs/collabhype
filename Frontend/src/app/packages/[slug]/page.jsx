@@ -26,9 +26,9 @@ async function loadPackage(slug) {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const pkg = await loadPackage(slug);
-  if (!pkg) return { title: 'Package — Collabcreator' };
+  if (!pkg) return { title: 'Package — Collabhype' };
   return {
-    title: `${pkg.title} — Collabcreator`,
+    title: `${pkg.title} — Collabhype`,
     description: pkg.description ?? undefined,
   };
 }

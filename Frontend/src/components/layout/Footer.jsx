@@ -14,7 +14,7 @@ export default function Footer() {
           className="text-center font-black tracking-tighter text-zinc-200/70"
           style={{ fontSize: 'clamp(72px, 17vw, 260px)', lineHeight: 0.85 }}
         >
-          Collabcreator
+          Collabhype
         </div>
       </div>
 
@@ -28,7 +28,7 @@ export default function Footer() {
                 <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-700 text-white">
                   C
                 </span>
-                Collabcreator
+                Collabhype
               </div>
               <p className="mt-4 max-w-sm text-sm leading-6 text-zinc-600">
                 Helping marketers run influencer campaigns at scale — curated creators,
@@ -100,7 +100,7 @@ export default function Footer() {
           {/* Bottom row */}
           <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-zinc-100 pt-6 text-xs text-zinc-500 sm:flex-row">
             <div className="flex flex-col items-center gap-1 sm:items-start">
-              <div>© {new Date().getFullYear()} Collabcreator. All rights reserved.</div>
+              <div>© {new Date().getFullYear()} Collabhype. All rights reserved.</div>
               <div className="text-[11px] text-zinc-400">
                 Managed by{' '}
                 <span className="font-semibold text-zinc-700">Finvera Solution LLP</span>

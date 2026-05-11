@@ -1,67 +1,80 @@
-# Collabcreator — Frontend
+# Collabhype — Frontend
 
-Next.js (App Router) marketplace frontend for Collabcreator.
+Next.js (App Router) marketplace frontend for **Collabhype**.
 
 ## Stack
-- Next.js 14 (App Router, JavaScript / ESM — no TypeScript)
+- Next.js 14 (App Router)
 - React 18
+- **TypeScript** for `src/lib/*` (typed domain models)
+- **JSX** for `src/app/*` and `src/components/*` (React components + pages)
 - Tailwind CSS 3
-- `@tanstack/react-query` (used in auth/dashboard phases)
-- Server Components for public pages (server-side fetch from the API for SEO)
+- `@tanstack/react-query` (used in auth/dashboard flows)
+- Server Components for public pages
 
-## Setup
-1. Start the Backend (`cd ../Backend && npm run dev`) — defaults to `http://localhost:4000`.
+## Local setup
+1. (Optional) start the Backend at `http://localhost:4000`. With no backend, demo mode is automatic.
 2. Copy env:
-   ```powershell
-   Copy-Item .env.local.example .env.local
+   ```bash
+   cp .env.local.example .env.local
    ```
 3. Install deps:
-   ```powershell
+   ```bash
    npm install
    ```
 4. Run dev server:
-   ```powershell
+   ```bash
    npm run dev
    ```
-   App will be live at `http://localhost:3000`.
+   App live at `http://localhost:3000`.
 
-## Pages shipped in Phase A
-| Route | Description |
-|---|---|
-| `/` | Marketing home — hero, how-it-works, featured packages, niches |
-| `/packages` | Browse packages with filters (tier, niche, price, sort) + pagination |
-| `/packages/[slug]` | Package detail with deliverables + included influencer roster |
-| `/influencers` | Browse influencers with filters (tier, niche, city, platform) + pagination |
-| `/influencers/[id]` | Influencer profile with socials + rate card |
+## Demo / dummy mode
+The frontend ships with a full set of dummy data in `src/lib/dummyData.ts`. When
+`NEXT_PUBLIC_DEMO_MODE=1` (or `NEXT_PUBLIC_API_BASE_URL` is unset), the axios
+client short-circuits every request and returns dummy responses — no backend
+needed. This is the default for production builds (`.env.production`), which
+makes the project deployable to Vercel out of the box.
 
-All public, all server-rendered. **No auth, cart, or dashboard yet** — those ship in Phase B (auth + brand checkout) and Phase C (influencer dashboard).
+To wire up a real backend, set `NEXT_PUBLIC_API_BASE_URL` and
+`NEXT_PUBLIC_DEMO_MODE=0`.
+
+## Deploying to Vercel
+1. Import this repo in Vercel.
+2. Set **Root Directory** to `Frontend` (since the repo also contains a `Backend/`).
+3. Vercel will pick up `Frontend/vercel.json` and detect Next.js automatically.
+4. No env vars required — `.env.production` already turns on demo mode.
+
+To wire to a real backend, add `NEXT_PUBLIC_API_BASE_URL` (and set
+`NEXT_PUBLIC_DEMO_MODE=0`) in the Vercel project settings.
 
 ## Folder layout
 ```
 src/
-├── app/
-│   ├── layout.js              Root layout w/ Header + Footer
-│   ├── page.js                Home
+├── app/                       Next.js App Router (.jsx)
+│   ├── layout.jsx             Root layout
+│   ├── page.jsx               Marketing home
 │   ├── globals.css            Tailwind + design tokens
-│   ├── not-found.js           404
-│   ├── packages/
-│   │   ├── page.js            Browse
-│   │   └── [slug]/page.js     Detail
-│   └── influencers/
-│       ├── page.js            Browse
-│       └── [id]/page.js       Detail
-├── components/
-│   ├── layout/{Header,Footer}.js
-│   ├── PackageCard.js
-│   ├── InfluencerCard.js
-│   ├── Filters.js             Client component (URL-driven filters)
-│   └── Pagination.js
-└── lib/
-    ├── api.js                 fetch helper + apiFetchSafe with fallback
-    └── format.js              INR, follower counts, tier/deliverable/platform labels
+│   ├── packages/              Browse + detail
+│   ├── influencers/           Browse + detail
+│   ├── dashboard/             Brand / Creator / Admin dashboards
+│   └── …
+├── components/                Reusable React components (.jsx)
+│   ├── layout/{Header,Footer,LayoutChrome}.jsx
+│   ├── ui/                    Full UI kit (Button, Card, Modal, …)
+│   ├── home/                  Marketing sections
+│   └── …
+└── lib/                       Typed utilities (.ts)
+    ├── types.ts               Shared domain types
+    ├── api.ts                 fetch helper
+    ├── apiClient.ts           axios client + demo-mode short-circuit
+    ├── auth.ts                token / demo-mode helpers
+    ├── dummyData.ts           dummy data for demo mode
+    ├── analytics.ts           consent-gated tracking
+    └── format.ts              INR + follower count formatters
 ```
 
 ## Notes
-- `apiFetchSafe` gracefully returns a fallback when the backend is down, so the marketing UI still renders during local dev.
+- `apiFetchSafe` (in `lib/api.ts`) returns a fallback when the backend is down.
 - Filters auto-sync to URL params and reset pagination on change.
-- Decimal prices from the API arrive as strings — `formatINR` handles the coercion.
+- Decimal prices coming from the API arrive as strings — `formatINR` handles coercion.
+- TypeScript is permissive (`strict: false`, `allowJs: true`) so the existing
+  `.jsx` components don't require type annotations.

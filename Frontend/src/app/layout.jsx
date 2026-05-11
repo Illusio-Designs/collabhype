@@ -8,7 +8,7 @@ import PageViewTracker from '@/components/analytics/PageViewTracker';
 import CookieConsent from '@/components/CookieConsent';
 
 export const metadata = {
-  title: 'Collabcreator — Influencer marketplace for India',
+  title: 'Collabhype — Influencer marketplace for India',
   description:
     'Buy curated influencer packages or build your own from a catalog of vetted creators. Self-serve influencer marketing with escrow-backed payments.',
 };

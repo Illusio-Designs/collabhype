@@ -1,15 +1,18 @@
-# Collabcreator
+# Collabhype
 
 Self-serve influencer marketplace for India. Brands buy pre-built influencer packages or hand-pick creators directly. Escrow-backed payments via Razorpay, in-app campaign briefs, and per-deliverable payouts.
 
 ## Repo layout
 
 ```
-Collabcreator/
+Collabhype/
 ├── Backend/          Node + Express + Prisma + MySQL REST API
-├── Frontend/         Next.js 14 (App Router, JavaScript / ESM)
+├── Frontend/         Next.js 14 (App Router) — JSX components + typed TS lib, Vercel-ready
 └── Application/      Expo (React Native) mobile app — scaffolded
 ```
+
+The Frontend is independently deployable to **Vercel** with dummy data — no
+backend required. See `Frontend/README.md` for setup.
 
 Each project has its own `README.md`, `.env.example`, and `package.json`.
 
@@ -63,6 +66,11 @@ npm run dev                    # http://localhost:3000
 ```
 
 For demo mode (no backend needed), open `/login` and click **View as Brand / Creator / Admin**.
+
+### Deploy Frontend to Vercel
+1. Import the repo in Vercel.
+2. Set **Root Directory** to `Frontend`.
+3. Deploy — `.env.production` ships with demo mode on so the site works with no backend.
 
 ## License
 

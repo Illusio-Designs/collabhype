@@ -101,7 +101,7 @@ function ChangePassword() {
   return (
     <Card padding="lg">
       <h2 className="text-lg font-semibold text-zinc-900">Change password</h2>
-      <p className="mt-1 text-sm text-zinc-600">Use a strong password unique to Collabcreator.</p>
+      <p className="mt-1 text-sm text-zinc-600">Use a strong password unique to Collabhype.</p>
       <form onSubmit={onSubmit} className="mt-5 grid gap-4 sm:max-w-md">
         <FormField label="Current password" required>
           <PasswordInput
@@ -191,7 +191,7 @@ function DangerZone({ user, onDeleted }) {
           }
         }}
         size="md"
-        title="Delete your Collabcreator account?"
+        title="Delete your Collabhype account?"
         description={`Account: ${user.email}`}
         footer={
           <>

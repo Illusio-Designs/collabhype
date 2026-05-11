@@ -1,4 +1,4 @@
-// Collabcreator UI Kit — barrel exports
+// Collabhype UI Kit — barrel exports
 // Usage:  import { Button, Card, Modal } from '@/components/ui';
 
 export { default as Accordion } from './Accordion';

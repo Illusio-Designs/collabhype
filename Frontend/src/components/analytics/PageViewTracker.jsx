@@ -24,8 +24,8 @@ function Tracker() {
         trackPageView(url);
       }
     }
-    window.addEventListener('cc:consent-change', onConsent);
-    return () => window.removeEventListener('cc:consent-change', onConsent);
+    window.addEventListener('ch:consent-change', onConsent);
+    return () => window.removeEventListener('ch:consent-change', onConsent);
   }, [pathname, sp]);
 
   return null;

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui';
 
 export const metadata = {
-  title: 'How it works — Collabcreator',
+  title: 'How it works — Collabhype',
   description:
     'From cart to campaign in four steps. Self-serve influencer marketing with escrow.',
 };

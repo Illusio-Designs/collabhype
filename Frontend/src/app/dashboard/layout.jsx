@@ -150,7 +150,7 @@ function Sidebar({ nav, pathname, user, roleLabel, onLogout, mobileOpen, onMobil
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-700 text-white shadow-sm">
           C
         </span>
-        Collabcreator
+        Collabhype
       </Link>
 
       <nav className="mt-6 flex-1 space-y-6 overflow-y-auto">

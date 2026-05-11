@@ -20,7 +20,7 @@ export default function Header() {
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-700 text-base text-white shadow-sm">
               C
             </span>
-            Collabcreator
+            Collabhype
           </Link>
 
           <nav className="hidden items-center gap-7 text-sm font-medium text-zinc-700 md:flex">

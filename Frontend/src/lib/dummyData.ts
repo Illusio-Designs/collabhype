@@ -1,7 +1,20 @@
 // Dummy data for the marketing UI — used when the backend is down or when
 // previewing the design. Shape mirrors what the API returns.
 
-export const DUMMY_NICHES = [
+import type {
+  Campaign,
+  Influencer,
+  Niche,
+  Notification,
+  Order,
+  Package,
+  Payout,
+  PayoutSummary,
+  PlatformStats,
+  User,
+} from './types';
+
+export const DUMMY_NICHES: Niche[] = [
   { id: 'n-1', slug: 'beauty', name: 'Beauty & Skincare' },
   { id: 'n-2', slug: 'fashion', name: 'Fashion' },
   { id: 'n-3', slug: 'fitness', name: 'Fitness' },
@@ -16,9 +29,11 @@ export const DUMMY_NICHES = [
   { id: 'n-12', slug: 'gaming', name: 'Gaming' },
 ];
 
-const NICHE_BY_SLUG = Object.fromEntries(DUMMY_NICHES.map((n) => [n.slug, n]));
+const NICHE_BY_SLUG: Record<string, Niche> = Object.fromEntries(
+  DUMMY_NICHES.map((n) => [n.slug, n]),
+);
 
-export const DUMMY_PACKAGES = [
+export const DUMMY_PACKAGES: Package[] = [
   {
     id: 'pkg-1',
     slug: 'starter-nano-10-beauty',
@@ -137,7 +152,7 @@ export const DUMMY_PACKAGES = [
   },
 ];
 
-export const DUMMY_INFLUENCERS = [
+export const DUMMY_INFLUENCERS: Influencer[] = [
   {
     id: 'inf-1',
     user: { id: 'u-1', fullName: 'Aanya Mehta', avatarUrl: null },
@@ -258,7 +273,7 @@ export const DUMMY_INFLUENCERS = [
   },
 ];
 
-export const DUMMY_BRANDS = [
+export const DUMMY_BRANDS: string[] = [
   'NOVA',
   'SUTRA',
   'BLOOM',
@@ -273,7 +288,7 @@ export const DUMMY_BRANDS = [
   'OLIVE',
 ];
 
-export function dummyOrEmpty(value, dummy) {
+export function dummyOrEmpty<T>(value: T | null | undefined, dummy: T): T {
   if (!value) return dummy;
   if (Array.isArray(value) && value.length === 0) return dummy;
   return value;
@@ -283,9 +298,9 @@ export function dummyOrEmpty(value, dummy) {
 // Demo dashboard data — used in demo mode when the backend isn't running.
 // =============================================================================
 
-export const DUMMY_ADMIN_USER = {
+export const DUMMY_ADMIN_USER: User = {
   id: 'demo-admin-1',
-  email: 'admin@collabcreator.in',
+  email: 'admin@collabhype.in',
   fullName: 'Riya Verma',
   role: 'ADMIN',
   phone: null,
@@ -296,7 +311,7 @@ export const DUMMY_ADMIN_USER = {
   createdAt: '2026-01-01T10:00:00Z',
 };
 
-export const DUMMY_PLATFORM_STATS = {
+export const DUMMY_PLATFORM_STATS: PlatformStats = {
   totalUsers: 1247,
   totalBrands: 184,
   totalCreators: 1063,
@@ -307,7 +322,7 @@ export const DUMMY_PLATFORM_STATS = {
   payoutsQueued: 23,
 };
 
-export const DUMMY_ADMIN_USERS_LIST = [
+export const DUMMY_ADMIN_USERS_LIST: Array<Pick<User, 'id' | 'fullName' | 'email' | 'role' | 'isActive' | 'createdAt'>> = [
   { id: 'u-a-1', fullName: 'Aanya Mehta', email: 'aanya@example.com', role: 'INFLUENCER', isActive: true, createdAt: '2026-05-10T10:00:00Z' },
   { id: 'u-a-2', fullName: 'Acme Brand', email: 'hello@acme.com', role: 'BRAND', isActive: true, createdAt: '2026-05-09T10:00:00Z' },
   { id: 'u-a-3', fullName: 'Rohan Iyer', email: 'rohan@example.com', role: 'INFLUENCER', isActive: true, createdAt: '2026-05-08T10:00:00Z' },
@@ -316,7 +331,7 @@ export const DUMMY_ADMIN_USERS_LIST = [
   { id: 'u-a-6', fullName: 'Karan Desai', email: 'karan@example.com', role: 'INFLUENCER', isActive: false, createdAt: '2026-05-05T10:00:00Z' },
 ];
 
-export const DUMMY_BRAND_USER = {
+export const DUMMY_BRAND_USER: User = {
   id: 'demo-brand-1',
   email: 'demo@brand.com',
   fullName: 'Acme Brand',
@@ -335,11 +350,11 @@ export const DUMMY_BRAND_USER = {
     industry: 'Beauty & Skincare',
     gstin: '',
     logoUrl: '',
-    about: 'A demo brand running influencer campaigns on Collabcreator.',
+    about: 'A demo brand running influencer campaigns on Collabhype.',
   },
 };
 
-export const DUMMY_INFLUENCER_USER = {
+export const DUMMY_INFLUENCER_USER: User = {
   id: 'demo-inf-1',
   email: 'demo@creator.com',
   fullName: 'Aanya Mehta',
@@ -406,10 +421,10 @@ export const DUMMY_INFLUENCER_USER = {
   },
 };
 
-export const DUMMY_ORDERS = [
+export const DUMMY_ORDERS: Order[] = [
   {
     id: 'ord-1',
-    orderNumber: 'CC-XKLM-A1B2',
+    orderNumber: 'CH-XKLM-A1B2',
     brandUserId: 'demo-brand-1',
     subtotal: 75000,
     tax: 0,
@@ -437,7 +452,7 @@ export const DUMMY_ORDERS = [
   },
   {
     id: 'ord-2',
-    orderNumber: 'CC-WJPM-Z9X8',
+    orderNumber: 'CH-WJPM-Z9X8',
     brandUserId: 'demo-brand-1',
     subtotal: 25000,
     tax: 0,
@@ -465,7 +480,10 @@ export const DUMMY_ORDERS = [
   },
 ];
 
-export const DUMMY_ORDER_DETAIL = {
+export const DUMMY_ORDER_DETAIL: Order & {
+  escrows: Array<{ id: string; amount: number; status: string; createdAt: string; releasedAt: string | null }>;
+  campaigns: Array<Partial<Campaign>>;
+} = {
   ...DUMMY_ORDERS[0],
   escrows: [
     {
@@ -490,7 +508,7 @@ export const DUMMY_ORDER_DETAIL = {
   ],
 };
 
-export const DUMMY_CAMPAIGNS_BRAND = [
+export const DUMMY_CAMPAIGNS_BRAND: Campaign[] = [
   {
     id: 'camp-1',
     title: 'Growth Pack — 5 Micro Fashion Influencers',
@@ -498,7 +516,7 @@ export const DUMMY_CAMPAIGNS_BRAND = [
     createdAt: '2026-05-08T14:30:00Z',
     order: {
       id: 'ord-1',
-      orderNumber: 'CC-XKLM-A1B2',
+      orderNumber: 'CH-XKLM-A1B2',
       total: 75000,
       status: 'IN_PROGRESS',
       paidAt: '2026-05-08T14:30:00Z',
@@ -512,7 +530,7 @@ export const DUMMY_CAMPAIGNS_BRAND = [
     createdAt: '2026-04-22T11:00:00Z',
     order: {
       id: 'ord-2',
-      orderNumber: 'CC-WJPM-Z9X8',
+      orderNumber: 'CH-WJPM-Z9X8',
       total: 25000,
       status: 'COMPLETED',
       paidAt: '2026-04-22T11:10:00Z',
@@ -521,14 +539,14 @@ export const DUMMY_CAMPAIGNS_BRAND = [
   },
 ];
 
-export const DUMMY_CAMPAIGNS_INFLUENCER = [
+export const DUMMY_CAMPAIGNS_INFLUENCER: Campaign[] = [
   {
     id: 'camp-3',
     title: 'Bloom Skincare — Spring launch',
     status: 'IN_PROGRESS',
     createdAt: '2026-05-05T10:00:00Z',
     order: {
-      orderNumber: 'CC-LMNO-P3Q4',
+      orderNumber: 'CH-LMNO-P3Q4',
       brand: {
         fullName: 'Bloom',
         brandProfile: { companyName: 'Bloom Skincare', logoUrl: null },
@@ -545,7 +563,7 @@ export const DUMMY_CAMPAIGNS_INFLUENCER = [
     status: 'COMPLETED',
     createdAt: '2026-04-10T10:00:00Z',
     order: {
-      orderNumber: 'CC-VWXY-R5S6',
+      orderNumber: 'CH-VWXY-R5S6',
       brand: {
         fullName: 'Sutra',
         brandProfile: { companyName: 'Sutra Foods', logoUrl: null },
@@ -557,7 +575,7 @@ export const DUMMY_CAMPAIGNS_INFLUENCER = [
   },
 ];
 
-export const DUMMY_CAMPAIGN_DETAIL_BRAND = {
+export const DUMMY_CAMPAIGN_DETAIL_BRAND: Campaign = {
   id: 'camp-1',
   title: 'Growth Pack — 5 Micro Fashion Influencers',
   brief:
@@ -571,7 +589,7 @@ export const DUMMY_CAMPAIGN_DETAIL_BRAND = {
   createdAt: '2026-05-08T14:30:00Z',
   order: {
     id: 'ord-1',
-    orderNumber: 'CC-XKLM-A1B2',
+    orderNumber: 'CH-XKLM-A1B2',
     total: 75000,
     status: 'IN_PROGRESS',
     paidAt: '2026-05-08T14:30:00Z',
@@ -609,7 +627,7 @@ export const DUMMY_CAMPAIGN_DETAIL_BRAND = {
   ],
 };
 
-export const DUMMY_CAMPAIGN_DETAIL_INFLUENCER = {
+export const DUMMY_CAMPAIGN_DETAIL_INFLUENCER: Campaign = {
   id: 'camp-3',
   title: 'Bloom Skincare — Spring launch',
   brief:
@@ -622,7 +640,7 @@ export const DUMMY_CAMPAIGN_DETAIL_INFLUENCER = {
   status: 'IN_PROGRESS',
   createdAt: '2026-05-05T10:00:00Z',
   order: {
-    orderNumber: 'CC-LMNO-P3Q4',
+    orderNumber: 'CH-LMNO-P3Q4',
     brand: {
       fullName: 'Bloom',
       brandProfile: {
@@ -653,7 +671,7 @@ export const DUMMY_CAMPAIGN_DETAIL_INFLUENCER = {
   ],
 };
 
-export const DUMMY_PAYOUTS = [
+export const DUMMY_PAYOUTS: Payout[] = [
   {
     id: 'p-1',
     influencerId: 'inf-demo',
@@ -686,7 +704,7 @@ export const DUMMY_PAYOUTS = [
   },
 ];
 
-export const DUMMY_PAYOUT_SUMMARY = {
+export const DUMMY_PAYOUT_SUMMARY: PayoutSummary = {
   total: 15500,
   pending: 7000,
   paid: 8500,
@@ -694,7 +712,7 @@ export const DUMMY_PAYOUT_SUMMARY = {
   currency: 'INR',
 };
 
-export const DUMMY_NOTIFICATIONS = [
+export const DUMMY_NOTIFICATIONS: Notification[] = [
   {
     id: 'nt-1',
     type: 'deliverable.draft',
@@ -707,7 +725,7 @@ export const DUMMY_NOTIFICATIONS = [
   {
     id: 'nt-2',
     type: 'order.paid',
-    title: 'Order CC-XKLM-A1B2 confirmed',
+    title: 'Order CH-XKLM-A1B2 confirmed',
     body: 'Payment of ₹75,000 was received. Campaign briefs dispatched.',
     link: '/dashboard/orders/ord-1',
     isRead: false,

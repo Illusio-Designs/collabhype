@@ -1,15 +1,15 @@
 export const metadata = {
-  title: 'Terms of Service — Collabcreator',
+  title: 'Terms of Service — Collabhype',
 };
 
 const SECTIONS = [
   {
     title: '1. Acceptance of terms',
-    body: 'By creating an account or using Collabcreator, you agree to these Terms. If you do not agree, you may not use the platform.',
+    body: 'By creating an account or using Collabhype, you agree to these Terms. If you do not agree, you may not use the platform.',
   },
   {
     title: '2. Eligibility',
-    body: 'You must be 18 or older to use Collabcreator. Brand accounts must represent a real business entity. Creator accounts must represent a real individual with an active social media presence.',
+    body: 'You must be 18 or older to use Collabhype. Brand accounts must represent a real business entity. Creator accounts must represent a real individual with an active social media presence.',
   },
   {
     title: '3. Accounts and security',
@@ -37,7 +37,7 @@ const SECTIONS = [
   },
   {
     title: '9. Limitation of liability',
-    body: 'Collabcreator is provided "as is." We are not liable for indirect, incidental, or consequential damages. Our aggregate liability is limited to the fees paid in the 12 months preceding a claim.',
+    body: 'Collabhype is provided "as is." We are not liable for indirect, incidental, or consequential damages. Our aggregate liability is limited to the fees paid in the 12 months preceding a claim.',
   },
   {
     title: '10. Changes to these terms',
@@ -64,8 +64,8 @@ export default function TermsPage() {
 
         <p className="mt-12 border-t border-zinc-200 pt-6 text-sm text-zinc-500">
           Questions about these Terms? Email{' '}
-          <a className="text-brand-700 hover:underline" href="mailto:legal@collabcreator.in">
-            legal@collabcreator.in
+          <a className="text-brand-700 hover:underline" href="mailto:legal@collabhype.in">
+            legal@collabhype.in
           </a>
           .
         </p>
