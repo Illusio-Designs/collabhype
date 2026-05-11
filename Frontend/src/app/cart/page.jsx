@@ -20,6 +20,7 @@ import {
   formatCount,
   formatINR,
 } from '@/lib/format';
+import { PLATFORM_BRAND_FEE_RATE } from '@/lib/types';
 
 export default function CartPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -278,6 +279,10 @@ function InfluencerRow({ item }) {
   const name = inf?.user?.fullName ?? 'Influencer';
   const deliverables = Array.isArray(item.deliverables) ? item.deliverables : [];
   const top = inf?.socialAccounts?.[0];
+  // Item price is already brand-side (rate × 1.05). Back out the creator rate for transparency.
+  const brandPrice = Number(item.price) || 0;
+  const creatorRate = brandPrice / (1 + PLATFORM_BRAND_FEE_RATE);
+  const platformFee = brandPrice - creatorRate;
   return (
     <>
       <h3 className="text-base font-semibold text-zinc-900">{name}</h3>
@@ -292,6 +297,16 @@ function InfluencerRow({ item }) {
             {d.qty}× {DELIVERABLE_LABEL[d.type] ?? d.type}
           </Badge>
         ))}
+      </div>
+      <div className="mt-3 rounded-lg bg-zinc-50 p-2.5 text-xs text-zinc-600">
+        <div className="flex justify-between">
+          <span>Creator rate</span>
+          <span className="font-medium text-zinc-800">{formatINR(creatorRate)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Platform fee (5%)</span>
+          <span className="font-medium text-zinc-800">{formatINR(platformFee)}</span>
+        </div>
       </div>
     </>
   );

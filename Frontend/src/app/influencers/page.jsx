@@ -1,5 +1,5 @@
 import { apiFetchSafe } from '@/lib/api';
-import InfluencerCard from '@/components/InfluencerCard';
+import InfluencerBrowserClient from '@/components/InfluencerBrowserClient';
 import Filters from '@/components/Filters';
 import Pagination from '@/components/Pagination';
 import { DUMMY_INFLUENCERS, DUMMY_NICHES } from '@/lib/dummyData';
@@ -79,21 +79,7 @@ export default async function InfluencersPage({ searchParams }) {
         <Filters niches={niches} extraSorts={SORTS} />
 
         <div>
-          {influencers.length ? (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {influencers.map((i) => (
-                <InfluencerCard key={i.id} profile={i} />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-12 text-center">
-              <h3 className="text-lg font-semibold text-zinc-900">No creators match your filters</h3>
-              <p className="mt-2 text-sm text-zinc-600">
-                Try a different tier or remove the niche filter.
-              </p>
-            </div>
-          )}
-
+          <InfluencerBrowserClient influencers={influencers} />
           <Pagination pathname="/influencers" searchParams={sp} meta={meta} />
         </div>
       </div>

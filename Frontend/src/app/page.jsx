@@ -16,7 +16,7 @@ import { DUMMY_NICHES, DUMMY_PACKAGES } from '@/lib/dummyData';
 export default function HomePage() {
   // Dummy data — backend-independent so the marketing UI always renders.
   // When wiring to live data, swap these for apiFetchSafe calls.
-  const featured = DUMMY_PACKAGES.slice(0, 6);
+  const featured = DUMMY_PACKAGES;
   const niches = DUMMY_NICHES;
 
   return (

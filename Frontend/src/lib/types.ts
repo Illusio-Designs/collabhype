@@ -1,6 +1,18 @@
 // Shared domain types for the Collabhype frontend. These mirror the shapes
 // returned by the backend API and the in-app dummy data.
 
+// =============================================================================
+// Platform fee constants
+// -----------------------------------------------------------------------------
+// Collabhype's 15% take splits as:
+//   - 5% markup added to the brand bill
+//   - 10% commission deducted from the creator's payout
+// These apply only to hand-picked (Micro/Macro/Mega) cart items. Nano packs are
+// flat-priced — the platform margin is already baked into the pack price.
+// =============================================================================
+export const PLATFORM_BRAND_FEE_RATE = 0.05;
+export const PLATFORM_CREATOR_COMMISSION_RATE = 0.10;
+
 export type Role = 'BRAND' | 'INFLUENCER' | 'ADMIN';
 export type Tier = 'NANO' | 'MICRO' | 'MACRO' | 'MEGA';
 export type Platform = 'INSTAGRAM' | 'YOUTUBE' | 'TIKTOK' | 'X' | 'FACEBOOK';
@@ -13,7 +25,10 @@ export type Deliverable =
   | 'YT_SHORT'
   | 'UGC'
   | 'STORE_VISIT'
-  | 'BLOG';
+  | 'BLOG'
+  | 'UTM_LINK'
+  | 'VIDEO_DRIVE_LINK'
+  | 'PERFORMANCE_REPORT';
 
 export interface Niche {
   id: string;
@@ -29,13 +44,19 @@ export interface DeliverableSpec {
 export interface Package {
   id: string;
   slug: string;
+  packName: string;                // e.g. "Starter Pack", "Growth Plan"
   title: string;
   description: string;
+  subtitle?: string;               // e.g. "Best for micro-campaigns."
   tier: Tier;
-  niche: Niche;
+  niche?: Niche;
   deliverables: DeliverableSpec[];
   influencerCount: number;
-  price: number;
+  price: number;                   // total brand pays
+  mrp?: number;                    // strike-through "₹500"
+  pricePerInfluencer?: number;     // "₹400" big number on the card
+  benefits?: string[];             // ["Content Rights"]
+  isMostPopular?: boolean;
   estReach: number;
   estEngagement: number;
   isActive: boolean;

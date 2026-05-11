@@ -1,4 +1,20 @@
-import type { Deliverable, Platform, Tier } from './types';
+import {
+  PLATFORM_BRAND_FEE_RATE,
+  PLATFORM_CREATOR_COMMISSION_RATE,
+  type Deliverable,
+  type Platform,
+  type Tier,
+} from './types';
+
+// Brand pays this for a creator's listed rate (rate + 5% markup).
+export function brandPriceFromCreatorRate(rate: number | string): number {
+  return Number(rate) * (1 + PLATFORM_BRAND_FEE_RATE);
+}
+
+// Creator receives this from their listed rate (rate − 10% commission).
+export function creatorPayoutFromRate(rate: number | string): number {
+  return Number(rate) * (1 - PLATFORM_CREATOR_COMMISSION_RATE);
+}
 
 export function formatINR(amount: number | string | null | undefined): string {
   const n = Number(amount);
@@ -27,14 +43,17 @@ export const TIER_LABEL: Record<Tier, string> = {
 
 export const DELIVERABLE_LABEL: Record<Deliverable, string> = {
   IG_POST: 'Instagram Post',
-  IG_REEL: 'Instagram Reel',
-  IG_STORY: 'Instagram Story',
+  IG_REEL: 'Reel (Tag/Collab)',
+  IG_STORY: 'Story',
   IG_CAROUSEL: 'Instagram Carousel',
   YT_VIDEO: 'YouTube Video',
   YT_SHORT: 'YouTube Short',
   UGC: 'UGC Content',
   STORE_VISIT: 'Store Visit',
   BLOG: 'Blog Post',
+  UTM_LINK: 'UTM Link',
+  VIDEO_DRIVE_LINK: 'Video Drive Link',
+  PERFORMANCE_REPORT: 'Performance Report',
 };
 
 export const PLATFORM_LABEL: Record<Platform, string> = {

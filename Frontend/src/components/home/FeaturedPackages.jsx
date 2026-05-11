@@ -34,7 +34,7 @@ export default function FeaturedPackages({ packages = [] }) {
           </Link>
         </motion.div>
 
-        <StaggerContainer className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <StaggerContainer className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {packages.map((p) => (
             <StaggerItem key={p.id}>
               <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }} className="h-full">
