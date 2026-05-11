@@ -104,21 +104,28 @@ export default function Header() {
             aria-controls="mobile-menu"
             className="grid h-10 w-10 place-items-center rounded-xl text-zinc-700 transition hover:bg-zinc-100 md:hidden"
           >
-            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               {open ? (
                 <path
                   d="M6 6l12 12M6 18L18 6"
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
+                  fill="none"
                 />
               ) : (
-                <path
-                  d="M4 7h16M4 12h16M4 17h16"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
+                // 3x3 "Candy Box" grid — 9 dots
+                <>
+                  <circle cx="5" cy="5" r="1.6" />
+                  <circle cx="12" cy="5" r="1.6" />
+                  <circle cx="19" cy="5" r="1.6" />
+                  <circle cx="5" cy="12" r="1.6" />
+                  <circle cx="12" cy="12" r="1.6" />
+                  <circle cx="19" cy="12" r="1.6" />
+                  <circle cx="5" cy="19" r="1.6" />
+                  <circle cx="12" cy="19" r="1.6" />
+                  <circle cx="19" cy="19" r="1.6" />
+                </>
               )}
             </svg>
           </button>
