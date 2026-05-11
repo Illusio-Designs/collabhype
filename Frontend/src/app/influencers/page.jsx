@@ -1,6 +1,6 @@
 import { apiFetchSafe } from '@/lib/api';
 import InfluencerBrowserClient from '@/components/InfluencerBrowserClient';
-import Filters from '@/components/Filters';
+import FiltersDrawer from '@/components/FiltersDrawer';
 import Pagination from '@/components/Pagination';
 import { DUMMY_INFLUENCERS, DUMMY_NICHES } from '@/lib/dummyData';
 
@@ -68,21 +68,18 @@ export default async function InfluencersPage({ searchParams }) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <header className="mb-10">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">Influencers</h1>
-        <p className="mt-2 text-zinc-600">
-          {meta?.total ?? 0} creators. Filter by tier, niche, city or platform.
-        </p>
+      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">Influencers</h1>
+          <p className="mt-2 text-zinc-600">
+            {meta?.total ?? 0} creators. Filter by tier, niche, city or platform.
+          </p>
+        </div>
+        <FiltersDrawer niches={niches} extraSorts={SORTS} />
       </header>
 
-      <div className="grid gap-10 lg:grid-cols-[260px,1fr]">
-        <Filters niches={niches} extraSorts={SORTS} />
-
-        <div>
-          <InfluencerBrowserClient influencers={influencers} />
-          <Pagination pathname="/influencers" searchParams={sp} meta={meta} />
-        </div>
-      </div>
+      <InfluencerBrowserClient influencers={influencers} />
+      <Pagination pathname="/influencers" searchParams={sp} meta={meta} />
     </div>
   );
 }

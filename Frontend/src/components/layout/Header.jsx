@@ -41,7 +41,7 @@ export default function Header() {
             <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand-700 text-sm text-white shadow-sm sm:h-9 sm:w-9 sm:text-base">
               C
             </span>
-            <span className="hidden xs:inline sm:inline">Collabhype</span>
+            <span>Collabhype</span>
           </Link>
 
           <nav className="hidden items-center gap-7 text-sm font-medium text-zinc-700 md:flex">
