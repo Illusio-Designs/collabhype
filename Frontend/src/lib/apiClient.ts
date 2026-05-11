@@ -8,14 +8,54 @@ import {
   DUMMY_CAMPAIGNS_BRAND,
   DUMMY_CAMPAIGNS_INFLUENCER,
   DUMMY_INFLUENCER_USER,
+  DUMMY_INFLUENCERS,
   DUMMY_NICHES,
   DUMMY_NOTIFICATIONS,
   DUMMY_ORDER_DETAIL,
   DUMMY_ORDERS,
+  DUMMY_PACKAGES,
   DUMMY_PAYOUT_SUMMARY,
   DUMMY_PAYOUTS,
 } from './dummyData';
-import type { Role, User } from './types';
+import { PLATFORM_BRAND_FEE_RATE, type Role, type User } from './types';
+
+// =============================================================================
+// In-memory demo cart — survives navigation within a single browser session.
+// Reset on full page reload. Not persisted to localStorage on purpose so the
+// demo always starts clean.
+// =============================================================================
+interface DemoCartItem {
+  id: string;
+  itemType: 'PACKAGE' | 'INFLUENCER';
+  package?: unknown;
+  influencer?: unknown;
+  deliverables?: Array<{ type: string; qty: number }>;
+  price: number;
+  qty: number;
+}
+
+const demoCart: { id: string; items: DemoCartItem[]; currency: string } = {
+  id: 'demo-cart',
+  items: [],
+  currency: 'INR',
+};
+
+function cartSubtotal() {
+  return demoCart.items.reduce((s, it) => s + Number(it.price) * it.qty, 0);
+}
+
+function unitPriceForInfluencer(
+  influencerId: string,
+  deliverables: Array<{ type: string; qty: number }>,
+) {
+  const inf = DUMMY_INFLUENCERS.find((i) => i.id === influencerId);
+  if (!inf) return 0;
+  const creatorRate = (deliverables ?? []).reduce((sum, d) => {
+    const rc = inf.rateCards.find((r) => r.deliverable === d.type);
+    return sum + (rc ? Number(rc.price) * (d.qty ?? 1) : 0);
+  }, 0);
+  return creatorRate * (1 + PLATFORM_BRAND_FEE_RATE);
+}
 
 function userForRole(role: Role): User {
   if (role === 'ADMIN') return DUMMY_ADMIN_USER;
@@ -34,9 +74,17 @@ export const apiClient = axios.create({
 // Demo mode — return dummy responses without making real HTTP calls.
 // We swap config.adapter to short-circuit the request when in demo mode.
 // -----------------------------------------------------------------------------
-function dummyResponseFor(url: string, method: Method | string = 'get'): unknown {
+function dummyResponseFor(
+  url: string,
+  method: Method | string = 'get',
+  body: unknown = null,
+): unknown {
   const m = String(method || 'get').toLowerCase();
   const role = (getDemoRole() || 'BRAND') as Role;
+  const data = (body && typeof body === 'object' ? (body as Record<string, unknown>) : {}) as Record<
+    string,
+    unknown
+  >;
 
   // Strip /api/v1 prefix for shorter matchers
   const path = url.replace(/^.*\/api\/v1/, '') || url;
@@ -101,11 +149,60 @@ function dummyResponseFor(url: string, method: Method | string = 'get'): unknown
   // === Deliverable actions — always succeed in demo ===
   if (path.startsWith('/deliverables/')) return { deliverable: { status: 'OK' } };
 
-  // === Cart / checkout — disabled in demo (would need real Razorpay) ===
-  if (path === '/cart') return { cart: { id: 'demo-cart', items: [], subtotal: 0, currency: 'INR' } };
-  if (path.startsWith('/cart')) return { ok: true };
+  // === Cart — in-memory demo store ===
+  if (path === '/cart' && m === 'get') {
+    return { cart: { ...demoCart, subtotal: cartSubtotal() } };
+  }
+  if (path === '/cart/items' && m === 'post') {
+    const itemType = String(data.itemType ?? '');
+    const id = `ci-${Math.random().toString(36).slice(2, 9)}`;
+    const qty = Number(data.qty ?? 1) || 1;
+    if (itemType === 'PACKAGE') {
+      const pkg = DUMMY_PACKAGES.find((p) => p.id === data.packageId);
+      if (pkg) {
+        demoCart.items.push({
+          id,
+          itemType: 'PACKAGE',
+          package: pkg,
+          price: Number(pkg.price),
+          qty,
+        });
+      }
+    } else if (itemType === 'INFLUENCER') {
+      const influencerId = String(data.influencerId ?? '');
+      const inf = DUMMY_INFLUENCERS.find((i) => i.id === influencerId);
+      const dels = Array.isArray(data.deliverables)
+        ? (data.deliverables as Array<{ type: string; qty: number }>)
+        : [];
+      if (inf) {
+        demoCart.items.push({
+          id,
+          itemType: 'INFLUENCER',
+          influencer: inf,
+          deliverables: dels,
+          price: unitPriceForInfluencer(influencerId, dels),
+          qty,
+        });
+      }
+    }
+    return { ok: true, item: { id }, cart: { ...demoCart, subtotal: cartSubtotal() } };
+  }
+  const cartItemMatch = path.match(/^\/cart\/items\/([^/?]+)/);
+  if (cartItemMatch) {
+    const itemId = cartItemMatch[1];
+    if (m === 'delete') {
+      const idx = demoCart.items.findIndex((it) => it.id === itemId);
+      if (idx >= 0) demoCart.items.splice(idx, 1);
+      return { ok: true, cart: { ...demoCart, subtotal: cartSubtotal() } };
+    }
+    if (m === 'patch') {
+      const it = demoCart.items.find((x) => x.id === itemId);
+      if (it && data.qty != null) it.qty = Math.max(1, Number(data.qty));
+      return { ok: true, cart: { ...demoCart, subtotal: cartSubtotal() } };
+    }
+  }
   if (path.startsWith('/checkout/')) {
-    return { error: 'Checkout disabled in demo mode' };
+    return { error: 'Checkout disabled in demo mode — connect a real backend to enable Razorpay.' };
   }
 
   // === Notifications ===
@@ -269,7 +366,15 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   // Demo short-circuit: swap the adapter so axios returns dummy data
   // without ever making a network call.
   if (isDemoMode()) {
-    const dummy = dummyResponseFor(config.url ?? '', config.method);
+    let body: unknown = config.data ?? null;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        // leave as raw string
+      }
+    }
+    const dummy = dummyResponseFor(config.url ?? '', config.method, body);
     if (dummy !== null) {
       config.adapter = () =>
         Promise.resolve({
