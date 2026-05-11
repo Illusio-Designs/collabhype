@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { Avatar, Spinner } from '@/components/ui';
+import { Avatar, Spinner, Tooltip } from '@/components/ui';
 
 // ============================================================================
 // Role-aware sidebar configurations
@@ -178,7 +178,7 @@ function Sidebar({
   const renderContent = (isCollapsed) => (
     <div
       className={clsx(
-        'flex h-full flex-col border-r border-zinc-200 bg-gradient-to-b from-rose-50/60 via-pink-50/40 to-violet-50/40 p-4 transition-[width] duration-200',
+        'flex h-full flex-col border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-white to-brand-50/60 p-4 transition-[width] duration-200',
         isCollapsed ? 'w-20 items-center' : 'w-72',
       )}
     >

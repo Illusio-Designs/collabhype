@@ -14,19 +14,19 @@ export default function Hero() {
       {/* Outer container matches header + footer width (max-w-7xl px-4/6/8) so
           the panel never gets wider than the header. */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-rose-50 via-pink-50 to-violet-50 sm:rounded-[2.5rem]">
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-50 via-white to-brand-100/60 sm:rounded-[2.5rem]">
           {/* Decorative blurred blobs */}
           <motion.div
             aria-hidden
             animate={{ scale: [1, 1.08, 1] }}
             transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-            className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-gradient-to-br from-violet-300 to-pink-300 opacity-60 blur-3xl"
+            className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-gradient-to-br from-brand-300 to-accent-300 opacity-50 blur-3xl"
           />
           <motion.div
             aria-hidden
             animate={{ scale: [1.08, 1, 1.08] }}
             transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
-            className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-gradient-to-tl from-pink-200 to-orange-200 opacity-50 blur-3xl"
+            className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-gradient-to-tl from-brand-200 to-accent-200 opacity-50 blur-3xl"
           />
 
           <div className="relative px-5 py-12 sm:px-8 sm:py-16 lg:px-10 lg:py-20">
@@ -115,7 +115,7 @@ export default function Hero() {
             >
               {/* Creator backdrop tile */}
               <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-                <div className="relative h-[320px] w-[230px] overflow-hidden rounded-[2rem] bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 shadow-2xl ring-4 ring-white sm:h-[340px] sm:w-[240px]">
+                <div className="relative h-[320px] w-[230px] overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-700 via-brand-500 to-accent-500 shadow-2xl ring-4 ring-white sm:h-[340px] sm:w-[240px]">
                   {/* Inner texture */}
                   <div
                     className="absolute inset-0 opacity-30"
@@ -162,10 +162,10 @@ export default function Hero() {
                 <div className="text-xs text-zinc-500">total reach this week</div>
                 <div className="mt-3 flex -space-x-2">
                   {[
-                    { l: 'A', c: 'bg-pink-400' },
-                    { l: 'R', c: 'bg-violet-500' },
-                    { l: 'V', c: 'bg-rose-400' },
-                    { l: 'P', c: 'bg-purple-500' },
+                    { l: 'A', c: 'bg-accent-400' },
+                    { l: 'R', c: 'bg-brand-500' },
+                    { l: 'V', c: 'bg-accent-500' },
+                    { l: 'P', c: 'bg-brand-600' },
                   ].map((a) => (
                     <div
                       key={a.l}
@@ -237,7 +237,7 @@ export default function Hero() {
                 transition={{ duration: 0.5, delay: 0.85, ease }}
                 className="absolute bottom-24 right-2 z-20 hidden items-center gap-2 rounded-full bg-zinc-900 px-3 py-1.5 shadow-lg sm:flex"
               >
-                <span className="h-2 w-2 rounded-full bg-rose-400" />
+                <span className="h-2 w-2 rounded-full bg-accent-500" />
                 <span className="text-[11px] font-semibold text-white">3 new bookings</span>
               </motion.div>
             </motion.div>

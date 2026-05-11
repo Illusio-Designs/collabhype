@@ -8,7 +8,7 @@ export default function FinalCTA() {
     <section className="bg-zinc-50 pb-20 pt-12">
       {/* Outer container matches header + footer width (max-w-7xl px-4/6/8). */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-800 via-brand-700 to-purple-600 sm:rounded-[2.5rem]">
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 sm:rounded-[2.5rem]">
           {/* Dotted pattern background */}
           <div
             aria-hidden
@@ -63,7 +63,7 @@ export default function FinalCTA() {
             aria-hidden
             animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
             transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-            className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-pink-400/30 blur-3xl"
+            className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent-400/30 blur-3xl"
           />
 
           <motion.div
@@ -74,20 +74,20 @@ export default function FinalCTA() {
             className="relative px-5 py-16 text-center sm:px-8 sm:py-20 lg:px-10"
           ><div className="mx-auto max-w-3xl">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-md">
-              <span className="h-1.5 w-1.5 rounded-full bg-pink-300" />
+              <span className="h-1.5 w-1.5 rounded-full bg-accent-300" />
               Take your campaigns to the next level
-              <span className="h-1.5 w-1.5 rounded-full bg-pink-300" />
+              <span className="h-1.5 w-1.5 rounded-full bg-accent-300" />
             </span>
             <h2 className="mt-6 text-4xl font-bold tracking-tight text-white sm:text-5xl">
               Bring your customer reach to the next level of excellence.
             </h2>
-            <p className="mx-auto mt-5 max-w-xl text-lg text-violet-100">
+            <p className="mx-auto mt-5 max-w-xl text-lg text-brand-100">
               Get set up in minutes. No long-term contracts. Pay only for what you book.
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/register?role=brand"
-                className="rounded-full bg-white px-7 py-3.5 text-base font-semibold text-brand-800 shadow-lg transition hover:bg-violet-50 hover:shadow-xl"
+                className="rounded-full bg-white px-7 py-3.5 text-base font-semibold text-brand-800 shadow-lg transition hover:bg-brand-50 hover:shadow-xl"
               >
                 Make a campaign →
               </Link>

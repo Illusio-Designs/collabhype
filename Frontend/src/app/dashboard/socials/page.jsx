@@ -107,7 +107,7 @@ function SocialsInner() {
           platform="instagram"
           name="Instagram"
           desc="Requires a Business or Creator account linked to a Facebook Page."
-          gradient="from-pink-500 via-fuchsia-500 to-purple-600"
+          gradient="from-accent-500 via-brand-500 to-brand-800"
           account={byPlatform('INSTAGRAM')}
           onConnect={() => connect('instagram')}
           onDisconnect={() => disconnect('INSTAGRAM')}
