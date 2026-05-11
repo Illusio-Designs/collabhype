@@ -9,6 +9,7 @@ import {
   PLATFORM_LABEL,
 } from '@/lib/format';
 import AddInfluencerForm from '@/components/cart/AddInfluencerForm';
+import CreatorBadge from '@/components/CreatorBadge';
 import { Badge } from '@/components/ui';
 import { DUMMY_INFLUENCERS } from '@/lib/dummyData';
 
@@ -67,9 +68,14 @@ export default async function InfluencerDetailPage({ params }) {
                   </div>
                 )}
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
-                    {name}
-                  </h1>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+                      {name}
+                    </h1>
+                    {profile.badge && profile.badge !== 'NONE' && (
+                      <CreatorBadge badge={profile.badge} size="md" />
+                    )}
+                  </div>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-600">
                     {profile.city && <span>{profile.city}</span>}
                     {profile.tier && (
@@ -81,6 +87,36 @@ export default async function InfluencerDetailPage({ params }) {
                   </div>
                 </div>
               </div>
+
+              {/* Reputation strip */}
+              {(profile.completedCampaigns ?? 0) > 0 && (
+                <div className="mt-6 grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 sm:grid-cols-4">
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-zinc-500">Completed</div>
+                    <div className="mt-1 text-xl font-bold text-zinc-900">
+                      {profile.completedCampaigns}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-zinc-500">Success</div>
+                    <div className="mt-1 text-xl font-bold text-zinc-900">
+                      {Math.round(profile.successRate ?? 0)}%
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-zinc-500">Response</div>
+                    <div className="mt-1 text-xl font-bold text-zinc-900">
+                      {Math.round(profile.responseRate ?? 0)}%
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-zinc-500">Rating</div>
+                    <div className="mt-1 text-xl font-bold text-zinc-900">
+                      {Number(profile.avgRating ?? 0).toFixed(1)} / 5
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {profile.bio && (
                 <p className="mt-6 text-lg leading-relaxed text-zinc-700">{profile.bio}</p>

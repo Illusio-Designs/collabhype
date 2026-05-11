@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { ApiError } from '../../utils/ApiError.js';
+import { recomputeBadgeForInfluencer } from '../influencer/badge.service.js';
 
 // --- listing ---
 
@@ -212,6 +213,10 @@ export async function requestRevision(userId, delivId, feedback) {
       where: { id: delivId },
       data: { status: 'REVISION_REQUESTED', feedback },
     });
+    await tx.influencerProfile.update({
+      where: { id: d.influencerId },
+      data: { revisionsRequested: { increment: 1 } },
+    });
     await recomputeCampaignStatus(d.campaignId, tx);
     const infUserId = await getInfluencerUserId(d.influencerId, tx);
     if (infUserId) {
@@ -261,21 +266,35 @@ export async function releasePayment(userId, delivId) {
   if (d.status !== 'POSTED') {
     throw ApiError.badRequest(`Can only release payment from POSTED (current: ${d.status})`);
   }
+  // Creator gets creatorPayout (set at materialization); the brand-side
+  // amountPayable - creatorPayout stays with the platform.
+  const payoutAmount = Number(d.creatorPayout ?? d.amountPayable);
   return prisma.$transaction(async (tx) => {
     const updated = await tx.campaignDeliverable.update({
       where: { id: delivId },
       data: { status: 'PAID' },
     });
+
     // Queue a payout record. Actual disbursal (Razorpay Route / Payouts API)
     // is processed out-of-band by an admin/cron in a later phase.
     await tx.payout.create({
       data: {
         influencerId: d.influencerId,
-        amount: d.amountPayable,
+        amount: payoutAmount,
         currency: 'INR',
         status: 'PENDING',
       },
     });
+
+    // Update creator reputation stats — drives the CreatorBadge tier.
+    await tx.influencerProfile.update({
+      where: { id: d.influencerId },
+      data: {
+        successfulDeliverables: { increment: 1 },
+        totalEarnings: { increment: payoutAmount },
+      },
+    });
+
     await recomputeCampaignStatus(d.campaignId, tx);
     await maybeReleaseEscrow(d.campaign.orderId, tx);
     const infUserId = await getInfluencerUserId(d.influencerId, tx);
@@ -285,12 +304,21 @@ export async function releasePayment(userId, delivId) {
           userId: infUserId,
           type: 'deliverable.paid',
           title: 'Payment released',
-          body: `₹${Number(d.amountPayable).toFixed(2)} has been queued for payout.`,
+          body: `₹${payoutAmount.toFixed(2)} has been queued for payout.`,
           link: `/dashboard/payouts`,
         },
       });
     }
     return updated;
+  }).then(async (result) => {
+    // Recompute badge outside the transaction so a failure here doesn't roll
+    // back the payment release.
+    try {
+      await recomputeBadgeForInfluencer(d.influencerId);
+    } catch (err) {
+      console.warn('Badge recompute failed', err);
+    }
+    return result;
   });
 }
 
@@ -299,14 +327,30 @@ export async function releasePayment(userId, delivId) {
 async function recomputeCampaignStatus(campaignId, tx) {
   const ds = await tx.campaignDeliverable.findMany({
     where: { campaignId },
-    select: { status: true },
+    select: { status: true, influencerId: true },
   });
   if (!ds.length) return; // leave DRAFT — admin still needs to assign
   let newStatus;
   if (ds.every((d) => d.status === 'PAID')) newStatus = 'COMPLETED';
   else if (ds.some((d) => d.status !== 'PENDING')) newStatus = 'IN_PROGRESS';
   else newStatus = 'BRIEF_SENT';
+  const previous = await tx.campaign.findUnique({
+    where: { id: campaignId },
+    select: { status: true },
+  });
   await tx.campaign.update({ where: { id: campaignId }, data: { status: newStatus } });
+
+  // Bump completedCampaigns once per influencer the first time we transition
+  // a campaign into COMPLETED.
+  if (newStatus === 'COMPLETED' && previous?.status !== 'COMPLETED') {
+    const ids = [...new Set(ds.map((d) => d.influencerId))];
+    if (ids.length) {
+      await tx.influencerProfile.updateMany({
+        where: { id: { in: ids } },
+        data: { completedCampaigns: { increment: 1 } },
+      });
+    }
+  }
 }
 
 async function maybeReleaseEscrow(orderId, tx) {

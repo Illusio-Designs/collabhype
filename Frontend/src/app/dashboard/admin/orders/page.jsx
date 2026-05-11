@@ -43,6 +43,7 @@ export default function AdminOrdersPage() {
       </div>
 
       <Card padding="none" className="overflow-hidden">
+       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
             <tr>
@@ -78,6 +79,7 @@ export default function AdminOrdersPage() {
             })}
           </tbody>
         </table>
+       </div>
       </Card>
     </div>
   );

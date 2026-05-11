@@ -16,6 +16,15 @@ export const PLATFORM_CREATOR_COMMISSION_RATE = 0.10;
 export type Role = 'BRAND' | 'INFLUENCER' | 'ADMIN';
 export type Tier = 'NANO' | 'MICRO' | 'MACRO' | 'MEGA';
 export type Platform = 'INSTAGRAM' | 'YOUTUBE' | 'TIKTOK' | 'X' | 'FACEBOOK';
+
+// Upwork-style creator badges, auto-derived (except EXPERT_VETTED which is
+// admin-assigned). Default NONE.
+export type CreatorBadge =
+  | 'NONE'
+  | 'RISING_TALENT'
+  | 'TOP_RATED'
+  | 'TOP_RATED_PLUS'
+  | 'EXPERT_VETTED';
 export type Deliverable =
   | 'IG_POST'
   | 'IG_REEL'
@@ -124,6 +133,12 @@ export interface Influencer {
   socialAccounts: SocialAccount[];
   niches: InfluencerNiche[];
   rateCards: RateCard[];
+  badge?: CreatorBadge;
+  completedCampaigns?: number;
+  successRate?: number;          // 0..100
+  responseRate?: number;         // 0..100
+  avgRating?: number;            // 0..5
+  totalEarnings?: number;
 }
 
 export interface BrandProfile {

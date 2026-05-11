@@ -4,7 +4,11 @@ import { ApiError } from '../../utils/ApiError.js';
 import { env } from '../../config/env.js';
 import { getRazorpayClient } from '../../lib/razorpay.js';
 import { generateOrderNumber } from '../../utils/orderNumber.js';
-import { getCart } from '../cart/cart.service.js';
+import {
+  getCart,
+  PLATFORM_BRAND_FEE_RATE,
+  PLATFORM_CREATOR_COMMISSION_RATE,
+} from '../cart/cart.service.js';
 
 // --- create order ---------------------------------------------------------
 
@@ -174,6 +178,14 @@ async function finalizePaidOrder(order, paymentId) {
 
 // One Campaign per OrderItem. For each influencer × deliverable × qty,
 // create a CampaignDeliverable with an even per-unit payout share.
+//
+// Creator payout rules:
+//   - INFLUENCER items: creator_rate = amountPayable / (1 + brand_fee);
+//                       payout       = creator_rate × (1 − commission)
+//                       (≈ 85.71% of the brand-side amountPayable)
+//   - PACKAGE (Nano)  : flat per-influencer-per-deliverable payout taken from
+//                       Package.nanoPayPerInfluencer (split across the pack's
+//                       deliverable units so each unit is consistent).
 async function materializeCampaigns(tx, order) {
   for (const item of order.items) {
     const snap = item.snapshot;
@@ -181,7 +193,11 @@ async function materializeCampaigns(tx, order) {
     const deliverables = Array.isArray(snap?.deliverables) ? snap.deliverables : [];
 
     let influencerIds = [];
+    let pkg = null;
     if (isPackage) {
+      pkg = item.packageId
+        ? await tx.package.findUnique({ where: { id: item.packageId } })
+        : null;
       const rows = await tx.packageInfluencer.findMany({
         where: { packageId: item.packageId },
         select: { influencerId: true },
@@ -195,6 +211,18 @@ async function materializeCampaigns(tx, order) {
     const perInfluencer = influencerIds.length ? lineTotal / influencerIds.length : 0;
     const totalDelivUnits = deliverables.reduce((s, d) => s + (d.qty ?? 1), 0) || 1;
     const perUnit = perInfluencer / totalDelivUnits;
+
+    // Creator payout per unit
+    let payoutPerUnit;
+    if (isPackage) {
+      const nanoPay = Number(pkg?.nanoPayPerInfluencer ?? 0);
+      payoutPerUnit = nanoPay / totalDelivUnits;
+    } else {
+      // Back out creator rate from brand-side perUnit and apply the 10% commission.
+      const creatorRatePerUnit = perUnit / (1 + PLATFORM_BRAND_FEE_RATE);
+      payoutPerUnit = creatorRatePerUnit * (1 - PLATFORM_CREATOR_COMMISSION_RATE);
+    }
+    const platformFeePerUnit = perUnit - payoutPerUnit;
 
     const campaign = await tx.campaign.create({
       data: {
@@ -219,6 +247,8 @@ async function materializeCampaigns(tx, order) {
             deliverable: d.type,
             qty: 1,
             amountPayable: perUnit,
+            creatorPayout: payoutPerUnit,
+            platformFee: platformFeePerUnit,
           });
         }
       }

@@ -36,7 +36,7 @@ export default function AdminPackagesPage() {
         <Button>+ New package</Button>
       </div>
 
-      <Card padding="none" className="overflow-hidden">
+      <Card padding="none" className="overflow-x-auto">
         <table className="min-w-full">
           <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
             <tr>
