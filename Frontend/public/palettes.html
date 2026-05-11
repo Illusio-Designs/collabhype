@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Collabhype — Palette options</title>
+  <style>
+    :root {
+      --ink: #15141A;
+      --muted: #5F5C66;
+      --line: #E8E6E1;
+      --bg: #FAF8F4;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Inter', system-ui, sans-serif; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+    h1 { font-size: 28px; margin: 0 0 4px; }
+    .sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+    .palette { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 22px; margin-bottom: 22px; }
+    .palette h2 { margin: 0 0 4px; font-size: 18px; }
+    .palette .tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; margin-left: 8px; vertical-align: middle; }
+    .palette .tag.rec { background: #E8F5E9; color: #1B5E20; }
+    .palette .why { color: var(--muted); font-size: 13px; margin: 8px 0 18px; line-height: 1.5; }
+    .swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .sw { border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
+    .sw .chip { height: 84px; }
+    .sw .meta { padding: 10px 12px; background: #fff; }
+    .sw .role { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .sw .hex { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; margin-top: 2px; }
+    .demo { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .card { border-radius: 18px; padding: 18px; }
+    .card .eye { font-size: 10px; letter-spacing: 0.18em; font-weight: 700; text-transform: uppercase; opacity: 0.8; }
+    .card .price { font-size: 28px; font-weight: 800; margin-top: 6px; }
+    .card .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; margin-top: 8px; }
+    .card .cta { display: inline-block; padding: 10px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; margin-top: 12px; }
+    .card .badge { position: relative; top: -3px; display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; margin-left: 6px; }
+    @media (max-width: 720px) {
+      .swatches { grid-template-columns: repeat(2, 1fr); }
+      .demo { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Collabhype — Palette options</h1>
+    <p class="sub">Four premium directions, each with a mock pack card so you can see how the brand reads in context.</p>
+
+    <!-- 1. AUBERGINE x CHAMPAGNE x BONE -->
+    <section class="palette">
+      <h2>1. Aubergine × Champagne × Bone <span class="tag rec">Recommended</span></h2>
+      <div class="why">Dark plum + gold — creator-economy luxury (Behance Pro, Vogue Business). Warm bone background reduces eye strain. Differentiates from the blue/pink crowd.</div>
+      <div class="swatches">
+        <div class="sw"><div class="chip" style="background:#3C2A4D"></div><div class="meta"><div class="role">Primary</div><div class="hex">#3C2A4D</div></div></div>
+        <div class="sw"><div class="chip" style="background:#6B4A8A"></div><div class="meta"><div class="role">Secondary</div><div class="hex">#6B4A8A</div></div></div>
+        <div class="sw"><div class="chip" style="background:#D4A24C"></div><div class="meta"><div class="role">Accent</div><div class="hex">#D4A24C</div></div></div>
+        <div class="sw"><div class="chip" style="background:#FAF6EF"></div><div class="meta"><div class="role">Background</div><div class="hex">#FAF6EF</div></div></div>
+        <div class="sw"><div class="chip" style="background:#1A1218"></div><div class="meta"><div class="role">Text</div><div class="hex">#1A1218</div></div></div>
+      </div>
+      <div class="demo">
+        <div class="card" style="background:#FAF6EF;border:1px solid #ECE2D0">
+          <div class="eye" style="color:#3C2A4D">Growth Plan <span class="badge" style="background:#D4A24C;color:#1A1218">Most Popular</span></div>
+          <div class="price" style="color:#1A1218">₹300 <span style="font-size:13px;font-weight:500;color:#5F5C66">per influencer</span></div>
+          <div class="pill" style="background:#3C2A4D;color:#D4A24C">Content Rights</div><br/>
+          <a class="cta" style="background:#3C2A4D;color:#FAF6EF">View pack →</a>
+        </div>
+        <div class="card" style="background:#3C2A4D;color:#FAF6EF">
+          <div class="eye" style="color:#D4A24C">Hero CTA</div>
+          <div style="font-size:22px;font-weight:800;margin-top:6px">Bulk-buy Nano packs</div>
+          <a class="cta" style="background:#D4A24C;color:#1A1218">Get started</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. OBSIDIAN x PISTACHIO x STONE -->
+    <section class="palette">
+      <h2>2. Obsidian × Pistachio × Stone</h2>
+      <div class="why">Monochrome backbone + one electric accent. Reads as Stripe / Linear / modern editorial. The pistachio CTA pops without being loud.</div>
+      <div class="swatches">
+        <div class="sw"><div class="chip" style="background:#1A1820"></div><div class="meta"><div class="role">Primary</div><div class="hex">#1A1820</div></div></div>
+        <div class="sw"><div class="chip" style="background:#2C2A35"></div><div class="meta"><div class="role">Secondary</div><div class="hex">#2C2A35</div></div></div>
+        <div class="sw"><div class="chip" style="background:#D4E157"></div><div class="meta"><div class="role">Accent</div><div class="hex">#D4E157</div></div></div>
+        <div class="sw"><div class="chip" style="background:#EDE9E0"></div><div class="meta"><div class="role">Background</div><div class="hex">#EDE9E0</div></div></div>
+        <div class="sw"><div class="chip" style="background:#15141A"></div><div class="meta"><div class="role">Text</div><div class="hex">#15141A</div></div></div>
+      </div>
+      <div class="demo">
+        <div class="card" style="background:#EDE9E0;border:1px solid #D8D2C2">
+          <div class="eye" style="color:#1A1820">Growth Plan <span class="badge" style="background:#D4E157;color:#15141A">Most Popular</span></div>
+          <div class="price" style="color:#15141A">₹300 <span style="font-size:13px;font-weight:500;color:#5F5C66">per influencer</span></div>
+          <div class="pill" style="background:#1A1820;color:#D4E157">Content Rights</div><br/>
+          <a class="cta" style="background:#1A1820;color:#EDE9E0">View pack →</a>
+        </div>
+        <div class="card" style="background:#1A1820;color:#EDE9E0">
+          <div class="eye" style="color:#D4E157">Hero CTA</div>
+          <div style="font-size:22px;font-weight:800;margin-top:6px">Bulk-buy Nano packs</div>
+          <a class="cta" style="background:#D4E157;color:#15141A">Get started</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. BURGUNDY x TERRACOTTA x LINEN -->
+    <section class="palette">
+      <h2>3. Burgundy × Terracotta × Linen</h2>
+      <div class="why">Warm earth tones — well-suited for India / fashion / lifestyle creators. Feels human and editorial, not corporate.</div>
+      <div class="swatches">
+        <div class="sw"><div class="chip" style="background:#7C1C2C"></div><div class="meta"><div class="role">Primary</div><div class="hex">#7C1C2C</div></div></div>
+        <div class="sw"><div class="chip" style="background:#B5503E"></div><div class="meta"><div class="role">Secondary</div><div class="hex">#B5503E</div></div></div>
+        <div class="sw"><div class="chip" style="background:#E2B549"></div><div class="meta"><div class="role">Accent</div><div class="hex">#E2B549</div></div></div>
+        <div class="sw"><div class="chip" style="background:#F9F4ED"></div><div class="meta"><div class="role">Background</div><div class="hex">#F9F4ED</div></div></div>
+        <div class="sw"><div class="chip" style="background:#2A1518"></div><div class="meta"><div class="role">Text</div><div class="hex">#2A1518</div></div></div>
+      </div>
+      <div class="demo">
+        <div class="card" style="background:#F9F4ED;border:1px solid #EADFD0">
+          <div class="eye" style="color:#7C1C2C">Growth Plan <span class="badge" style="background:#E2B549;color:#2A1518">Most Popular</span></div>
+          <div class="price" style="color:#2A1518">₹300 <span style="font-size:13px;font-weight:500;color:#5F5C66">per influencer</span></div>
+          <div class="pill" style="background:#7C1C2C;color:#F9F4ED">Content Rights</div><br/>
+          <a class="cta" style="background:#7C1C2C;color:#F9F4ED">View pack →</a>
+        </div>
+        <div class="card" style="background:#7C1C2C;color:#F9F4ED">
+          <div class="eye" style="color:#E2B549">Hero CTA</div>
+          <div style="font-size:22px;font-weight:800;margin-top:6px">Bulk-buy Nano packs</div>
+          <a class="cta" style="background:#E2B549;color:#2A1518">Get started</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. EMERALD x CORAL x IVORY -->
+    <section class="palette">
+      <h2>4. Forest Emerald × Coral × Ivory</h2>
+      <div class="why">Emerald is rare in tech — signals payments-trustworthy + creative. Coral accent adds energy without being aggressive.</div>
+      <div class="swatches">
+        <div class="sw"><div class="chip" style="background:#0E5C42"></div><div class="meta"><div class="role">Primary</div><div class="hex">#0E5C42</div></div></div>
+        <div class="sw"><div class="chip" style="background:#1F8067"></div><div class="meta"><div class="role">Secondary</div><div class="hex">#1F8067</div></div></div>
+        <div class="sw"><div class="chip" style="background:#FF7E5F"></div><div class="meta"><div class="role">Accent</div><div class="hex">#FF7E5F</div></div></div>
+        <div class="sw"><div class="chip" style="background:#FAF8F2"></div><div class="meta"><div class="role">Background</div><div class="hex">#FAF8F2</div></div></div>
+        <div class="sw"><div class="chip" style="background:#102B22"></div><div class="meta"><div class="role">Text</div><div class="hex">#102B22</div></div></div>
+      </div>
+      <div class="demo">
+        <div class="card" style="background:#FAF8F2;border:1px solid #E2DBC9">
+          <div class="eye" style="color:#0E5C42">Growth Plan <span class="badge" style="background:#FF7E5F;color:#102B22">Most Popular</span></div>
+          <div class="price" style="color:#102B22">₹300 <span style="font-size:13px;font-weight:500;color:#5F5C66">per influencer</span></div>
+          <div class="pill" style="background:#0E5C42;color:#FAF8F2">Content Rights</div><br/>
+          <a class="cta" style="background:#0E5C42;color:#FAF8F2">View pack →</a>
+        </div>
+        <div class="card" style="background:#0E5C42;color:#FAF8F2">
+          <div class="eye" style="color:#FF7E5F">Hero CTA</div>
+          <div style="font-size:22px;font-weight:800;margin-top:6px">Bulk-buy Nano packs</div>
+          <a class="cta" style="background:#FF7E5F;color:#102B22">Get started</a>
+        </div>
+      </div>
+    </section>
+
+    <p class="sub" style="margin-top:32px">Reply with <b>1</b>, <b>2</b>, <b>3</b>, or <b>4</b> and I'll wire it into <code>tailwind.config.js</code> so it cascades across the whole app.</p>
+  </div>
+</body>
+</html>
