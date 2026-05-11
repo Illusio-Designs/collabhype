@@ -50,14 +50,14 @@ export default function ContactPage() {
           <div className="space-y-6 text-sm text-zinc-600 lg:col-span-1">
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Email</div>
-              <a href="mailto:hello@collabcreator.in" className="mt-1 block font-medium text-zinc-900 hover:text-brand-700">
-                hello@collabcreator.in
+              <a href="mailto:hello@collabhype.in" className="mt-1 block font-medium text-zinc-900 hover:text-brand-700">
+                hello@collabhype.in
               </a>
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Support</div>
-              <a href="mailto:support@collabcreator.in" className="mt-1 block font-medium text-zinc-900 hover:text-brand-700">
-                support@collabcreator.in
+              <a href="mailto:support@collabhype.in" className="mt-1 block font-medium text-zinc-900 hover:text-brand-700">
+                support@collabhype.in
               </a>
             </div>
             <div>

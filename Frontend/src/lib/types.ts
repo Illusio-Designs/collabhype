@@ -1,0 +1,241 @@
+// Shared domain types for the Collabhype frontend. These mirror the shapes
+// returned by the backend API and the in-app dummy data.
+
+export type Role = 'BRAND' | 'INFLUENCER' | 'ADMIN';
+export type Tier = 'NANO' | 'MICRO' | 'MACRO' | 'MEGA';
+export type Platform = 'INSTAGRAM' | 'YOUTUBE' | 'TIKTOK' | 'X' | 'FACEBOOK';
+export type Deliverable =
+  | 'IG_POST'
+  | 'IG_REEL'
+  | 'IG_STORY'
+  | 'IG_CAROUSEL'
+  | 'YT_VIDEO'
+  | 'YT_SHORT'
+  | 'UGC'
+  | 'STORE_VISIT'
+  | 'BLOG';
+
+export interface Niche {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+export interface DeliverableSpec {
+  type: Deliverable;
+  qty: number;
+}
+
+export interface Package {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  tier: Tier;
+  niche: Niche;
+  deliverables: DeliverableSpec[];
+  influencerCount: number;
+  price: number;
+  estReach: number;
+  estEngagement: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface SocialAccount {
+  id?: string;
+  platform: Platform;
+  handle: string;
+  profileUrl?: string;
+  followers: number;
+  following?: number;
+  posts?: number;
+  avgLikes?: number;
+  avgComments?: number;
+  engagementRate: number;
+  isVerified?: boolean;
+  lastSyncedAt?: string;
+}
+
+export interface RateCard {
+  id: string;
+  deliverable: Deliverable;
+  price: number;
+}
+
+export interface InfluencerNiche {
+  influencerId?: string;
+  nicheId?: string;
+  niche: Niche;
+}
+
+export interface InfluencerProfile {
+  id: string;
+  userId?: string;
+  bio: string;
+  city: string;
+  state: string;
+  country?: string;
+  languages?: string;
+  gender?: string;
+  dob?: string;
+  tier: Tier;
+  totalFollowers: number;
+  avgEngagementRate: number;
+  isAvailable: boolean;
+  baseRate?: number;
+  upiId?: string;
+  socialAccounts: SocialAccount[];
+  niches: InfluencerNiche[];
+  rateCards: RateCard[];
+}
+
+export interface Influencer {
+  id: string;
+  user: { id: string; fullName: string; avatarUrl: string | null };
+  bio: string;
+  city: string;
+  state: string;
+  tier: Tier;
+  totalFollowers: number;
+  avgEngagementRate: number;
+  isAvailable: boolean;
+  socialAccounts: SocialAccount[];
+  niches: InfluencerNiche[];
+  rateCards: RateCard[];
+}
+
+export interface BrandProfile {
+  id: string;
+  userId: string;
+  companyName: string;
+  website: string;
+  industry: string;
+  gstin: string;
+  logoUrl: string;
+  about: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  role: Role;
+  phone: string | null;
+  avatarUrl: string | null;
+  isActive: boolean;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  createdAt: string;
+  brandProfile?: BrandProfile;
+  influencerProfile?: InfluencerProfile;
+}
+
+export interface OrderItemSnapshot {
+  packageTitle: string;
+  deliverables: DeliverableSpec[];
+}
+
+export interface OrderItem {
+  id: string;
+  itemType: 'PACKAGE' | 'INFLUENCER';
+  snapshot: OrderItemSnapshot;
+  price: number;
+  qty: number;
+}
+
+export interface Order {
+  id: string;
+  orderNumber: string;
+  brandUserId: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  currency: string;
+  status: 'DRAFT' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  paidAt: string | null;
+  createdAt: string;
+  items: OrderItem[];
+  _count?: { campaigns: number };
+}
+
+export interface CampaignDeliverable {
+  id: string;
+  deliverable: Deliverable;
+  status:
+    | 'PENDING'
+    | 'DRAFT_SUBMITTED'
+    | 'APPROVED'
+    | 'POSTED'
+    | 'PAID'
+    | 'DRAFT';
+  amountPayable: number;
+  draftUrl?: string;
+  postedUrl?: string;
+  qty?: number;
+  influencerId?: string;
+  influencer?: Influencer;
+}
+
+export interface Campaign {
+  id: string;
+  title: string;
+  status: 'DRAFT' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  createdAt: string;
+  brief?: string;
+  hashtags?: string;
+  doList?: string;
+  dontList?: string;
+  startDate?: string;
+  endDate?: string;
+  order?: Partial<Order> & { brand?: { fullName: string; brandProfile?: Partial<BrandProfile> } };
+  deliverables?: CampaignDeliverable[];
+  _count?: { deliverables: number };
+}
+
+export interface Payout {
+  id: string;
+  influencerId: string;
+  amount: number;
+  currency: string;
+  status: 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED';
+  razorpayPayoutId: string | null;
+  paidAt: string | null;
+  createdAt: string;
+}
+
+export interface PayoutSummary {
+  total: number;
+  pending: number;
+  paid: number;
+  failed: number;
+  currency: string;
+}
+
+export interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  link: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface PlatformStats {
+  totalUsers: number;
+  totalBrands: number;
+  totalCreators: number;
+  activeCampaigns: number;
+  gmv30d: number;
+  signupsThisWeek: number;
+  pendingApprovals: number;
+  payoutsQueued: number;
+}
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}

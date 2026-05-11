@@ -45,7 +45,7 @@ function LoginForm() {
   return (
     <div className="mx-auto max-w-md px-4 py-16 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Sign in</h1>
-      <p className="mt-2 text-zinc-600">Welcome back to Collabcreator.</p>
+      <p className="mt-2 text-zinc-600">Welcome back to Collabhype.</p>
 
       <Card padding="lg" className="mt-8">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -83,7 +83,7 @@ function LoginForm() {
       </Card>
 
       <p className="mt-6 text-center text-sm text-zinc-600">
-        New to Collabcreator?{' '}
+        New to Collabhype?{' '}
         <Link href="/register" className="font-semibold text-brand-700 hover:underline">
           Create an account
         </Link>

@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Privacy Policy — Collabcreator',
+  title: 'Privacy Policy — Collabhype',
 };
 
 const SECTIONS = [
@@ -33,7 +33,7 @@ const SECTIONS = [
   },
   {
     title: '8. Children',
-    body: 'Collabcreator is not for users under 18. If we discover a minor has signed up, we will remove the account.',
+    body: 'Collabhype is not for users under 18. If we discover a minor has signed up, we will remove the account.',
   },
   {
     title: '9. Security',
@@ -64,8 +64,8 @@ export default function PrivacyPage() {
 
         <p className="mt-12 border-t border-zinc-200 pt-6 text-sm text-zinc-500">
           Privacy questions? Email{' '}
-          <a className="text-brand-700 hover:underline" href="mailto:privacy@collabcreator.in">
-            privacy@collabcreator.in
+          <a className="text-brand-700 hover:underline" href="mailto:privacy@collabhype.in">
+            privacy@collabhype.in
           </a>
           .
         </p>

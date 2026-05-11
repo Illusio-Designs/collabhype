@@ -85,7 +85,7 @@ export default function CartPage() {
         key: order.keyId,
         amount: order.amount,
         currency: order.currency,
-        name: 'Collabcreator',
+        name: 'Collabhype',
         description: `Order ${order.orderNumber}`,
         order_id: order.razorpayOrderId,
         prefill: { name: user.fullName, email: user.email, contact: user.phone || '' },

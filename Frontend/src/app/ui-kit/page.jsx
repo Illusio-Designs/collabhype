@@ -63,7 +63,7 @@ export default function UIKitPage() {
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
           <span className="eyebrow">Design system</span>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
-            Collabcreator UI Kit
+            Collabhype UI Kit
           </h1>
           <p className="mt-3 max-w-2xl text-lg text-zinc-600">
             Every reusable component in one place. Built with Tailwind + Framer Motion. Import from
@@ -377,7 +377,7 @@ export default function UIKitPage() {
                   Razorpay test mode is enabled. Use card 4111 1111 1111 1111 to test payments.
                 </Alert>
                 <Alert variant="success" title="Payment verified">
-                  Order CC-XXXX confirmed. Campaign briefs dispatched.
+                  Order CH-XXXX confirmed. Campaign briefs dispatched.
                 </Alert>
                 <Alert variant="warning" title="Profile incomplete">
                   Connect Instagram or YouTube to be listed in brand searches.

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig, type Method } from 'axios';
 import { clearAuth, getDemoRole, getToken, isDemoMode } from './auth';
 import {
   DUMMY_ADMIN_USER,
@@ -15,8 +15,9 @@ import {
   DUMMY_PAYOUT_SUMMARY,
   DUMMY_PAYOUTS,
 } from './dummyData';
+import type { Role, User } from './types';
 
-function userForRole(role) {
+function userForRole(role: Role): User {
   if (role === 'ADMIN') return DUMMY_ADMIN_USER;
   if (role === 'INFLUENCER') return DUMMY_INFLUENCER_USER;
   return DUMMY_BRAND_USER;
@@ -33,9 +34,9 @@ export const apiClient = axios.create({
 // Demo mode — return dummy responses without making real HTTP calls.
 // We swap config.adapter to short-circuit the request when in demo mode.
 // -----------------------------------------------------------------------------
-function dummyResponseFor(url, method = 'get') {
-  const m = (method || 'get').toLowerCase();
-  const role = getDemoRole() || 'BRAND';
+function dummyResponseFor(url: string, method: Method | string = 'get'): unknown {
+  const m = String(method || 'get').toLowerCase();
+  const role = (getDemoRole() || 'BRAND') as Role;
 
   // Strip /api/v1 prefix for shorter matchers
   const path = url.replace(/^.*\/api\/v1/, '') || url;
@@ -60,13 +61,13 @@ function dummyResponseFor(url, method = 'get') {
     return { profile: DUMMY_INFLUENCER_USER.influencerProfile };
   }
   if (path === '/influencers/me/niches' && m === 'put') {
-    return DUMMY_INFLUENCER_USER.influencerProfile.niches;
+    return DUMMY_INFLUENCER_USER.influencerProfile?.niches;
   }
   if (path === '/influencers/me/rate-cards' && m === 'put') {
-    return DUMMY_INFLUENCER_USER.influencerProfile.rateCards;
+    return DUMMY_INFLUENCER_USER.influencerProfile?.rateCards;
   }
   if (path === '/influencers/me/socials') {
-    return { socials: DUMMY_INFLUENCER_USER.influencerProfile.socialAccounts };
+    return { socials: DUMMY_INFLUENCER_USER.influencerProfile?.socialAccounts };
   }
   if (path.startsWith('/influencers/me/socials/') && m === 'delete') {
     return { status: 'disconnected' };
@@ -81,7 +82,9 @@ function dummyResponseFor(url, method = 'get') {
   }
 
   // === Orders (brand) ===
-  if (path === '/orders') return { orders: DUMMY_ORDERS, meta: { total: DUMMY_ORDERS.length, page: 1, limit: 20, totalPages: 1 } };
+  if (path === '/orders') {
+    return { orders: DUMMY_ORDERS, meta: { total: DUMMY_ORDERS.length, page: 1, limit: 20, totalPages: 1 } };
+  }
   if (path.startsWith('/orders/')) return { order: DUMMY_ORDER_DETAIL };
 
   // === Campaigns (role-aware) ===
@@ -121,7 +124,7 @@ function dummyResponseFor(url, method = 'get') {
         {
           id: 'c-home',
           slug: 'home',
-          title: "Collabcreator — India's self-serve influencer marketplace",
+          title: "Collabhype — India's self-serve influencer marketplace",
           description:
             'Buy curated influencer packages or hand-pick creators one at a time.',
           ogImageUrl: null,
@@ -134,8 +137,8 @@ function dummyResponseFor(url, method = 'get') {
         {
           id: 'c-about',
           slug: 'about',
-          title: 'About — Collabcreator',
-          description: 'Why we built Collabcreator: transparent, self-serve influencer marketing for India.',
+          title: 'About — Collabhype',
+          description: 'Why we built Collabhype: transparent, self-serve influencer marketing for India.',
           ogImageUrl: null,
           body: null,
           data: null,
@@ -146,7 +149,7 @@ function dummyResponseFor(url, method = 'get') {
         {
           id: 'c-how',
           slug: 'how-it-works',
-          title: 'How it works — Collabcreator',
+          title: 'How it works — Collabhype',
           description: 'From cart to campaign in four steps.',
           ogImageUrl: null,
           body: null,
@@ -158,8 +161,8 @@ function dummyResponseFor(url, method = 'get') {
         {
           id: 'c-terms',
           slug: 'terms',
-          title: 'Terms of Service — Collabcreator',
-          description: 'The terms under which you use Collabcreator.',
+          title: 'Terms of Service — Collabhype',
+          description: 'The terms under which you use Collabhype.',
           isPublished: true,
           updatedAt: '2026-04-15T10:00:00Z',
           createdAt: '2026-04-01T10:00:00Z',
@@ -167,8 +170,8 @@ function dummyResponseFor(url, method = 'get') {
         {
           id: 'c-privacy',
           slug: 'privacy',
-          title: 'Privacy Policy — Collabcreator',
-          description: 'How Collabcreator collects, uses, and protects your data.',
+          title: 'Privacy Policy — Collabhype',
+          description: 'How Collabhype collects, uses, and protects your data.',
           isPublished: true,
           updatedAt: '2026-04-15T10:00:00Z',
           createdAt: '2026-04-01T10:00:00Z',
@@ -258,12 +261,11 @@ function dummyResponseFor(url, method = 'get') {
   // === Public track endpoint — accept events silently in demo mode ===
   if (path === '/track') return { ok: true };
 
-  // No demo match — let request fall through to real API (which will likely fail
-  // gracefully; the caller can handle).
+  // No demo match — return null and let the request fall through to real API.
   return null;
 }
 
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   // Demo short-circuit: swap the adapter so axios returns dummy data
   // without ever making a network call.
   if (isDemoMode()) {
@@ -283,15 +285,17 @@ apiClient.interceptors.request.use((config) => {
 
   const token = getToken();
   if (token) {
-    config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer ${token}`;
+    if (!config.headers) {
+      config.headers = new AxiosHeaders();
+    }
+    config.headers.set('Authorization', `Bearer ${token}`);
   }
   return config;
 });
 
 apiClient.interceptors.response.use(
   (res) => res,
-  (err) => {
+  (err: AxiosError) => {
     if (err?.response?.status === 401 && !isDemoMode()) {
       clearAuth();
     }
@@ -299,6 +303,10 @@ apiClient.interceptors.response.use(
   },
 );
 
-export function apiError(err) {
-  return err?.response?.data?.message || err?.message || 'Something went wrong';
+export function apiError(err: unknown): string {
+  if (typeof err === 'object' && err !== null) {
+    const ax = err as AxiosError<{ message?: string }>;
+    return ax.response?.data?.message || ax.message || 'Something went wrong';
+  }
+  return 'Something went wrong';
 }

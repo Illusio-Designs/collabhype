@@ -1,4 +1,6 @@
-export function formatINR(amount) {
+import type { Deliverable, Platform, Tier } from './types';
+
+export function formatINR(amount: number | string | null | undefined): string {
   const n = Number(amount);
   if (Number.isNaN(n)) return '—';
   return new Intl.NumberFormat('en-IN', {
@@ -8,7 +10,7 @@ export function formatINR(amount) {
   }).format(n);
 }
 
-export function formatCount(n) {
+export function formatCount(n: number | string | null | undefined): string {
   const num = Number(n);
   if (Number.isNaN(num)) return '0';
   if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
@@ -16,14 +18,14 @@ export function formatCount(n) {
   return String(Math.round(num));
 }
 
-export const TIER_LABEL = {
+export const TIER_LABEL: Record<Tier, string> = {
   NANO: 'Nano · 1K–10K',
   MICRO: 'Micro · 10K–100K',
   MACRO: 'Macro · 100K–1M',
   MEGA: 'Mega · 1M+',
 };
 
-export const DELIVERABLE_LABEL = {
+export const DELIVERABLE_LABEL: Record<Deliverable, string> = {
   IG_POST: 'Instagram Post',
   IG_REEL: 'Instagram Reel',
   IG_STORY: 'Instagram Story',
@@ -35,7 +37,7 @@ export const DELIVERABLE_LABEL = {
   BLOG: 'Blog Post',
 };
 
-export const PLATFORM_LABEL = {
+export const PLATFORM_LABEL: Record<Platform, string> = {
   INSTAGRAM: 'Instagram',
   YOUTUBE: 'YouTube',
   TIKTOK: 'TikTok',

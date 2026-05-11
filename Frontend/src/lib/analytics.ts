@@ -2,23 +2,24 @@
 // Events are sent to our own backend (/api/v1/track) where they're persisted
 // for the admin tracking dashboard. Optionally also forwarded to GA4/Plausible.
 
-const CONSENT_KEY = 'cc_cookie_consent';
-const CONSENT_DATE_KEY = 'cc_cookie_consent_at';
-const SESSION_KEY = 'cc_session_id';
+const CONSENT_KEY = 'ch_cookie_consent';
+const CONSENT_DATE_KEY = 'ch_cookie_consent_at';
+const SESSION_KEY = 'ch_session_id';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
 
-// Status values: 'accepted' | 'declined' | null (not yet decided)
-export function getConsent() {
+export type ConsentValue = 'accepted' | 'declined' | null;
+
+export function getConsent(): ConsentValue {
   if (typeof window === 'undefined') return null;
   try {
-    return localStorage.getItem(CONSENT_KEY);
+    return (localStorage.getItem(CONSENT_KEY) as ConsentValue) ?? null;
   } catch {
     return null;
   }
 }
 
-export function setConsent(value) {
+export function setConsent(value: ConsentValue): void {
   if (typeof window === 'undefined') return;
   try {
     if (value === null) {
@@ -28,17 +29,17 @@ export function setConsent(value) {
       localStorage.setItem(CONSENT_KEY, value);
       localStorage.setItem(CONSENT_DATE_KEY, new Date().toISOString());
     }
-    window.dispatchEvent(new CustomEvent('cc:consent-change', { detail: value }));
+    window.dispatchEvent(new CustomEvent('ch:consent-change', { detail: value }));
   } catch {}
 }
 
-export function hasConsent() {
+export function hasConsent(): boolean {
   return getConsent() === 'accepted';
 }
 
 // ---- helpers ---------------------------------------------------------------
 
-function getSessionId() {
+function getSessionId(): string | null {
   if (typeof window === 'undefined') return null;
   try {
     let sid = sessionStorage.getItem(SESSION_KEY);
@@ -52,17 +53,25 @@ function getSessionId() {
   }
 }
 
-function authHeader() {
+function authHeader(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   try {
-    const token = localStorage.getItem('cc_token');
+    const token = localStorage.getItem('ch_token');
     return token ? { Authorization: `Bearer ${token}` } : {};
   } catch {
     return {};
   }
 }
 
-async function sendToBackend(payload) {
+interface TrackPayload {
+  eventName: string;
+  pageUrl: string;
+  referer: string | null;
+  sessionId: string | null;
+  properties?: Record<string, unknown>;
+}
+
+async function sendToBackend(payload: TrackPayload): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
     await fetch(`${API_BASE}/api/v1/track`, {
@@ -78,7 +87,7 @@ async function sendToBackend(payload) {
 
 // ---- public tracking API ---------------------------------------------------
 
-export function trackPageView(path) {
+export function trackPageView(path: string): void {
   if (!hasConsent()) return;
   if (typeof window === 'undefined') return;
 
@@ -89,17 +98,13 @@ export function trackPageView(path) {
     sessionId: getSessionId(),
   });
 
-  // Optional 3rd-party forwarding — uncomment after wiring
-  // if (window.gtag) window.gtag('event', 'page_view', { page_path: path });
-  // if (window.plausible) window.plausible('pageview', { u: path });
-
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line no-console
     console.info('[track] page_view', path);
   }
 }
 
-export function trackEvent(name, params = {}) {
+export function trackEvent(name: string, params: Record<string, unknown> = {}): void {
   if (!hasConsent()) return;
   if (typeof window === 'undefined') return;
 
@@ -110,9 +115,6 @@ export function trackEvent(name, params = {}) {
     sessionId: getSessionId(),
     properties: params,
   });
-
-  // if (window.gtag) window.gtag('event', name, params);
-  // if (window.plausible) window.plausible(name, { props: params });
 
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line no-console

@@ -24,9 +24,9 @@ async function loadInfluencer(id) {
 export async function generateMetadata({ params }) {
   const { id } = await params;
   const profile = await loadInfluencer(id);
-  if (!profile) return { title: 'Influencer — Collabcreator' };
+  if (!profile) return { title: 'Influencer — Collabhype' };
   return {
-    title: `${profile.user?.fullName ?? 'Influencer'} — Collabcreator`,
+    title: `${profile.user?.fullName ?? 'Influencer'} — Collabhype`,
     description: profile.bio ?? undefined,
   };
 }

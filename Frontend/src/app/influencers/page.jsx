@@ -5,7 +5,7 @@ import Pagination from '@/components/Pagination';
 import { DUMMY_INFLUENCERS, DUMMY_NICHES } from '@/lib/dummyData';
 
 export const metadata = {
-  title: 'Browse influencers — Collabcreator',
+  title: 'Browse influencers — Collabhype',
   description: 'Find vetted influencers by tier, niche, city, and platform.',
 };
 
