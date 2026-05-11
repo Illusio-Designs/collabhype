@@ -91,7 +91,7 @@ export default function Footer() {
                 links={[
                   { href: '/about', label: 'About' },
                   { href: '/contact', label: 'Contact' },
-                  { href: '/ui-kit', label: 'UI kit' },
+                  { href: '/privacy', label: 'Privacy' },
                 ]}
               />
             </div>
@@ -118,6 +118,13 @@ export default function Footer() {
               </a>
             </div>
           </div>
+
+          {/* Crafted in Rajkot strip */}
+          <div className="mt-4 flex items-center justify-center gap-2 border-t border-zinc-100 pt-4 text-xs font-medium text-zinc-500">
+            <span>Crafted with</span>
+            <HeartIcon />
+            <span>in Rajkot, India</span>
+          </div>
         </div>
 
         {/* Spacer so the watermark text peeks below the card a bit */}
@@ -141,6 +148,19 @@ function FooterColumn({ title, links }) {
         ))}
       </ul>
     </div>
+  );
+}
+
+function HeartIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4 text-accent-500"
+      fill="currentColor"
+    >
+      <path d="M12 21s-7.5-4.5-9.5-9.4C1 8 3.4 4.5 7 4.5c2 0 3.7 1 5 2.6 1.3-1.6 3-2.6 5-2.6 3.6 0 6 3.5 4.5 7.1C19.5 16.5 12 21 12 21z" />
+    </svg>
   );
 }
 

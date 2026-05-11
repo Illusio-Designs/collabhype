@@ -62,7 +62,7 @@ export default function ContactPage() {
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Office</div>
-              <div className="mt-1 font-medium text-zinc-900">Mumbai, India</div>
+              <div className="mt-1 font-medium text-zinc-900">Rajkot, India</div>
               <div className="text-zinc-500">Mon–Fri, 10am–7pm IST</div>
             </div>
           </div>

@@ -29,7 +29,7 @@ const SECTIONS = [
   },
   {
     title: '7. Disputes',
-    body: 'For deliverable disputes, our team will mediate in good faith and may issue partial or full refunds based on evidence. Decisions are final unless overturned via formal arbitration in Mumbai, India.',
+    body: 'For deliverable disputes, our team will mediate in good faith and may issue partial or full refunds based on evidence. Decisions are final unless overturned via formal arbitration in Rajkot, India.',
   },
   {
     title: '8. Termination',
