@@ -87,11 +87,21 @@ const NAV = {
 // Layout
 // ============================================================================
 
+const COLLAPSED_KEY = 'ch_dashboard_sidebar_collapsed';
+
 export default function DashboardLayout({ children }) {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Hydrate the collapsed flag from localStorage so the layout doesn't
+  // visually jump on every reload.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setCollapsed(window.localStorage.getItem(COLLAPSED_KEY) === '1');
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !user) router.replace(`/login?next=${pathname}`);
@@ -100,6 +110,16 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(COLLAPSED_KEY, next ? '1' : '0');
+      }
+      return next;
+    });
+  };
 
   if (isLoading || !user) {
     return (
@@ -123,6 +143,8 @@ export default function DashboardLayout({ children }) {
         onLogout={logout}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
+        collapsed={collapsed}
+        onToggleCollapsed={toggleCollapsed}
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar
@@ -140,26 +162,74 @@ export default function DashboardLayout({ children }) {
 // Sidebar
 // ============================================================================
 
-function Sidebar({ nav, pathname, user, roleLabel, onLogout, mobileOpen, onMobileClose }) {
-  const content = (
-    <div className="flex h-full w-72 flex-col border-r border-zinc-200 bg-gradient-to-b from-rose-50/60 via-pink-50/40 to-violet-50/40 p-4">
-      <Link
-        href="/"
-        className="flex items-center gap-2.5 rounded-xl px-2 py-2 text-lg font-bold text-brand-800 transition hover:bg-white/60"
-      >
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-700 text-white shadow-sm">
-          C
-        </span>
-        Collabhype
-      </Link>
+function Sidebar({
+  nav,
+  pathname,
+  user,
+  roleLabel,
+  onLogout,
+  mobileOpen,
+  onMobileClose,
+  collapsed,
+  onToggleCollapsed,
+}) {
+  // `collapsed` only applies to the desktop sticky sidebar. The mobile drawer
+  // always renders fully expanded since screen space is already constrained.
+  const renderContent = (isCollapsed) => (
+    <div
+      className={clsx(
+        'flex h-full flex-col border-r border-zinc-200 bg-gradient-to-b from-rose-50/60 via-pink-50/40 to-violet-50/40 p-4 transition-[width] duration-200',
+        isCollapsed ? 'w-20 items-center' : 'w-72',
+      )}
+    >
+      <div className={clsx('flex items-center', isCollapsed ? 'justify-center' : 'justify-between')}>
+        <Link
+          href="/"
+          className={clsx(
+            'flex items-center gap-2.5 rounded-xl px-2 py-2 text-lg font-bold text-brand-800 transition hover:bg-white/60',
+            isCollapsed && 'px-1',
+          )}
+          title="Collabhype"
+        >
+          <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-brand-700 text-white shadow-sm">
+            C
+          </span>
+          {!isCollapsed && <span>Collabhype</span>}
+        </Link>
+        {!isCollapsed && onToggleCollapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            className="hidden h-8 w-8 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/60 hover:text-zinc-900 lg:grid"
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            <ChevronLeftIcon className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {isCollapsed && onToggleCollapsed && (
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          className="mt-3 hidden h-8 w-8 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/60 hover:text-zinc-900 lg:grid"
+          aria-label="Expand sidebar"
+          title="Expand sidebar"
+        >
+          <ChevronRightIcon className="h-4 w-4" />
+        </button>
+      )}
 
       <nav className="mt-6 flex-1 space-y-6 overflow-y-auto">
         {nav.map((section) => (
           <div key={section.label}>
-            <div className="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-400">
-              {section.label}
-            </div>
-            <div className="mt-2 space-y-0.5">
+            {!isCollapsed && (
+              <div className="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-400">
+                {section.label}
+              </div>
+            )}
+            <div className={clsx('space-y-0.5', isCollapsed ? 'mt-0' : 'mt-2')}>
               {section.items.map((item) => {
                 const isActive = item.exact
                   ? pathname === item.href
@@ -170,23 +240,27 @@ function Sidebar({ nav, pathname, user, roleLabel, onLogout, mobileOpen, onMobil
                     key={item.href}
                     href={item.href}
                     onClick={onMobileClose}
+                    title={isCollapsed ? item.label : undefined}
                     className={clsx(
-                      'flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm font-medium transition',
+                      'group relative flex items-center rounded-xl text-sm font-medium transition',
+                      isCollapsed
+                        ? 'h-10 w-10 justify-center'
+                        : 'justify-between gap-3 px-3 py-2',
                       isActive
                         ? 'bg-white text-brand-700 shadow-sm ring-1 ring-zinc-100'
                         : 'text-zinc-600 hover:bg-white/60 hover:text-zinc-900',
                     )}
                   >
-                    <span className="flex items-center gap-3">
+                    <span className={clsx('flex items-center', isCollapsed ? '' : 'gap-3')}>
                       <Icon
                         className={clsx(
                           'h-4 w-4 flex-shrink-0',
                           isActive ? 'text-brand-600' : 'text-zinc-400',
                         )}
                       />
-                      {item.label}
+                      {!isCollapsed && item.label}
                     </span>
-                    {item.badge && (
+                    {!isCollapsed && item.badge && (
                       <span
                         className={clsx(
                           'rounded-full px-2 py-0.5 text-[10px] font-semibold',
@@ -196,8 +270,12 @@ function Sidebar({ nav, pathname, user, roleLabel, onLogout, mobileOpen, onMobil
                         {item.badge}
                       </span>
                     )}
-                    {item.dot && !item.badge && (
+                    {!isCollapsed && item.dot && !item.badge && (
                       <span className="h-2 w-2 rounded-full bg-red-500" />
+                    )}
+                    {/* Dot indicator when collapsed but the item has a notification */}
+                    {isCollapsed && item.dot && (
+                      <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
                     )}
                   </Link>
                 );
@@ -207,32 +285,54 @@ function Sidebar({ nav, pathname, user, roleLabel, onLogout, mobileOpen, onMobil
         ))}
       </nav>
 
-      <div className="mt-6 flex items-center gap-3 rounded-2xl bg-zinc-950 p-3 text-white">
-        <Avatar name={user.fullName} size="md" />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold">{user.fullName}</div>
-          <div className="truncate text-[11px] text-zinc-400">
-            {roleLabel} · {user.email}
-          </div>
-        </div>
+      <div
+        className={clsx(
+          'mt-6 flex items-center rounded-2xl bg-zinc-950 text-white',
+          isCollapsed ? 'h-12 w-12 justify-center' : 'gap-3 p-3',
+        )}
+      >
+        <Avatar name={user.fullName} size={isCollapsed ? 'sm' : 'md'} />
+        {!isCollapsed && (
+          <>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold">{user.fullName}</div>
+              <div className="truncate text-[11px] text-zinc-400">
+                {roleLabel} · {user.email}
+              </div>
+            </div>
+            <button
+              onClick={onLogout}
+              className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg text-zinc-400 transition hover:bg-white/10 hover:text-white"
+              title="Sign out"
+            >
+              <SignOutIcon className="h-4 w-4" />
+            </button>
+          </>
+        )}
+      </div>
+
+      {isCollapsed && (
         <button
           onClick={onLogout}
-          className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg text-zinc-400 transition hover:bg-white/10 hover:text-white"
+          className="mt-2 grid h-9 w-9 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/60 hover:text-zinc-900"
           title="Sign out"
+          aria-label="Sign out"
         >
           <SignOutIcon className="h-4 w-4" />
         </button>
-      </div>
+      )}
     </div>
   );
 
   return (
     <>
-      <aside className="sticky top-0 hidden h-screen flex-shrink-0 lg:flex">{content}</aside>
+      <aside className="sticky top-0 hidden h-screen flex-shrink-0 lg:flex">
+        {renderContent(collapsed)}
+      </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={onMobileClose} />
-          <aside className="relative h-full">{content}</aside>
+          <aside className="relative h-full">{renderContent(false)}</aside>
         </div>
       )}
     </>
@@ -446,6 +546,20 @@ function ChartIcon(p) {
     <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M3 3v18h18" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M7 15l3-4 4 2 5-7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function ChevronLeftIcon(p) {
+  return (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function ChevronRightIcon(p) {
+  return (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

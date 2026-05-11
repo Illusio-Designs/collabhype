@@ -4,8 +4,10 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Badge, Card, Spinner } from '@/components/ui';
+import KpiStrip from '@/components/dashboard/KpiStrip';
+import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR } from '@/lib/format';
-import { DUMMY_ORDERS } from '@/lib/dummyData';
+import { DUMMY_ORDERS, DUMMY_PLATFORM_STATS } from '@/lib/dummyData';
 
 const ORDER_BADGE = {
   PENDING: { variant: 'warning', label: 'Pending payment' },
@@ -42,8 +44,17 @@ export default function AdminOrdersPage() {
         </p>
       </div>
 
+      <KpiStrip
+        kpis={[
+          { label: 'GMV (30d)', value: formatINR(DUMMY_PLATFORM_STATS.gmv30d) },
+          { label: 'Active campaigns', value: String(DUMMY_PLATFORM_STATS.activeCampaigns) },
+          { label: 'Pending approvals', value: String(DUMMY_PLATFORM_STATS.pendingApprovals) },
+          { label: 'Payouts queued', value: String(DUMMY_PLATFORM_STATS.payoutsQueued) },
+        ]}
+      />
+
       <Card padding="none" className="overflow-hidden">
-       <div className="overflow-x-auto">
+       <ScrollTable hintLabel="Scroll">
         <table className="min-w-full">
           <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
             <tr>
@@ -79,7 +90,7 @@ export default function AdminOrdersPage() {
             })}
           </tbody>
         </table>
-       </div>
+       </ScrollTable>
       </Card>
     </div>
   );

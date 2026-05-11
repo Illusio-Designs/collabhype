@@ -16,6 +16,7 @@ import {
   Textarea,
   useToast,
 } from '@/components/ui';
+import ScrollTable from '@/components/dashboard/ScrollTable';
 
 export default function AdminContentPage() {
   const { user, isLoading } = useAuth();
@@ -67,7 +68,8 @@ export default function AdminContentPage() {
         <Button onClick={() => setEditing('new')}>+ New entry</Button>
       </div>
 
-      <Card padding="none" className="overflow-x-auto">
+      <Card padding="none" className="overflow-hidden">
+       <ScrollTable hintLabel="Scroll">
         <table className="min-w-full">
           <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
             <tr>
@@ -119,6 +121,7 @@ export default function AdminContentPage() {
             ))}
           </tbody>
         </table>
+       </ScrollTable>
       </Card>
 
       <ContentEditorModal

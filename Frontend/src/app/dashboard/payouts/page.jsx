@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
-import { Badge, Card, EmptyState, Spinner, Stat, useToast } from '@/components/ui';
+import { Badge, Card, EmptyState, Spinner, useToast } from '@/components/ui';
+import KpiStrip from '@/components/dashboard/KpiStrip';
+import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR } from '@/lib/format';
 
 const STATUS_BADGE = {
@@ -59,22 +61,26 @@ export default function PayoutsPage() {
   const summary = data.summary ?? {};
   const payouts = data.payouts ?? [];
 
+  const kpis = [
+    { label: 'Total earned', value: formatINR(summary.total ?? 0) },
+    { label: 'Pending', value: formatINR(summary.pending ?? 0) },
+    { label: 'Paid out', value: formatINR(summary.paid ?? 0) },
+    { label: 'Failed', value: formatINR(summary.failed ?? 0) },
+  ];
+
   return (
-    <div>
-      <span className="eyebrow">Earnings</span>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Payouts</h1>
-      <p className="mt-2 text-zinc-600">
-        Released to your UPI within 1–2 business days after a brand approves your post.
-      </p>
+    <div className="space-y-6">
+      <header>
+        <span className="eyebrow">Earnings</span>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Payouts</h1>
+        <p className="mt-2 text-zinc-600">
+          Released to your UPI within 1–2 business days after a brand approves your post.
+        </p>
+      </header>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Total earned" value={formatINR(summary.total ?? 0)} />
-        <Stat label="Pending" value={formatINR(summary.pending ?? 0)} />
-        <Stat label="Paid out" value={formatINR(summary.paid ?? 0)} />
-        <Stat label="Failed" value={formatINR(summary.failed ?? 0)} />
-      </div>
+      <KpiStrip kpis={kpis} />
 
-      <Card padding="none" className="mt-8 overflow-hidden">
+      <Card padding="none" className="overflow-hidden">
         <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-4">
           <h2 className="text-lg font-semibold text-zinc-900">History</h2>
           <span className="text-xs text-zinc-500">{payouts.length} total</span>
@@ -87,7 +93,7 @@ export default function PayoutsPage() {
             />
           </div>
         ) : (
-         <div className="overflow-x-auto">
+         <ScrollTable hintLabel="Scroll">
           <table className="min-w-full">
             <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
               <tr>
@@ -119,7 +125,7 @@ export default function PayoutsPage() {
               })}
             </tbody>
           </table>
-         </div>
+         </ScrollTable>
         )}
       </Card>
     </div>

@@ -87,7 +87,7 @@ export async function deleteAccount(userId, password) {
   // Soft delete — preserves orders/campaigns/payouts for accounting + audit
   await prisma.user.update({
     where: { id: userId },
-    data: { isActive: false, email: `deleted-${userId}@collabcreator.invalid` },
+    data: { isActive: false, email: `deleted-${userId}@collabhype.invalid` },
   });
   return { ok: true };
 }

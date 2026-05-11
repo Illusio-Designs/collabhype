@@ -4,7 +4,10 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Avatar, Badge, Button, Card, Input, Spinner } from '@/components/ui';
-import { DUMMY_ADMIN_USERS_LIST } from '@/lib/dummyData';
+import KpiStrip from '@/components/dashboard/KpiStrip';
+import ScrollTable from '@/components/dashboard/ScrollTable';
+import { DUMMY_ADMIN_USERS_LIST, DUMMY_PLATFORM_STATS } from '@/lib/dummyData';
+import { formatCount } from '@/lib/format';
 
 export default function AdminUsersPage() {
   const { user, isLoading } = useAuth();
@@ -36,8 +39,17 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
+      <KpiStrip
+        kpis={[
+          { label: 'Total users', value: formatCount(DUMMY_PLATFORM_STATS.totalUsers) },
+          { label: 'Brands', value: formatCount(DUMMY_PLATFORM_STATS.totalBrands) },
+          { label: 'Creators', value: formatCount(DUMMY_PLATFORM_STATS.totalCreators) },
+          { label: 'Signups (7d)', value: formatCount(DUMMY_PLATFORM_STATS.signupsThisWeek) },
+        ]}
+      />
+
       <Card padding="none" className="overflow-hidden">
-       <div className="overflow-x-auto">
+       <ScrollTable hintLabel="Scroll">
         <table className="min-w-full">
           <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
             <tr>
@@ -82,7 +94,7 @@ export default function AdminUsersPage() {
             ))}
           </tbody>
         </table>
-       </div>
+       </ScrollTable>
       </Card>
     </div>
   );
