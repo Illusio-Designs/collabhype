@@ -1,0 +1,458 @@
+// Collabcreator — Prisma schema (MySQL)
+// Self-serve influencer marketplace: brands buy packages or build custom carts of influencers.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum Role {
+  BRAND
+  INFLUENCER
+  ADMIN
+}
+
+enum Tier {
+  NANO   // 1K – 10K
+  MICRO  // 10K – 100K
+  MACRO  // 100K – 1M
+  MEGA   // 1M+
+}
+
+enum SocialPlatform {
+  INSTAGRAM
+  YOUTUBE
+  TIKTOK
+  X
+  FACEBOOK
+}
+
+enum DeliverableType {
+  IG_POST
+  IG_REEL
+  IG_STORY
+  IG_CAROUSEL
+  YT_VIDEO
+  YT_SHORT
+  UGC
+  STORE_VISIT
+  BLOG
+}
+
+enum CartItemType {
+  PACKAGE
+  INFLUENCER
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum CampaignStatus {
+  DRAFT
+  BRIEF_SENT
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+  CANCELLED
+}
+
+enum DeliverableStatus {
+  PENDING
+  DRAFT_SUBMITTED
+  REVISION_REQUESTED
+  APPROVED
+  POSTED
+  PAID
+}
+
+enum EscrowStatus {
+  HELD
+  RELEASED
+  REFUNDED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+// ---------- Users ----------
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  phone         String?  @unique
+  passwordHash  String
+  role          Role
+  fullName      String
+  avatarUrl     String?
+  emailVerified Boolean  @default(false)
+  phoneVerified Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  influencerProfile InfluencerProfile?
+  brandProfile      BrandProfile?
+  carts             Cart[]
+  orders            Order[]            @relation("BrandOrders")
+  notifications     Notification[]
+  trackingEvents    TrackingEvent[]
+
+  @@index([role])
+}
+
+model InfluencerProfile {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio                   String?   @db.Text
+  city                  String?
+  state                 String?
+  country               String?   @default("IN")
+  languages             String?   // comma separated, e.g. "en,hi,ta"
+  gender                String?
+  dob                   DateTime?
+  tier                  Tier?     // derived from totalFollowers
+  totalFollowers        Int       @default(0)
+  avgEngagementRate     Float     @default(0)
+  isAvailable           Boolean   @default(true)
+  baseRate              Decimal?  @db.Decimal(10, 2)
+  upiId                 String?
+  bankAccountJson       Json?
+  razorpayContactId     String?
+  razorpayFundAccountId String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  socialAccounts     SocialAccount[]
+  niches             InfluencerNiche[]
+  rateCards          RateCard[]
+  packageInfluencers PackageInfluencer[]
+  deliverables       CampaignDeliverable[]
+  payouts            Payout[]
+
+  @@index([tier])
+  @@index([city])
+  @@index([isAvailable])
+}
+
+model BrandProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  website     String?
+  industry    String?
+  gstin       String?
+  logoUrl     String?
+  about       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------- Social ----------
+
+model SocialAccount {
+  id             String         @id @default(cuid())
+  influencerId   String
+  influencer     InfluencerProfile @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  platform       SocialPlatform
+  handle         String
+  externalId     String?        // platform user id
+  profileUrl     String?
+  followers      Int            @default(0)
+  following      Int            @default(0)
+  posts          Int            @default(0)
+  avgLikes       Int            @default(0)
+  avgComments    Int            @default(0)
+  engagementRate Float          @default(0)
+  accessToken    String?        @db.Text  // app-level encrypted
+  refreshToken   String?        @db.Text
+  tokenExpiresAt DateTime?
+  lastSyncedAt   DateTime?
+  isVerified     Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([influencerId, platform])
+  @@index([platform])
+  @@index([handle])
+}
+
+// ---------- Niches ----------
+
+model Niche {
+  id      String  @id @default(cuid())
+  slug    String  @unique
+  name    String
+  iconUrl String?
+
+  influencers InfluencerNiche[]
+  packages    Package[]
+}
+
+model InfluencerNiche {
+  influencerId String
+  nicheId      String
+  influencer   InfluencerProfile @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  niche        Niche             @relation(fields: [nicheId], references: [id], onDelete: Cascade)
+
+  @@id([influencerId, nicheId])
+}
+
+// ---------- Rate cards ----------
+
+model RateCard {
+  id           String          @id @default(cuid())
+  influencerId String
+  influencer   InfluencerProfile @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  deliverable  DeliverableType
+  price        Decimal         @db.Decimal(10, 2)
+  currency     String          @default("INR")
+
+  @@unique([influencerId, deliverable])
+}
+
+// ---------- Packages ----------
+
+model Package {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  description     String?  @db.Text
+  coverUrl        String?
+  tier            Tier
+  nicheId         String?
+  niche           Niche?   @relation(fields: [nicheId], references: [id])
+  deliverables    Json     // [{ type: "IG_REEL", qty: 1 }, ...]
+  influencerCount Int
+  price           Decimal  @db.Decimal(10, 2)
+  currency        String   @default("INR")
+  estReach        Int?
+  estEngagement   Int?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  influencers PackageInfluencer[]
+  cartItems   CartItem[]
+
+  @@index([tier])
+  @@index([isActive])
+}
+
+model PackageInfluencer {
+  packageId    String
+  influencerId String
+  package      Package           @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  influencer   InfluencerProfile @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
+  @@id([packageId, influencerId])
+}
+
+// ---------- Cart ----------
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items CartItem[]
+
+  @@index([userId])
+}
+
+model CartItem {
+  id           String       @id @default(cuid())
+  cartId       String
+  cart         Cart         @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  itemType     CartItemType
+  packageId    String?
+  package      Package?     @relation(fields: [packageId], references: [id])
+  influencerId String?
+  deliverables Json?        // for INFLUENCER items: [{ type, qty }]
+  price        Decimal      @db.Decimal(10, 2)
+  qty          Int          @default(1)
+  createdAt    DateTime     @default(now())
+}
+
+// ---------- Orders ----------
+
+model Order {
+  id                String      @id @default(cuid())
+  orderNumber       String      @unique
+  brandUserId       String
+  brand             User        @relation("BrandOrders", fields: [brandUserId], references: [id])
+  subtotal          Decimal     @db.Decimal(10, 2)
+  tax               Decimal     @db.Decimal(10, 2) @default(0)
+  total             Decimal     @db.Decimal(10, 2)
+  currency          String      @default("INR")
+  status            OrderStatus @default(PENDING)
+  razorpayOrderId   String?     @unique
+  razorpayPaymentId String?
+  paidAt            DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  items     OrderItem[]
+  campaigns Campaign[]
+  escrows   EscrowHold[]
+
+  @@index([brandUserId])
+  @@index([status])
+}
+
+model OrderItem {
+  id           String       @id @default(cuid())
+  orderId      String
+  order        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemType     CartItemType
+  packageId    String?
+  influencerId String?
+  snapshot     Json         // full pricing/deliverable snapshot at purchase
+  price        Decimal      @db.Decimal(10, 2)
+  qty          Int          @default(1)
+}
+
+// ---------- Campaigns ----------
+
+model Campaign {
+  id        String         @id @default(cuid())
+  orderId   String
+  order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  title     String
+  brief     String?        @db.Text
+  hashtags  String?
+  doList    String?        @db.Text
+  dontList  String?        @db.Text
+  startDate DateTime?
+  endDate   DateTime?
+  status    CampaignStatus @default(DRAFT)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  deliverables CampaignDeliverable[]
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model CampaignDeliverable {
+  id            String            @id @default(cuid())
+  campaignId    String
+  campaign      Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  influencerId  String
+  influencer    InfluencerProfile @relation(fields: [influencerId], references: [id])
+  deliverable   DeliverableType
+  qty           Int               @default(1)
+  dueDate       DateTime?
+  status        DeliverableStatus @default(PENDING)
+  draftUrl      String?
+  postedUrl     String?
+  feedback      String?           @db.Text
+  amountPayable Decimal           @db.Decimal(10, 2)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([influencerId])
+  @@index([status])
+}
+
+// ---------- Escrow & Payouts ----------
+
+model EscrowHold {
+  id         String       @id @default(cuid())
+  orderId    String
+  order      Order        @relation(fields: [orderId], references: [id])
+  amount     Decimal      @db.Decimal(10, 2)
+  status     EscrowStatus @default(HELD)
+  releasedAt DateTime?
+  createdAt  DateTime     @default(now())
+}
+
+model Payout {
+  id               String            @id @default(cuid())
+  influencerId     String
+  influencer       InfluencerProfile @relation(fields: [influencerId], references: [id])
+  amount           Decimal           @db.Decimal(10, 2)
+  currency         String            @default("INR")
+  status           PayoutStatus      @default(PENDING)
+  razorpayPayoutId String?
+  failureReason    String?
+  createdAt        DateTime          @default(now())
+  paidAt           DateTime?
+
+  @@index([influencerId])
+  @@index([status])
+}
+
+// ---------- Notifications ----------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String?  @db.Text
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+// ---------- SEO / Content (admin-managed) ----------
+
+model SiteContent {
+  id          String   @id @default(cuid())
+  slug        String   @unique           // e.g. "home", "about", "terms"
+  title       String?                    // SEO <title>
+  description String?  @db.Text           // SEO meta description
+  ogImageUrl  String?                    // social share image
+  body        String?  @db.LongText       // optional markdown/rich body
+  data        Json?                       // structured content blocks
+  isPublished Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@index([isPublished])
+}
+
+// ---------- Platform tracking ----------
+
+model TrackingEvent {
+  id         String   @id @default(cuid())
+  eventName  String                       // e.g. "page_view", "package_view", "checkout_started"
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessionId  String?                       // anonymous session id
+  pageUrl    String?  @db.VarChar(500)
+  referer    String?  @db.VarChar(500)
+  userAgent  String?  @db.VarChar(500)
+  ipHash     String?                       // SHA-256 of IP (privacy preserving)
+  properties Json?                         // event-specific payload
+  createdAt  DateTime @default(now())
+
+  @@index([eventName, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
