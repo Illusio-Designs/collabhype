@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Badge, Button, Card, Spinner } from '@/components/ui';
+import KpiStrip from '@/components/dashboard/KpiStrip';
+import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR, formatCount, TIER_LABEL } from '@/lib/format';
 import { DUMMY_PACKAGES } from '@/lib/dummyData';
 
@@ -36,7 +38,33 @@ export default function AdminPackagesPage() {
         <Button>+ New package</Button>
       </div>
 
-      <Card padding="none" className="overflow-x-auto">
+      <KpiStrip
+        kpis={[
+          { label: 'Total packs', value: String(DUMMY_PACKAGES.length) },
+          {
+            label: 'Active',
+            value: String(DUMMY_PACKAGES.filter((p) => p.isActive).length),
+          },
+          {
+            label: 'Total slots',
+            value: formatCount(
+              DUMMY_PACKAGES.reduce((s, p) => s + (p.influencerCount ?? 0), 0),
+            ),
+          },
+          {
+            label: 'Avg price',
+            value: formatINR(
+              DUMMY_PACKAGES.length
+                ? DUMMY_PACKAGES.reduce((s, p) => s + Number(p.price ?? 0), 0) /
+                    DUMMY_PACKAGES.length
+                : 0,
+            ),
+          },
+        ]}
+      />
+
+      <Card padding="none" className="overflow-hidden">
+       <ScrollTable hintLabel="Scroll">
         <table className="min-w-full">
           <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
             <tr>
@@ -70,6 +98,7 @@ export default function AdminPackagesPage() {
             ))}
           </tbody>
         </table>
+       </ScrollTable>
       </Card>
     </div>
   );

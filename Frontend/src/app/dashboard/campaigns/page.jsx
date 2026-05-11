@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { Badge, Card, EmptyState, Spinner, Tabs, useToast } from '@/components/ui';
+import KpiStrip from '@/components/dashboard/KpiStrip';
 import { formatINR } from '@/lib/format';
 
 const STATUS_BADGE = {
@@ -54,17 +55,36 @@ export default function CampaignsListPage() {
     { label: 'Completed', value: 'COMPLETED' },
   ];
 
-  return (
-    <div>
-      <span className="eyebrow">{user?.role === 'BRAND' ? 'Your campaigns' : 'Assigned campaigns'}</span>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Campaigns</h1>
-      <p className="mt-2 text-zinc-600">
-        {user?.role === 'BRAND'
-          ? 'Track briefs, drafts, and approvals across every order.'
-          : 'Every brand campaign you’re part of, in one place.'}
-      </p>
+  // KPIs derived from the current campaign list
+  const totalCampaigns = campaigns.length;
+  const inProgress = campaigns.filter((c) => c.status === 'IN_PROGRESS' || c.status === 'BRIEF_SENT').length;
+  const completed = campaigns.filter((c) => c.status === 'COMPLETED').length;
+  const totalDeliverables = campaigns.reduce(
+    (s, c) => s + (c._count?.deliverables ?? c.deliverables?.length ?? 0),
+    0,
+  );
+  const kpis = [
+    { label: 'Total campaigns', value: String(totalCampaigns) },
+    { label: 'In progress', value: String(inProgress) },
+    { label: 'Completed', value: String(completed) },
+    { label: 'Deliverables', value: String(totalDeliverables) },
+  ];
 
-      <div className="mt-8">
+  return (
+    <div className="space-y-6">
+      <header>
+        <span className="eyebrow">{user?.role === 'BRAND' ? 'Your campaigns' : 'Assigned campaigns'}</span>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Campaigns</h1>
+        <p className="mt-2 text-zinc-600">
+          {user?.role === 'BRAND'
+            ? 'Track briefs, drafts, and approvals across every order.'
+            : 'Every brand campaign you’re part of, in one place.'}
+        </p>
+      </header>
+
+      <KpiStrip kpis={kpis} />
+
+      <div>
         <Tabs
           variant="pills"
           tabs={tabs.map((t) => ({

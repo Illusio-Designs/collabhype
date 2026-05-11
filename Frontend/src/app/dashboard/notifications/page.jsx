@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { Badge, Button, Card, EmptyState, Spinner, useToast } from '@/components/ui';
+import KpiStrip from '@/components/dashboard/KpiStrip';
 
 function timeAgo(d) {
   const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
@@ -84,14 +85,19 @@ export default function NotificationsPage() {
     );
   }
 
+  const oneDayMs = 1000 * 60 * 60 * 24;
+  const last24h = items.filter((n) => Date.now() - new Date(n.createdAt).getTime() < oneDayMs).length;
+  const last7d = items.filter((n) => Date.now() - new Date(n.createdAt).getTime() < oneDayMs * 7).length;
+  const read = items.filter((n) => n.isRead).length;
+
   return (
-    <div>
-      <div className="flex items-end justify-between">
+    <div className="space-y-6">
+      <header className="flex items-end justify-between">
         <div>
           <span className="eyebrow">Inbox</span>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Notifications</h1>
           <p className="mt-2 text-zinc-600">
-            {unread > 0 ? `You have ${unread} unread` : 'You\'re all caught up'}.
+            {unread > 0 ? `You have ${unread} unread` : "You're all caught up"}.
           </p>
         </div>
         {unread > 0 && (
@@ -99,9 +105,18 @@ export default function NotificationsPage() {
             Mark all read
           </Button>
         )}
-      </div>
+      </header>
 
-      <div className="mt-8">
+      <KpiStrip
+        kpis={[
+          { label: 'Unread', value: String(unread) },
+          { label: 'Read', value: String(read) },
+          { label: 'Last 24h', value: String(last24h) },
+          { label: 'Last 7d', value: String(last7d) },
+        ]}
+      />
+
+      <div>
         {items.length === 0 ? (
           <EmptyState
             title="No notifications"

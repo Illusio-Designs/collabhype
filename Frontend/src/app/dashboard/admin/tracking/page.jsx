@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { Avatar, Badge, Card, Select, Spinner, Stat, useToast } from '@/components/ui';
+import ScrollTable from '@/components/dashboard/ScrollTable';
 
 const RANGE_OPTIONS = [
   { value: '7', label: 'Last 7 days' },
@@ -151,7 +152,7 @@ export default function AdminTrackingPage() {
             No events recorded yet. Accept cookies on the public site to start collecting.
           </div>
         ) : (
-         <div className="overflow-x-auto">
+         <ScrollTable hintLabel="Scroll">
           <table className="min-w-full">
             <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
               <tr>
@@ -196,7 +197,7 @@ export default function AdminTrackingPage() {
               ))}
             </tbody>
           </table>
-         </div>
+         </ScrollTable>
         )}
       </Card>
     </div>

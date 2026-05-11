@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { Badge, Card, EmptyState, Spinner, useToast } from '@/components/ui';
+import KpiStrip from '@/components/dashboard/KpiStrip';
+import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR } from '@/lib/format';
 
 const ORDER_BADGE = {
@@ -55,11 +57,27 @@ export default function OrdersPage() {
     );
   }
 
+  // KPIs derived from the orders list
+  const totalSpent = orders.reduce((s, o) => s + Number(o.total ?? 0), 0);
+  const completed = orders.filter((o) => o.status === 'COMPLETED').length;
+  const inFlight = orders.filter((o) => o.status === 'PAID' || o.status === 'IN_PROGRESS').length;
+  const avg = orders.length ? totalSpent / orders.length : 0;
+  const kpis = [
+    { label: 'Total orders', value: String(orders.length) },
+    { label: 'Lifetime spend', value: formatINR(totalSpent) },
+    { label: 'Avg order', value: formatINR(avg) },
+    { label: 'In flight', value: String(inFlight) },
+  ];
+
   return (
-    <div>
-      <span className="eyebrow">Billing</span>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Orders</h1>
-      <p className="mt-2 text-zinc-600">Every checkout, with escrow + campaign status.</p>
+    <div className="space-y-6">
+      <header>
+        <span className="eyebrow">Billing</span>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Orders</h1>
+        <p className="mt-2 text-zinc-600">Every checkout, with escrow + campaign status.</p>
+      </header>
+
+      <KpiStrip kpis={kpis} />
 
       {orders.length === 0 ? (
         <div className="mt-10">
@@ -74,7 +92,8 @@ export default function OrdersPage() {
           />
         </div>
       ) : (
-        <Card padding="none" className="mt-8 overflow-x-auto">
+        <Card padding="none" className="overflow-hidden">
+         <ScrollTable hintLabel="Scroll">
           <table className="min-w-full">
             <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
               <tr>
@@ -118,6 +137,7 @@ export default function OrdersPage() {
               })}
             </tbody>
           </table>
+         </ScrollTable>
         </Card>
       )}
     </div>
