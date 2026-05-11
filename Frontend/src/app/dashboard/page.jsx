@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Avatar, Badge, Button, Card, Stat } from '@/components/ui';
+import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR, formatCount } from '@/lib/format';
 import {
   DUMMY_ADMIN_USERS_LIST,
@@ -54,28 +55,30 @@ function BrandOverview({ user }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card padding="lg" className="lg:col-span-2">
+        <Card padding="lg" className="min-w-0 lg:col-span-2">
           <SectionHead title="Recent campaigns" link="/dashboard/campaigns" />
           <div className="mt-4 space-y-3">
             {DUMMY_CAMPAIGNS_BRAND.map((c) => (
               <Link
                 key={c.id}
                 href={`/dashboard/campaigns/${c.id}`}
-                className="flex items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 transition hover:border-brand-200 hover:bg-brand-50/40"
+                className="flex items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 transition hover:border-brand-200 hover:bg-brand-50/40"
               >
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-zinc-900">{c.title}</div>
-                  <div className="text-xs text-zinc-500">
+                  <div className="truncate text-xs text-zinc-500">
                     {c.order?.orderNumber} · {c._count?.deliverables ?? 0} deliverables
                   </div>
                 </div>
-                <CampaignBadge status={c.status} />
+                <div className="flex-shrink-0">
+                  <CampaignBadge status={c.status} />
+                </div>
               </Link>
             ))}
           </div>
         </Card>
 
-        <Card padding="lg">
+        <Card padding="lg" className="min-w-0">
           <SectionHead title="Recent orders" link="/dashboard/orders" />
           <div className="mt-4 space-y-3">
             {DUMMY_ORDERS.map((o) => (
@@ -84,12 +87,16 @@ function BrandOverview({ user }) {
                 href={`/dashboard/orders/${o.id}`}
                 className="block rounded-xl border border-zinc-100 p-3 transition hover:border-brand-200"
               >
-                <div className="font-mono text-xs font-semibold text-brand-700">
+                <div className="truncate font-mono text-xs font-semibold text-brand-700">
                   {o.orderNumber}
                 </div>
-                <div className="mt-1 flex items-center justify-between">
-                  <div className="text-sm font-bold text-zinc-900">{formatINR(o.total)}</div>
-                  <OrderBadge status={o.status} />
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <div className="truncate text-sm font-bold text-zinc-900">
+                    {formatINR(o.total)}
+                  </div>
+                  <div className="flex-shrink-0">
+                    <OrderBadge status={o.status} />
+                  </div>
                 </div>
               </Link>
             ))}
@@ -157,43 +164,49 @@ function CreatorOverview({ user }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card padding="lg" className="lg:col-span-2">
+        <Card padding="lg" className="min-w-0 lg:col-span-2">
           <SectionHead title="Active campaigns" link="/dashboard/campaigns" />
           <div className="mt-4 space-y-3">
             {DUMMY_CAMPAIGNS_INFLUENCER.map((c) => (
               <Link
                 key={c.id}
                 href={`/dashboard/campaigns/${c.id}`}
-                className="flex items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 transition hover:border-brand-200 hover:bg-brand-50/40"
+                className="flex items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 transition hover:border-brand-200 hover:bg-brand-50/40"
               >
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-zinc-900">{c.title}</div>
-                  <div className="text-xs text-zinc-500">
+                  <div className="truncate text-xs text-zinc-500">
                     {c.order?.brand?.brandProfile?.companyName} ·{' '}
                     {c.deliverables?.length ?? 0} deliverables
                   </div>
                 </div>
-                <CampaignBadge status={c.status} />
+                <div className="flex-shrink-0">
+                  <CampaignBadge status={c.status} />
+                </div>
               </Link>
             ))}
           </div>
         </Card>
 
-        <Card padding="lg">
+        <Card padding="lg" className="min-w-0">
           <SectionHead title="Recent payouts" link="/dashboard/payouts" />
           <div className="mt-4 space-y-3">
             {DUMMY_PAYOUTS.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between rounded-xl border border-zinc-100 p-3"
+                className="flex items-center justify-between gap-2 rounded-xl border border-zinc-100 p-3"
               >
-                <div>
-                  <div className="text-sm font-bold text-zinc-900">{formatINR(p.amount)}</div>
-                  <div className="text-xs text-zinc-500">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-bold text-zinc-900">
+                    {formatINR(p.amount)}
+                  </div>
+                  <div className="truncate text-xs text-zinc-500">
                     {new Date(p.createdAt).toLocaleDateString('en-IN')}
                   </div>
                 </div>
-                <PayoutBadge status={p.status} />
+                <div className="flex-shrink-0">
+                  <PayoutBadge status={p.status} />
+                </div>
               </div>
             ))}
           </div>
@@ -240,10 +253,11 @@ function AdminOverview({ user }) {
         <SmallKPI label="Payouts queued" value={stats.payoutsQueued} tone="info" />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card padding="lg" className="lg:col-span-2">
+      <div className="grid gap-6 xl:grid-cols-3">
+        <Card padding="lg" className="min-w-0 xl:col-span-2">
           <SectionHead title="Recent signups" link="/dashboard/admin/users" />
-          <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-100">
+          <div className="mt-4 overflow-hidden rounded-xl border border-zinc-100">
+           <ScrollTable hintLabel="Scroll">
             <table className="min-w-full">
               <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
                 <tr>
@@ -256,7 +270,7 @@ function AdminOverview({ user }) {
               <tbody className="divide-y divide-zinc-100 text-sm">
                 {DUMMY_ADMIN_USERS_LIST.map((u) => (
                   <tr key={u.id} className="hover:bg-zinc-50">
-                    <td className="px-4 py-2.5">
+                    <td className="whitespace-nowrap px-4 py-2.5">
                       <div className="flex items-center gap-2.5">
                         <Avatar name={u.fullName} size="sm" />
                         <div className="min-w-0">
@@ -265,7 +279,7 @@ function AdminOverview({ user }) {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="whitespace-nowrap px-4 py-2.5">
                       <Badge
                         variant={
                           u.role === 'BRAND'
@@ -278,10 +292,10 @@ function AdminOverview({ user }) {
                         {u.role}
                       </Badge>
                     </td>
-                    <td className="px-4 py-2.5 text-zinc-600">
+                    <td className="whitespace-nowrap px-4 py-2.5 text-zinc-600">
                       {new Date(u.createdAt).toLocaleDateString('en-IN')}
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="whitespace-nowrap px-4 py-2.5">
                       <Badge variant={u.isActive ? 'success' : 'default'}>
                         {u.isActive ? 'Active' : 'Suspended'}
                       </Badge>
@@ -290,20 +304,25 @@ function AdminOverview({ user }) {
                 ))}
               </tbody>
             </table>
+           </ScrollTable>
           </div>
         </Card>
 
-        <Card padding="lg">
+        <Card padding="lg" className="min-w-0">
           <SectionHead title="Recent orders" link="/dashboard/admin/orders" />
           <div className="mt-4 space-y-3">
             {DUMMY_ORDERS.map((o) => (
               <div key={o.id} className="rounded-xl border border-zinc-100 p-3">
-                <div className="font-mono text-xs font-semibold text-brand-700">
+                <div className="truncate font-mono text-xs font-semibold text-brand-700">
                   {o.orderNumber}
                 </div>
-                <div className="mt-1 flex items-center justify-between">
-                  <div className="text-sm font-bold text-zinc-900">{formatINR(o.total)}</div>
-                  <OrderBadge status={o.status} />
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <div className="truncate text-sm font-bold text-zinc-900">
+                    {formatINR(o.total)}
+                  </div>
+                  <div className="flex-shrink-0">
+                    <OrderBadge status={o.status} />
+                  </div>
                 </div>
               </div>
             ))}
@@ -321,14 +340,14 @@ function AdminOverview({ user }) {
 function PageHeader({ eyebrow, title, subtitle, action }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
-      <div>
+      <div className="min-w-0 flex-1">
         <span className="eyebrow">{eyebrow}</span>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
+        <h1 className="mt-2 break-words text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
           {title}
         </h1>
         {subtitle && <p className="mt-1 text-sm text-zinc-600">{subtitle}</p>}
       </div>
-      {action}
+      {action && <div className="flex-shrink-0">{action}</div>}
     </div>
   );
 }
@@ -355,8 +374,10 @@ function SmallKPI({ label, value, tone = 'brand' }) {
   };
   return (
     <div className={`rounded-2xl ${TONES[tone]} p-4`}>
-      <div className="text-xs font-semibold uppercase tracking-wider opacity-80">{label}</div>
-      <div className="mt-1 text-3xl font-bold">{value}</div>
+      <div className="truncate text-[11px] font-semibold uppercase tracking-wider opacity-80 sm:text-xs">
+        {label}
+      </div>
+      <div className="mt-1 truncate text-2xl font-bold sm:text-3xl">{value}</div>
     </div>
   );
 }
@@ -411,8 +432,8 @@ function NotificationsList() {
           >
             <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-brand-500" />
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold text-zinc-900">{n.title}</div>
-              {n.body && <div className="mt-0.5 text-xs text-zinc-600">{n.body}</div>}
+              <div className="truncate text-sm font-semibold text-zinc-900">{n.title}</div>
+              {n.body && <div className="line-clamp-2 text-xs text-zinc-600">{n.body}</div>}
             </div>
           </Link>
         ))}
