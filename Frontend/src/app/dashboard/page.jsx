@@ -243,7 +243,7 @@ function AdminOverview({ user }) {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card padding="lg" className="lg:col-span-2">
           <SectionHead title="Recent signups" link="/dashboard/admin/users" />
-          <div className="mt-4 overflow-hidden rounded-xl border border-zinc-100">
+          <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-100">
             <table className="min-w-full">
               <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
                 <tr>

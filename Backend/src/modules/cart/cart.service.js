@@ -1,6 +1,11 @@
 import { prisma } from '../../lib/prisma.js';
 import { ApiError } from '../../utils/ApiError.js';
 
+// Platform's 15% split into a brand-side markup and a creator-side commission.
+// Keep in sync with Frontend/src/lib/types.ts.
+export const PLATFORM_BRAND_FEE_RATE = 0.05;
+export const PLATFORM_CREATOR_COMMISSION_RATE = 0.10;
+
 async function getOrCreateCart(userId) {
   let cart = await prisma.cart.findFirst({
     where: { userId },
@@ -15,9 +20,15 @@ async function priceItem(input) {
   if (input.itemType === 'PACKAGE') {
     const pkg = await prisma.package.findUnique({ where: { id: input.packageId } });
     if (!pkg || !pkg.isActive) throw ApiError.notFound('Package not found');
-    return { unitPrice: Number(pkg.price), deliverables: pkg.deliverables };
+    return {
+      unitPrice: Number(pkg.price),
+      creatorRate: null,
+      platformFee: null,
+      deliverables: pkg.deliverables,
+    };
   }
-  // INFLUENCER — sum (rate × qty) across requested deliverables
+  // INFLUENCER — sum (rate × qty) across requested deliverables, then apply
+  // the 5% brand-side markup so the brand sees the all-in price up front.
   const influencer = await prisma.influencerProfile.findUnique({
     where: { id: input.influencerId },
     include: { rateCards: true },
@@ -26,15 +37,17 @@ async function priceItem(input) {
     throw ApiError.notFound('Influencer not found or unavailable');
   }
   const cardByDeliv = new Map(influencer.rateCards.map((r) => [r.deliverable, Number(r.price)]));
-  let unit = 0;
+  let creatorRate = 0;
   for (const d of input.deliverables) {
     const rate = cardByDeliv.get(d.type);
     if (rate == null) {
       throw ApiError.badRequest(`Influencer has no rate card for ${d.type}`);
     }
-    unit += rate * d.qty;
+    creatorRate += rate * d.qty;
   }
-  return { unitPrice: unit, deliverables: input.deliverables };
+  const platformFee = creatorRate * PLATFORM_BRAND_FEE_RATE;
+  const unitPrice = creatorRate + platformFee;
+  return { unitPrice, creatorRate, platformFee, deliverables: input.deliverables };
 }
 
 export async function getCart(userId) {
@@ -77,7 +90,7 @@ export async function getCart(userId) {
 
 export async function addItem(userId, input) {
   const cart = await getOrCreateCart(userId);
-  const { unitPrice, deliverables } = await priceItem(input);
+  const { unitPrice, creatorRate, platformFee, deliverables } = await priceItem(input);
   return prisma.cartItem.create({
     data: {
       cartId: cart.id,
@@ -89,6 +102,8 @@ export async function addItem(userId, input) {
       deliverables: input.itemType === 'INFLUENCER' ? deliverables : null,
       qty: input.qty ?? 1,
       price: unitPrice,
+      creatorRate,
+      platformFee,
     },
   });
 }

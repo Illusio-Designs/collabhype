@@ -1,5 +1,7 @@
-// Collabcreator — Prisma schema (MySQL)
-// Self-serve influencer marketplace: brands buy packages or build custom carts of influencers.
+// Collabhype — Prisma schema (MySQL)
+// Self-serve influencer marketplace: brands buy bulk Nano packages or hand-pick
+// Micro/Macro/Mega creators. Platform takes 15% split as 5% brand markup + 10%
+// creator commission. Nano packs are flat-priced (platform margin baked in).
 
 generator client {
   provider = "prisma-client-js"
@@ -43,6 +45,21 @@ enum DeliverableType {
   UGC
   STORE_VISIT
   BLOG
+  // Pack-only "deliverables" — platform-provided artifacts that ship with
+  // certain Nano packs. Not actual creator outputs.
+  UTM_LINK
+  VIDEO_DRIVE_LINK
+  PERFORMANCE_REPORT
+}
+
+// Upwork-style creator badges, derived from completed-work stats by an admin
+// recompute. Default NONE until the creator earns it.
+enum CreatorBadge {
+  NONE
+  RISING_TALENT     // new but performing well
+  TOP_RATED         // consistent high marks
+  TOP_RATED_PLUS    // top of TOP_RATED + revenue threshold
+  EXPERT_VETTED     // hand-picked elite tier (admin-set)
 }
 
 enum CartItemType {
@@ -137,6 +154,19 @@ model InfluencerProfile {
   bankAccountJson       Json?
   razorpayContactId     String?
   razorpayFundAccountId String?
+
+  // ---- Reputation stats — updated when deliverables transition through the
+  // approval/posted/paid states. Drive the CreatorBadge tier.
+  badge               CreatorBadge @default(NONE)
+  completedCampaigns  Int          @default(0)
+  successfulDeliverables Int       @default(0)
+  failedDeliverables  Int          @default(0)
+  revisionsRequested  Int          @default(0)
+  totalEarnings       Decimal      @db.Decimal(12, 2) @default(0)
+  successRate         Float        @default(0)        // 0..100, % of approved-without-revision
+  responseRate        Float        @default(0)        // 0..100, % replies within 24h
+  avgRating           Float        @default(0)        // 0..5 — placeholder until reviews ship
+
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
@@ -150,6 +180,7 @@ model InfluencerProfile {
   @@index([tier])
   @@index([city])
   @@index([isAvailable])
+  @@index([badge])
 }
 
 model BrandProfile {
@@ -234,15 +265,26 @@ model RateCard {
 model Package {
   id              String   @id @default(cuid())
   slug            String   @unique
+  packName        String?                              // "Starter Pack", "Growth Plan", …
   title           String
   description     String?  @db.Text
+  subtitle        String?                              // "Best for micro-campaigns."
   coverUrl        String?
   tier            Tier
   nicheId         String?
   niche           Niche?   @relation(fields: [nicheId], references: [id])
   deliverables    Json     // [{ type: "IG_REEL", qty: 1 }, ...]
   influencerCount Int
-  price           Decimal  @db.Decimal(10, 2)
+  price           Decimal  @db.Decimal(10, 2)         // total brand pays
+  mrp             Decimal? @db.Decimal(10, 2)         // strike-through original price
+  pricePerInfluencer Decimal? @db.Decimal(10, 2)      // displayed unit price on the card
+
+  // Platform pays each nano creator this flat amount per pack slot (market rate
+  // is barter so anything is upside for them). Platform keeps the rest.
+  nanoPayPerInfluencer Decimal? @db.Decimal(10, 2)
+
+  benefits        Json?                                // ["Content Rights", …]
+  isMostPopular   Boolean  @default(false)
   currency        String   @default("INR")
   estReach        Int?
   estEngagement   Int?
@@ -289,7 +331,11 @@ model CartItem {
   package      Package?     @relation(fields: [packageId], references: [id])
   influencerId String?
   deliverables Json?        // for INFLUENCER items: [{ type, qty }]
+  // price = brand-side total (creator rate × 1.05 for INFLUENCER, pkg.price for PACKAGE)
   price        Decimal      @db.Decimal(10, 2)
+  // creatorRate = sum of (rate × qty) before platform markup. Only set for INFLUENCER items.
+  creatorRate  Decimal?     @db.Decimal(10, 2)
+  platformFee  Decimal?     @db.Decimal(10, 2)        // brand-side 5% markup
   qty          Int          @default(1)
   createdAt    DateTime     @default(now())
 }
@@ -368,7 +414,16 @@ model CampaignDeliverable {
   draftUrl      String?
   postedUrl     String?
   feedback      String?           @db.Text
+
+  // amountPayable = brand-side amount held in escrow per unit
   amountPayable Decimal           @db.Decimal(10, 2)
+  // creatorPayout = what the creator actually receives on release
+  //   For INFLUENCER items: amountPayable / 1.05 × 0.90
+  //   For PACKAGE (Nano) items: Package.nanoPayPerInfluencer (flat)
+  creatorPayout Decimal?          @db.Decimal(10, 2)
+  // platformFee = amountPayable - creatorPayout (audit)
+  platformFee   Decimal?          @db.Decimal(10, 2)
+
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 

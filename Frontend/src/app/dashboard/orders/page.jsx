@@ -74,7 +74,7 @@ export default function OrdersPage() {
           />
         </div>
       ) : (
-        <Card padding="none" className="mt-8 overflow-hidden">
+        <Card padding="none" className="mt-8 overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
               <tr>

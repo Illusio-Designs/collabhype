@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Avatar, Badge, Card } from '@/components/ui';
+import CreatorBadge from '@/components/CreatorBadge';
 import { formatCount, TIER_LABEL, PLATFORM_LABEL } from '@/lib/format';
 
 export default function InfluencerCard({ profile, selectable = false, selected = false, onToggle }) {
@@ -33,14 +34,19 @@ export default function InfluencerCard({ profile, selectable = false, selected =
       <div className="flex items-center gap-3">
         <Avatar src={profile.user?.avatarUrl} name={name} size="md" />
         <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold text-zinc-900 group-hover:text-brand-700">
-            {name}
+          <div className="flex items-center gap-2">
+            <div className="truncate font-semibold text-zinc-900 group-hover:text-brand-700">
+              {name}
+            </div>
           </div>
           <div className="truncate text-xs text-zinc-500">
             {profile.city ? `${profile.city} · ` : ''}
             {TIER_LABEL[profile.tier] ?? profile.tier ?? 'New creator'}
           </div>
         </div>
+        {profile.badge && profile.badge !== 'NONE' && (
+          <CreatorBadge badge={profile.badge} size="sm" />
+        )}
       </div>
       <div className="flex flex-wrap gap-1.5">
         {niches.slice(0, 3).map((n) => (
