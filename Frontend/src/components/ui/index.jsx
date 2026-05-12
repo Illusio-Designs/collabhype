@@ -16,6 +16,7 @@ export { FormField, inputClasses } from './FormField';
 export { default as Input } from './Input';
 export { default as Modal } from './Modal';
 export { default as PasswordInput } from './PasswordInput';
+export { default as PhoneInput, COUNTRIES } from './PhoneInput';
 export { default as Progress } from './Progress';
 export { default as Radio } from './Radio';
 export { default as Select } from './Select';
