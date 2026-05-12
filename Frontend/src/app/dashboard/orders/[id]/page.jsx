@@ -14,6 +14,7 @@ import {
   Stat,
   useToast,
 } from '@/components/ui';
+import Milestone, { ORDER_STEPS, orderActiveKey } from '@/components/dashboard/Milestone';
 import { DELIVERABLE_LABEL, formatINR } from '@/lib/format';
 
 const ORDER_BADGE = {
@@ -96,8 +97,18 @@ export default function OrderDetailPage() {
         </Badge>
       </div>
 
+      {/* Milestone tracker */}
+      <Card padding="lg" className="mt-8">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          Order milestones
+        </h2>
+        <div className="mt-5">
+          <Milestone steps={ORDER_STEPS} activeKey={orderActiveKey(order)} />
+        </div>
+      </Card>
+
       {/* Top stats */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Stat label="Order total" value={formatINR(order.total)} />
         <Stat label="Items" value={String(order.items?.length ?? 0)} />
         <Stat label="Campaigns" value={String(order.campaigns?.length ?? 0)} />
