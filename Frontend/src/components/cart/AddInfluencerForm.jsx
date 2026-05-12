@@ -113,44 +113,58 @@ export default function AddInfluencerForm({ influencerId, influencerName, rateCa
       <div className="space-y-2">
         {rateCards.map((rc) => {
           const qty = selections[rc.deliverable] || 0;
+          const active = qty > 0;
           return (
             <div
               key={rc.id}
-              className="flex items-center gap-3 rounded-lg border border-zinc-200 p-2.5"
+              className={`rounded-lg border p-3 transition ${
+                active ? 'border-brand-300 bg-brand-50/40' : 'border-zinc-200 bg-white'
+              }`}
             >
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium text-zinc-900">
-                  {DELIVERABLE_LABEL[rc.deliverable] ?? rc.deliverable}
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold leading-tight text-zinc-900">
+                    {DELIVERABLE_LABEL[rc.deliverable] ?? rc.deliverable}
+                  </div>
+                  <div className="mt-0.5 text-xs text-zinc-500">{formatINR(rc.price)} each</div>
                 </div>
-                <div className="text-xs text-zinc-500">{formatINR(rc.price)} each</div>
+                <div className="flex flex-shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => updateQty(rc.deliverable, Math.max(0, qty - 1))}
+                    disabled={qty <= 0}
+                    className="grid h-7 w-7 place-items-center rounded-md border border-zinc-300 text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Decrease"
+                  >
+                    −
+                  </button>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={qty}
+                    onChange={(e) =>
+                      updateQty(rc.deliverable, Math.max(0, parseInt(e.target.value || '0', 10)))
+                    }
+                    className="w-12 text-center !py-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => updateQty(rc.deliverable, qty + 1)}
+                    className="grid h-7 w-7 place-items-center rounded-md border border-zinc-300 text-zinc-700 transition hover:bg-zinc-50"
+                    aria-label="Increase"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => updateQty(rc.deliverable, Math.max(0, qty - 1))}
-                  className="h-7 w-7 rounded-md border border-zinc-300 text-zinc-700 transition hover:bg-zinc-50"
-                  aria-label="Decrease"
-                >
-                  −
-                </button>
-                <Input
-                  type="number"
-                  min={0}
-                  value={qty}
-                  onChange={(e) =>
-                    updateQty(rc.deliverable, Math.max(0, parseInt(e.target.value || '0', 10)))
-                  }
-                  className="w-14 text-center !py-1"
-                />
-                <button
-                  type="button"
-                  onClick={() => updateQty(rc.deliverable, qty + 1)}
-                  className="h-7 w-7 rounded-md border border-zinc-300 text-zinc-700 transition hover:bg-zinc-50"
-                  aria-label="Increase"
-                >
-                  +
-                </button>
-              </div>
+              {active && (
+                <div className="mt-2 flex items-center justify-between border-t border-brand-100 pt-2 text-xs">
+                  <span className="text-zinc-500">Line total</span>
+                  <span className="font-semibold text-brand-700">
+                    {formatINR(Number(rc.price) * qty)}
+                  </span>
+                </div>
+              )}
             </div>
           );
         })}
