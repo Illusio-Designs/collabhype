@@ -1,7 +1,7 @@
 {
-  "name": "collabcreator-backend",
+  "name": "collabhype-backend",
   "version": "0.1.0",
-  "description": "Collabcreator API — influencer marketplace backend (Node + Express + MySQL via Prisma)",
+  "description": "Collabhype API — influencer marketplace backend (Node + Express + MySQL via Prisma)",
   "type": "module",
   "main": "src/index.js",
   "scripts": {

@@ -39,7 +39,7 @@ const apiLimiter = rateLimit({
 app.use('/api', apiLimiter);
 
 app.get('/', (_req, res) => {
-  res.json({ name: 'Collabcreator API', version: '0.1.0' });
+  res.json({ name: 'Collabhype API', version: '0.1.0' });
 });
 
 app.use('/api/v1', routes);

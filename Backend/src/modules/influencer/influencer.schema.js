@@ -3,6 +3,10 @@ import { z } from 'zod';
 const TIERS = ['NANO', 'MICRO', 'MACRO', 'MEGA'];
 const PLATFORMS = ['INSTAGRAM', 'YOUTUBE', 'TIKTOK', 'X', 'FACEBOOK'];
 
+// Creator-offerable deliverables only. UTM_LINK / VIDEO_DRIVE_LINK /
+// PERFORMANCE_REPORT exist in the Prisma enum because the catalog packs
+// include them, but creators don't individually price those — they're
+// platform-provided artifacts that ship with certain Nano packs.
 const DELIVERABLE_TYPES = [
   'IG_POST',
   'IG_REEL',

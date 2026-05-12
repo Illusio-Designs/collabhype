@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+// Only creator-bookable deliverables. Pack-only artifacts (UTM_LINK /
+// VIDEO_DRIVE_LINK / PERFORMANCE_REPORT) ship with Nano packs, not custom
+// influencer carts.
 const DELIVERABLE_TYPES = [
   'IG_POST',
   'IG_REEL',

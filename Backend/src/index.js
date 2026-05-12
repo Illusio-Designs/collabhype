@@ -4,11 +4,11 @@ import { prisma } from './lib/prisma.js';
 
 async function bootstrap() {
   const server = app.listen(env.PORT, () => {
-    console.log(`[collabcreator-api] ready on http://localhost:${env.PORT} (${env.NODE_ENV})`);
+    console.log(`[collabhype-api] ready on http://localhost:${env.PORT} (${env.NODE_ENV})`);
   });
 
   const shutdown = async (signal) => {
-    console.log(`\n[collabcreator-api] received ${signal}, shutting down`);
+    console.log(`\n[collabhype-api] received ${signal}, shutting down`);
     server.close(async () => {
       await prisma.$disconnect();
       process.exit(0);

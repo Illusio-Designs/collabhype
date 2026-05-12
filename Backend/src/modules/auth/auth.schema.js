@@ -1,11 +1,20 @@
 import { z } from 'zod';
 
+// E.164: leading '+', country digit 1-9, 6-14 more digits. Frontend's
+// PhoneInput always emits this shape.
+const PHONE_E164 = /^\+[1-9]\d{6,14}$/;
+const phoneSchema = z
+  .string()
+  .trim()
+  .regex(PHONE_E164, 'Phone must be in E.164 format, e.g. +919812345678')
+  .optional();
+
 export const registerSchema = z.object({
   body: z.object({
     email: z.string().email(),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     fullName: z.string().min(2),
-    phone: z.string().min(7).optional(),
+    phone: phoneSchema,
     role: z.enum(['BRAND', 'INFLUENCER']),
     // optional profile bootstrap
     companyName: z.string().optional(), // brand
