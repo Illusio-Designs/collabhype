@@ -206,7 +206,9 @@ function dummyResponseFor(
   }
 
   // === Notifications ===
-  if (path === '/notifications') {
+  // GET /notifications (with or without ?limit=…). POST actions like
+  // /notifications/:id/read or /notifications/read-all just succeed.
+  if (path === '/notifications' || path.startsWith('/notifications?')) {
     return {
       notifications: DUMMY_NOTIFICATIONS,
       unreadCount: DUMMY_NOTIFICATIONS.filter((n) => !n.isRead).length,
