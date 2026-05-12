@@ -109,13 +109,15 @@ export default function AdminContentPage() {
                 <td className="px-6 py-3 text-zinc-500">
                   {new Date(c.updatedAt).toLocaleDateString('en-IN')}
                 </td>
-                <td className="px-6 py-3 text-right">
-                  <button
+                <td className="whitespace-nowrap px-6 py-3 text-right">
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={() => setEditing(c)}
-                    className="text-xs font-medium text-brand-700 hover:underline"
+                    iconRight={<ChevronRight />}
                   >
-                    Edit →
-                  </button>
+                    Edit
+                  </Button>
                 </td>
               </tr>
             ))}
@@ -276,5 +278,13 @@ function ContentEditorModal({ editing, onClose, onSaved }) {
         />
       </div>
     </Modal>
+  );
+}
+
+function ChevronRight() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+      <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
