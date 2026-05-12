@@ -16,6 +16,8 @@ import {
   DUMMY_PACKAGES,
   DUMMY_PAYOUT_SUMMARY,
   DUMMY_PAYOUTS,
+  DUMMY_SUPPORT_MESSAGES,
+  DUMMY_SUPPORT_TICKETS,
 } from './dummyData';
 import { PLATFORM_BRAND_FEE_RATE, type Role, type User } from './types';
 
@@ -215,6 +217,132 @@ function dummyResponseFor(
     };
   }
   if (path.startsWith('/notifications/')) return { ok: true };
+
+  // === Support / disputes ===
+  // User-facing list — filters by current demo user when role isn't ADMIN.
+  if (path === '/support/tickets' || path.startsWith('/support/tickets?')) {
+    if (m === 'post') {
+      const subject = String(data.subject ?? 'New ticket');
+      const category = String(data.category ?? 'OTHER');
+      const priority = String(data.priority ?? 'NORMAL');
+      const userId = role === 'ADMIN' ? 'demo-admin-1' : role === 'BRAND' ? 'demo-brand-1' : 'demo-inf-1';
+      const id = `tk-demo-${Math.random().toString(36).slice(2, 8)}`;
+      const ticket = {
+        id,
+        ticketNumber: `CH-T-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+        userId,
+        subject,
+        category,
+        priority,
+        status: 'OPEN',
+        orderId: data.orderId ?? null,
+        campaignId: data.campaignId ?? null,
+        deliverableId: data.deliverableId ?? null,
+        resolution: null,
+        resolvedAt: null,
+        closedAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        user: { id: userId, fullName: 'Demo user', email: 'demo@user.com', role, avatarUrl: null },
+        assignedTo: null,
+        order: null,
+        campaign: null,
+        deliverable: null,
+        _count: { messages: 1 },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      DUMMY_SUPPORT_TICKETS.unshift(ticket as any);
+      DUMMY_SUPPORT_MESSAGES[id] = [
+        {
+          id: `sm-${id}-1`,
+          ticketId: id,
+          authorId: userId,
+          authorRole: role,
+          body: String(data.body ?? ''),
+          createdAt: new Date().toISOString(),
+          author: { id: userId, fullName: 'Demo user', role, avatarUrl: null },
+        },
+      ];
+      return { ticket };
+    }
+    const tickets =
+      role === 'ADMIN'
+        ? DUMMY_SUPPORT_TICKETS
+        : role === 'BRAND'
+          ? DUMMY_SUPPORT_TICKETS.filter((t) => t.userId === 'demo-brand-1')
+          : DUMMY_SUPPORT_TICKETS.filter((t) => t.userId === 'demo-inf-1');
+    return {
+      tickets,
+      meta: { total: tickets.length, page: 1, limit: 20, totalPages: 1 },
+    };
+  }
+  // Admin queue
+  if (path === '/support/admin/tickets' || path.startsWith('/support/admin/tickets?')) {
+    return {
+      tickets: DUMMY_SUPPORT_TICKETS,
+      meta: { total: DUMMY_SUPPORT_TICKETS.length, page: 1, limit: 20, totalPages: 1 },
+    };
+  }
+  // Admin stats
+  if (path === '/support/admin/stats') {
+    const open = DUMMY_SUPPORT_TICKETS.filter((t) => t.status === 'OPEN').length;
+    const inProgress = DUMMY_SUPPORT_TICKETS.filter((t) => t.status === 'IN_PROGRESS').length;
+    const awaitingUser = DUMMY_SUPPORT_TICKETS.filter((t) => t.status === 'AWAITING_USER').length;
+    const resolved = DUMMY_SUPPORT_TICKETS.filter((t) => t.status === 'RESOLVED').length;
+    const totalDisputes = DUMMY_SUPPORT_TICKETS.filter((t) => t.category === 'DISPUTE').length;
+    const openDisputes = DUMMY_SUPPORT_TICKETS.filter(
+      (t) =>
+        t.category === 'DISPUTE' &&
+        ['OPEN', 'IN_PROGRESS', 'AWAITING_USER'].includes(t.status),
+    ).length;
+    return { open, inProgress, awaitingUser, resolved, totalDisputes, openDisputes };
+  }
+  // Ticket detail (incl. messages) and message append
+  const ticketMsgMatch = path.match(/^\/support\/tickets\/([^/?]+)\/messages/);
+  const ticketGetMatch = path.match(/^\/support\/tickets\/([^/?]+)$/);
+  const adminTicketPatchMatch = path.match(/^\/support\/admin\/tickets\/([^/?]+)$/);
+  if (ticketMsgMatch && m === 'post') {
+    const id = ticketMsgMatch[1];
+    const msg = {
+      id: `sm-${id}-${Math.random().toString(36).slice(2, 6)}`,
+      ticketId: id,
+      authorId: role === 'ADMIN' ? 'demo-admin-1' : role === 'BRAND' ? 'demo-brand-1' : 'demo-inf-1',
+      authorRole: role,
+      body: String(data.body ?? ''),
+      createdAt: new Date().toISOString(),
+      author: { id: 'demo-user', fullName: 'You', role, avatarUrl: null },
+    };
+    (DUMMY_SUPPORT_MESSAGES[id] ??= []).push(msg);
+    const ticket = DUMMY_SUPPORT_TICKETS.find((t) => t.id === id);
+    if (ticket) {
+      ticket.updatedAt = new Date().toISOString();
+      if (role === 'ADMIN') ticket.status = 'AWAITING_USER';
+      else if (ticket.status === 'AWAITING_USER') ticket.status = 'OPEN';
+      ticket._count = { messages: (ticket._count?.messages ?? 0) + 1 };
+    }
+    return { message: msg };
+  }
+  if (ticketGetMatch && m === 'get') {
+    const id = ticketGetMatch[1];
+    const ticket = DUMMY_SUPPORT_TICKETS.find((t) => t.id === id);
+    if (!ticket) return { error: 'Not found' };
+    return { ticket: { ...ticket, messages: DUMMY_SUPPORT_MESSAGES[id] ?? [] } };
+  }
+  if (adminTicketPatchMatch && m === 'patch') {
+    const id = adminTicketPatchMatch[1];
+    const ticket = DUMMY_SUPPORT_TICKETS.find((t) => t.id === id);
+    if (ticket) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const t: any = ticket;
+      if (data.status) t.status = String(data.status);
+      if (data.priority) t.priority = String(data.priority);
+      if (data.resolution !== undefined) t.resolution = String(data.resolution ?? '');
+      if (data.status === 'RESOLVED' && !t.resolvedAt) t.resolvedAt = new Date().toISOString();
+      if (data.status === 'CLOSED' && !t.closedAt) t.closedAt = new Date().toISOString();
+      t.updatedAt = new Date().toISOString();
+    }
+    return { ticket };
+  }
 
   // === Admin: content (SEO) ===
   if (path === '/admin/content' || path === '/admin/content/') {

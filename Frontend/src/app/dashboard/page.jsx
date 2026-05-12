@@ -15,6 +15,7 @@ import {
   DUMMY_PAYOUTS,
   DUMMY_PAYOUT_SUMMARY,
   DUMMY_PLATFORM_STATS,
+  DUMMY_SUPPORT_TICKETS,
 } from '@/lib/dummyData';
 
 export default function DashboardHome() {
@@ -224,6 +225,11 @@ function CreatorOverview({ user }) {
 
 function AdminOverview({ user }) {
   const stats = DUMMY_PLATFORM_STATS;
+  const openDisputes = DUMMY_SUPPORT_TICKETS.filter(
+    (t) =>
+      t.category === 'DISPUTE' &&
+      ['OPEN', 'IN_PROGRESS', 'AWAITING_USER'].includes(t.status),
+  ).length;
   return (
     <div className="space-y-6">
       <PageHeader
@@ -246,11 +252,12 @@ function AdminOverview({ user }) {
         <Stat label="GMV (30d)" value={formatINR(stats.gmv30d)} change={22} />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <SmallKPI label="Active campaigns" value={stats.activeCampaigns} tone="brand" />
         <SmallKPI label="Signups this week" value={stats.signupsThisWeek} tone="success" />
         <SmallKPI label="Pending approvals" value={stats.pendingApprovals} tone="warning" />
         <SmallKPI label="Payouts queued" value={stats.payoutsQueued} tone="info" />
+        <SmallKPI label="Open disputes" value={openDisputes} tone="warning" />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">
