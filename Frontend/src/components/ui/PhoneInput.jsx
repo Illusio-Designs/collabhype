@@ -87,60 +87,65 @@ const PhoneInput = forwardRef(function PhoneInput(
     emit(country, next);
   }
 
-  const wrapperClasses = clsx(
-    'group relative flex items-stretch overflow-hidden rounded-lg border bg-white shadow-sm transition focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500',
+  // Outer div is `relative` (for absolute dropdown positioning). Inner flex
+  // wrapper owns the rounded border + overflow-hidden so the country button
+  // and input share a clipped pill. Keeping `overflow-hidden` OFF the outer
+  // div ensures the dropdown isn't clipped when it opens.
+  const fieldClasses = clsx(
+    'flex items-stretch overflow-hidden rounded-lg border bg-white shadow-sm transition focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500',
     error ? 'border-red-400' : 'border-zinc-300 hover:border-zinc-400',
     disabled && 'cursor-not-allowed opacity-60',
-    className,
   );
 
   return (
-    <div ref={rootRef} className={wrapperClasses}>
-      <button
-        type="button"
-        onClick={() => !disabled && setOpen((o) => !o)}
-        disabled={disabled}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={listId}
-        className="flex flex-shrink-0 items-center gap-1.5 border-r border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100 focus:outline-none disabled:cursor-not-allowed"
-      >
-        <span className="text-base leading-none" aria-hidden="true">{country.flag}</span>
-        <span className="tabular-nums">{country.dial}</span>
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 20 20"
-          className={clsx('h-3.5 w-3.5 text-zinc-500 transition-transform', open && 'rotate-180')}
-          fill="currentColor"
+    <div ref={rootRef} className={clsx('relative', className)}>
+      <div className={fieldClasses}>
+        <button
+          type="button"
+          onClick={() => !disabled && setOpen((o) => !o)}
+          disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-controls={listId}
+          className="flex flex-shrink-0 items-center gap-1.5 border-r border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-500 disabled:cursor-not-allowed"
         >
-          <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" />
-        </svg>
-      </button>
+          <span className="text-base leading-none" aria-hidden="true">{country.flag}</span>
+          <span className="tabular-nums">{country.dial}</span>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 20 20"
+            className={clsx('h-3.5 w-3.5 text-zinc-500 transition-transform', open && 'rotate-180')}
+            fill="currentColor"
+          >
+            <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" />
+          </svg>
+        </button>
 
-      <input
-        ref={ref}
-        type="tel"
-        inputMode="tel"
-        name={name}
-        autoComplete={autoComplete}
-        value={national}
-        onChange={onInput}
-        placeholder={placeholder}
-        disabled={disabled}
-        className={clsx(
-          inputClasses,
-          // Strip the FormField input's own border/ring so the wrapper owns the look.
-          '!border-0 !shadow-none !ring-0 focus:!ring-0',
-          'min-w-0 flex-1 rounded-none bg-white',
-        )}
-        {...rest}
-      />
+        <input
+          ref={ref}
+          type="tel"
+          inputMode="tel"
+          name={name}
+          autoComplete={autoComplete}
+          value={national}
+          onChange={onInput}
+          placeholder={placeholder}
+          disabled={disabled}
+          className={clsx(
+            inputClasses,
+            // Strip the FormField input's own border/ring so the wrapper owns the look.
+            '!border-0 !shadow-none !ring-0 focus:!ring-0',
+            'min-w-0 flex-1 rounded-none bg-white',
+          )}
+          {...rest}
+        />
+      </div>
 
       {open && (
         <ul
           id={listId}
           role="listbox"
-          className="absolute left-0 top-full z-20 mt-1 max-h-72 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-xl"
+          className="absolute left-0 top-full z-50 mt-1 max-h-72 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-xl"
         >
           {COUNTRIES.map((c) => {
             const selected = c.code === country.code;
