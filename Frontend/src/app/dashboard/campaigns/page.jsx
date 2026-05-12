@@ -6,6 +6,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { Badge, Card, EmptyState, Spinner, Tabs, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
+import PageHeader from '@/components/dashboard/PageHeader';
 import { formatINR } from '@/lib/format';
 
 const STATUS_BADGE = {
@@ -72,15 +73,19 @@ export default function CampaignsListPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <span className="eyebrow">{user?.role === 'BRAND' ? 'Your campaigns' : 'Assigned campaigns'}</span>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Campaigns</h1>
-        <p className="mt-2 text-zinc-600">
-          {user?.role === 'BRAND'
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Campaigns' },
+        ]}
+        eyebrow={user?.role === 'BRAND' ? 'Your campaigns' : 'Assigned campaigns'}
+        title="Campaigns"
+        subtitle={
+          user?.role === 'BRAND'
             ? 'Track briefs, drafts, and approvals across every order.'
-            : 'Every brand campaign you’re part of, in one place.'}
-        </p>
-      </header>
+            : 'Every brand campaign you’re part of, in one place.'
+        }
+      />
 
       <KpiStrip kpis={kpis} />
 

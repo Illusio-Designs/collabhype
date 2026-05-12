@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ArrowRight, Inbox, Search, Star } from 'lucide-react';
 import {
   Accordion,
   Alert,
@@ -12,22 +13,30 @@ import {
   Card,
   Checkbox,
   Divider,
+  Drawer,
+  Dropdown,
   EmptyState,
   FileUpload,
   FormField,
   Input,
   Modal,
+  Pagination,
   PasswordInput,
   Progress,
   Radio,
+  Rating,
   Select,
   Skeleton,
+  Slider,
   Spinner,
   Stat,
+  Stepper,
   Switch,
+  Table,
   Tabs,
   Tag,
   Textarea,
+  Tooltip,
   useToast,
 } from '@/components/ui';
 
@@ -41,8 +50,15 @@ const SECTIONS = [
   { id: 'alerts', label: 'Alerts' },
   { id: 'loaders', label: 'Loaders' },
   { id: 'data', label: 'Data display' },
+  { id: 'table', label: 'Table' },
   { id: 'nav', label: 'Navigation' },
+  { id: 'pagination', label: 'Pagination' },
+  { id: 'stepper', label: 'Stepper' },
   { id: 'overlays', label: 'Overlays' },
+  { id: 'tooltip', label: 'Tooltip' },
+  { id: 'menus', label: 'Dropdown' },
+  { id: 'rating', label: 'Rating' },
+  { id: 'slider', label: 'Slider' },
   { id: 'misc', label: 'Misc' },
 ];
 
@@ -50,17 +66,33 @@ export default function UIKitPage() {
   const toast = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [tagItems, setTagItems] = useState(['Beauty', 'Lifestyle', 'Fashion', 'Food']);
   const [tier, setTier] = useState('MICRO');
   const [niche, setNiche] = useState(null);
   const [uploadFiles, setUploadFiles] = useState([]);
   const [avatarFile, setAvatarFile] = useState(null);
+  const [page, setPage] = useState(3);
+  const [step, setStep] = useState(1);
+  const [stars, setStars] = useState(4);
+  const [budget, setBudget] = useState(75000);
+
+  // Table demo data
+  const tableRows = [
+    { id: 1, name: 'Bloom Skincare Q1', status: 'In progress', budget: 145000, deliverables: 12 },
+    { id: 2, name: 'GoodFit Apparel — launch', status: 'Brief sent', budget: 240000, deliverables: 18 },
+    { id: 3, name: 'Cafe Hopper city tour', status: 'Completed', budget: 65000, deliverables: 8 },
+    { id: 4, name: 'Nirvana Studios audio drops', status: 'Draft', budget: 90000, deliverables: 10 },
+  ];
 
   return (
     <div className="bg-zinc-50">
       {/* Hero */}
       <div className="border-b border-zinc-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <div className="mb-4">
+            <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'UI Kit' }]} />
+          </div>
           <span className="eyebrow">Design system</span>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
             Collabhype UI Kit
@@ -154,8 +186,8 @@ export default function UIKitPage() {
                   <Button>Default</Button>
                   <Button disabled>Disabled</Button>
                   <Button loading>Loading</Button>
-                  <Button icon={<IconStar />}>With icon</Button>
-                  <Button iconRight={<IconArrow />} variant="outline">
+                  <Button icon={<Star className="h-4 w-4" />}>With icon</Button>
+                  <Button iconRight={<ArrowRight className="h-4 w-4" />} variant="outline">
                     Continue
                   </Button>
                   <Button fullWidth className="!w-64">
@@ -222,7 +254,7 @@ export default function UIKitPage() {
                     <PasswordInput placeholder="••••••••" autoComplete="new-password" />
                   </FormField>
                   <FormField label="Search">
-                    <Input placeholder="Search creators…" icon={<IconSearch />} />
+                    <Input placeholder="Search creators…" icon={<Search className="h-4 w-4" />} />
                   </FormField>
                   <FormField label="Disabled">
                     <Input disabled defaultValue="Locked field" />
@@ -429,6 +461,55 @@ export default function UIKitPage() {
               </div>
             </Section>
 
+            {/* ===== Table ===== */}
+            <Section id="table" title="Table" desc="Generic data table with loading + empty states baked in.">
+              <Block label="With data">
+                <Table
+                  columns={[
+                    { header: 'Campaign', accessor: 'name' },
+                    {
+                      header: 'Status',
+                      accessor: 'status',
+                      cell: (row) => {
+                        const v =
+                          row.status === 'Completed'
+                            ? 'success'
+                            : row.status === 'In progress'
+                              ? 'warning'
+                              : row.status === 'Brief sent'
+                                ? 'info'
+                                : 'default';
+                        return <Badge variant={v}>{row.status}</Badge>;
+                      },
+                    },
+                    {
+                      header: 'Budget',
+                      accessor: 'budget',
+                      align: 'right',
+                      cell: (row) => `₹${row.budget.toLocaleString('en-IN')}`,
+                    },
+                    {
+                      header: 'Deliverables',
+                      accessor: 'deliverables',
+                      align: 'right',
+                    },
+                  ]}
+                  data={tableRows}
+                />
+              </Block>
+              <Block label="Empty">
+                <Table
+                  columns={[
+                    { header: 'Campaign', accessor: 'name' },
+                    { header: 'Status', accessor: 'status' },
+                  ]}
+                  data={[]}
+                  emptyTitle="No campaigns yet"
+                  emptyDescription="Start a campaign to see them here."
+                />
+              </Block>
+            </Section>
+
             {/* ===== Navigation ===== */}
             <Section id="nav" title="Navigation" desc="Breadcrumb, tabs.">
               <Block label="Breadcrumb">
@@ -470,8 +551,55 @@ export default function UIKitPage() {
               </Block>
             </Section>
 
+            {/* ===== Pagination ===== */}
+            <Section id="pagination" title="Pagination" desc="Page numbers with ellipsis truncation.">
+              <Block label={`Current page: ${page} of 24`}>
+                <Pagination page={page} pageCount={24} onChange={setPage} />
+              </Block>
+            </Section>
+
+            {/* ===== Stepper ===== */}
+            <Section id="stepper" title="Stepper" desc="Multi-step progress indicator.">
+              <Block label="Horizontal">
+                <Stepper
+                  current={step}
+                  onStepClick={setStep}
+                  steps={[
+                    { label: 'Profile' },
+                    { label: 'Socials' },
+                    { label: 'Rate card' },
+                    { label: 'Review' },
+                  ]}
+                />
+                <div className="mt-4 flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setStep((s) => Math.max(0, s - 1))}
+                  >
+                    Back
+                  </Button>
+                  <Button size="sm" onClick={() => setStep((s) => Math.min(3, s + 1))}>
+                    Next
+                  </Button>
+                </div>
+              </Block>
+              <Block label="Vertical with description">
+                <Stepper
+                  orientation="vertical"
+                  current={2}
+                  steps={[
+                    { label: 'Account', description: 'Email + password set up' },
+                    { label: 'Profile', description: 'Bio, niche, city captured' },
+                    { label: 'Verification', description: 'OTP confirmation in progress' },
+                    { label: 'Done', description: 'You\'re live on the marketplace' },
+                  ]}
+                />
+              </Block>
+            </Section>
+
             {/* ===== Overlays ===== */}
-            <Section id="overlays" title="Overlays" desc="Modals and toasts.">
+            <Section id="overlays" title="Overlays" desc="Modals, drawer, and toasts.">
               <Block label="Modal">
                 <div className="flex flex-wrap gap-3">
                   <Button onClick={() => setModalOpen(true)}>Open modal</Button>
@@ -518,6 +646,52 @@ export default function UIKitPage() {
                     action cannot be undone.
                   </p>
                 </Modal>
+              </Block>
+              <Block label="Drawer (slide-in panel)">
+                <Button variant="outline" onClick={() => setDrawerOpen(true)}>
+                  Open drawer
+                </Button>
+                <Drawer
+                  open={drawerOpen}
+                  onClose={() => setDrawerOpen(false)}
+                  title="Filters"
+                  description="Narrow the creator list."
+                  side="right"
+                  footer={
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" onClick={() => setDrawerOpen(false)}>
+                        Clear
+                      </Button>
+                      <Button onClick={() => setDrawerOpen(false)}>Apply</Button>
+                    </div>
+                  }
+                >
+                  <div className="space-y-4">
+                    <FormField label="Tier">
+                      <Select
+                        value="MICRO"
+                        onChange={() => {}}
+                        options={[
+                          { value: 'NANO', label: 'Nano' },
+                          { value: 'MICRO', label: 'Micro' },
+                          { value: 'MACRO', label: 'Macro' },
+                        ]}
+                      />
+                    </FormField>
+                    <FormField label="City">
+                      <Input placeholder="Mumbai, Indore, Surat…" />
+                    </FormField>
+                    <Slider
+                      label="Max budget"
+                      value={budget}
+                      onChange={setBudget}
+                      min={0}
+                      max={500000}
+                      step={1000}
+                      formatValue={(v) => `₹${v.toLocaleString('en-IN')}`}
+                    />
+                  </div>
+                </Drawer>
               </Block>
               <Block label="Toast">
                 <div className="flex flex-wrap gap-3">
@@ -573,6 +747,110 @@ export default function UIKitPage() {
               </Block>
             </Section>
 
+            {/* ===== Tooltip ===== */}
+            <Section id="tooltip" title="Tooltip" desc="Accessible hover/focus label with placements and variants.">
+              <Block label="Placements">
+                <div className="flex flex-wrap items-center gap-6">
+                  <Tooltip label="Top tooltip" placement="top">
+                    <Button variant="outline" size="sm">Top</Button>
+                  </Tooltip>
+                  <Tooltip label="Bottom tooltip" placement="bottom">
+                    <Button variant="outline" size="sm">Bottom</Button>
+                  </Tooltip>
+                  <Tooltip label="Left tooltip" placement="left">
+                    <Button variant="outline" size="sm">Left</Button>
+                  </Tooltip>
+                  <Tooltip label="Right tooltip" placement="right">
+                    <Button variant="outline" size="sm">Right</Button>
+                  </Tooltip>
+                </div>
+              </Block>
+              <Block label="Variants">
+                <div className="flex flex-wrap items-center gap-6">
+                  <Tooltip label="Dark (default)" variant="dark">
+                    <Button variant="outline" size="sm">Dark</Button>
+                  </Tooltip>
+                  <Tooltip label="Brand-tinted" variant="brand">
+                    <Button variant="outline" size="sm">Brand</Button>
+                  </Tooltip>
+                  <Tooltip label="Light card" variant="light">
+                    <Button variant="outline" size="sm">Light</Button>
+                  </Tooltip>
+                </div>
+              </Block>
+            </Section>
+
+            {/* ===== Dropdown ===== */}
+            <Section id="menus" title="Dropdown" desc="Click-triggered menu of actions.">
+              <Block label="Actions menu">
+                <div className="flex flex-wrap gap-4">
+                  <Dropdown
+                    trigger={<Button variant="outline">Actions</Button>}
+                    items={[
+                      { header: 'Manage' },
+                      { label: 'Edit campaign', icon: <Star className="h-4 w-4" />, onClick: () => {} },
+                      { label: 'Duplicate', onClick: () => {} },
+                      { label: 'Archive', onClick: () => {}, shortcut: '⌘A' },
+                      { divider: true },
+                      { label: 'Delete campaign', danger: true, onClick: () => {} },
+                    ]}
+                  />
+                  <Dropdown
+                    align="right"
+                    trigger={<Button>Add ▾</Button>}
+                    items={[
+                      { label: 'New package', onClick: () => {} },
+                      { label: 'Invite creator', onClick: () => {} },
+                      { label: 'Disabled item', disabled: true },
+                    ]}
+                  />
+                </div>
+              </Block>
+            </Section>
+
+            {/* ===== Rating ===== */}
+            <Section id="rating" title="Rating" desc="Star rating — read-only or interactive.">
+              <Block label="Display">
+                <div className="flex flex-col gap-3">
+                  <Rating value={4.5} readOnly showValue />
+                  <Rating value={3.2} readOnly size="sm" showValue />
+                  <Rating value={5} readOnly size="lg" showValue />
+                </div>
+              </Block>
+              <Block label="Interactive">
+                <div className="flex items-center gap-3">
+                  <Rating value={stars} onChange={setStars} />
+                  <span className="text-sm text-zinc-600">You picked {stars}</span>
+                </div>
+              </Block>
+            </Section>
+
+            {/* ===== Slider ===== */}
+            <Section id="slider" title="Slider" desc="Range input with brand-tinted track + format helper.">
+              <Block label="Budget">
+                <Slider
+                  label="Maximum budget"
+                  value={budget}
+                  onChange={setBudget}
+                  min={0}
+                  max={500000}
+                  step={1000}
+                  formatValue={(v) => `₹${v.toLocaleString('en-IN')}`}
+                />
+              </Block>
+              <Block label="Percent">
+                <Slider
+                  label="Engagement floor"
+                  value={4}
+                  onChange={() => {}}
+                  min={0}
+                  max={10}
+                  step={0.5}
+                  formatValue={(v) => `${v}%`}
+                />
+              </Block>
+            </Section>
+
             {/* ===== Misc ===== */}
             <Section id="misc" title="Misc" desc="Divider, accordion, empty state.">
               <Block label="Divider">
@@ -608,7 +886,7 @@ export default function UIKitPage() {
               </Block>
               <Block label="Empty state">
                 <EmptyState
-                  icon={<IconInbox />}
+                  icon={<Inbox className="h-6 w-6" />}
                   title="No campaigns yet"
                   description="Once you check out a package or build a custom mix, campaigns appear here."
                   action={<Button>Browse packages</Button>}
@@ -643,41 +921,3 @@ function Block({ label, children }) {
   );
 }
 
-// --- inline icons ---
-function IconStar() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-      <path d="M9.05 2.927a1 1 0 011.9 0l1.6 4.9h5.15a1 1 0 01.59 1.81l-4.17 3.03 1.6 4.9a1 1 0 01-1.54 1.12L10 15.66l-4.18 3.03a1 1 0 01-1.54-1.12l1.6-4.9-4.17-3.03A1 1 0 012.3 7.83h5.15l1.6-4.9z" />
-    </svg>
-  );
-}
-function IconArrow() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-      <path
-        fillRule="evenodd"
-        d="M3 10a1 1 0 011-1h10.586L11.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L14.586 11H4a1 1 0 01-1-1z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
-function IconSearch() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="9" cy="9" r="6" />
-      <path d="m14 14 3 3" strokeLinecap="round" />
-    </svg>
-  );
-}
-function IconInbox() {
-  return (
-    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path
-        d="M3 12l2-7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2l2 7M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6M3 12h5l2 2h4l2-2h5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}

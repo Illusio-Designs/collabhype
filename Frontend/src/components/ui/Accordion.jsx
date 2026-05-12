@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 
 export default function Accordion({ items, allowMultiple = false, defaultOpen = null }) {
   const [open, setOpen] = useState(allowMultiple ? defaultOpen ?? [] : defaultOpen);
@@ -36,9 +37,7 @@ export default function Accordion({ items, allowMultiple = false, defaultOpen = 
                 transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                 className="text-zinc-400"
               >
-                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="m5 7 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <ChevronDown className="h-4 w-4" />
               </motion.span>
             </button>
             <AnimatePresence initial={false}>

@@ -14,6 +14,7 @@ import {
   PasswordInput,
   useToast,
 } from '@/components/ui';
+import PageHeader from '@/components/dashboard/PageHeader';
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -21,9 +22,15 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <span className="eyebrow">Account</span>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Settings</h1>
-      <p className="mt-2 text-zinc-600">Manage how you sign in, get notified, and your data.</p>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Settings' },
+        ]}
+        eyebrow="Account"
+        title="Settings"
+        subtitle="Manage how you sign in, get notified, and your data."
+      />
 
       <div className="mt-8 space-y-6">
         <AccountInfo user={user} />

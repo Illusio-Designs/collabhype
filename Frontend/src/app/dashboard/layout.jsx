@@ -4,6 +4,29 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import clsx from 'clsx';
+import {
+  Bell,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  HelpCircle,
+  LayoutDashboard,
+  LifeBuoy,
+  LineChart,
+  Link as LinkIconLucide,
+  LogOut,
+  Menu,
+  Package,
+  Receipt,
+  Search,
+  Settings,
+  ShoppingCart,
+  User,
+  Users,
+  Wallet,
+  X,
+} from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Avatar, Spinner, Tooltip } from '@/components/ui';
 
@@ -16,19 +39,19 @@ const NAV = {
     {
       label: 'Main',
       items: [
-        { href: '/dashboard', label: 'Overview', icon: GridIcon, exact: true },
-        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardIcon, badge: '12' },
-        { href: '/dashboard/orders', label: 'Orders', icon: ReceiptIcon },
-        { href: '/cart', label: 'Cart', icon: CartIcon },
+        { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList, badge: '12' },
+        { href: '/dashboard/orders', label: 'Orders', icon: Receipt },
+        { href: '/cart', label: 'Cart', icon: ShoppingCart },
       ],
     },
     {
       label: 'Account',
       items: [
-        { href: '/dashboard/profile', label: 'Brand profile', icon: BuildingIcon },
-        { href: '/dashboard/notifications', label: 'Notifications', icon: BellIcon, dot: true },
-        { href: '/dashboard/support', label: 'Help & disputes', icon: LifeBuoyIcon },
-        { href: '/dashboard/settings', label: 'Settings', icon: CogIcon },
+        { href: '/dashboard/profile', label: 'Brand profile', icon: Building2 },
+        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell, dot: true },
+        { href: '/dashboard/support', label: 'Help & disputes', icon: LifeBuoy },
+        { href: '/dashboard/settings', label: 'Settings', icon: Settings },
       ],
     },
   ],
@@ -36,25 +59,25 @@ const NAV = {
     {
       label: 'Main',
       items: [
-        { href: '/dashboard', label: 'Overview', icon: GridIcon, exact: true },
-        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardIcon, badge: '3' },
-        { href: '/dashboard/payouts', label: 'Payouts', icon: CashIcon },
+        { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList, badge: '3' },
+        { href: '/dashboard/payouts', label: 'Payouts', icon: Wallet },
       ],
     },
     {
       label: 'Creator setup',
       items: [
-        { href: '/dashboard/profile', label: 'Profile', icon: UserIcon },
-        { href: '/dashboard/socials', label: 'Connect socials', icon: LinkIcon },
-        { href: '/dashboard/rates', label: 'Rate card', icon: WalletIcon },
+        { href: '/dashboard/profile', label: 'Profile', icon: User },
+        { href: '/dashboard/socials', label: 'Connect socials', icon: LinkIconLucide },
+        { href: '/dashboard/rates', label: 'Rate card', icon: Wallet },
       ],
     },
     {
       label: 'Account',
       items: [
-        { href: '/dashboard/notifications', label: 'Notifications', icon: BellIcon, dot: true },
-        { href: '/dashboard/support', label: 'Help & disputes', icon: LifeBuoyIcon },
-        { href: '/dashboard/settings', label: 'Settings', icon: CogIcon },
+        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell, dot: true },
+        { href: '/dashboard/support', label: 'Help & disputes', icon: LifeBuoy },
+        { href: '/dashboard/settings', label: 'Settings', icon: Settings },
       ],
     },
   ],
@@ -62,30 +85,30 @@ const NAV = {
     {
       label: 'Platform',
       items: [
-        { href: '/dashboard', label: 'Overview', icon: GridIcon, exact: true },
-        { href: '/dashboard/admin/users', label: 'Users', icon: UsersIcon, badge: '1.2K' },
-        { href: '/dashboard/admin/packages', label: 'Packages', icon: PackageIcon },
-        { href: '/dashboard/admin/orders', label: 'All orders', icon: ReceiptIcon },
+        { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+        { href: '/dashboard/admin/users', label: 'Users', icon: Users, badge: '1.2K' },
+        { href: '/dashboard/admin/packages', label: 'Packages', icon: Package },
+        { href: '/dashboard/admin/orders', label: 'All orders', icon: Receipt },
       ],
     },
     {
       label: 'Marketing',
       items: [
-        { href: '/dashboard/admin/content', label: 'SEO & content', icon: DocIcon },
-        { href: '/dashboard/admin/tracking', label: 'Tracking', icon: ChartIcon },
+        { href: '/dashboard/admin/content', label: 'SEO & content', icon: ClipboardList },
+        { href: '/dashboard/admin/tracking', label: 'Tracking', icon: LineChart },
       ],
     },
     {
       label: 'Support',
       items: [
-        { href: '/dashboard/admin/support', label: 'Support queue', icon: LifeBuoyIcon, dot: true },
+        { href: '/dashboard/admin/support', label: 'Support queue', icon: LifeBuoy, dot: true },
       ],
     },
     {
       label: 'Account',
       items: [
-        { href: '/dashboard/notifications', label: 'Notifications', icon: BellIcon, dot: true },
-        { href: '/dashboard/settings', label: 'Settings', icon: CogIcon },
+        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell, dot: true },
+        { href: '/dashboard/settings', label: 'Settings', icon: Settings },
       ],
     },
   ],
@@ -210,11 +233,11 @@ function Sidebar({
           <button
             type="button"
             onClick={onMobileClose}
-            className="grid h-9 w-9 place-items-center rounded-lg text-zinc-600 transition hover:bg-white/60 hover:text-zinc-900"
+            className="grid h-9 w-9 place-items-center rounded-lg text-brand-800 transition hover:bg-white/70 hover:text-brand-900"
             aria-label="Close menu"
             title="Close menu"
           >
-            <CloseIcon className="h-5 w-5" />
+            <X className="h-5 w-5" />
           </button>
         )}
         {/* Collapse toggle — desktop only */}
@@ -222,11 +245,11 @@ function Sidebar({
           <button
             type="button"
             onClick={onToggleCollapsed}
-            className="hidden h-8 w-8 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/60 hover:text-zinc-900 lg:grid"
+            className="hidden h-8 w-8 place-items-center rounded-lg text-brand-800/80 transition hover:bg-white/70 hover:text-brand-900 lg:grid"
             aria-label="Collapse sidebar"
             title="Collapse sidebar"
           >
-            <ChevronLeftIcon className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
         )}
       </div>
@@ -235,11 +258,11 @@ function Sidebar({
         <button
           type="button"
           onClick={onToggleCollapsed}
-          className="mt-3 hidden h-8 w-8 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/60 hover:text-zinc-900 lg:grid"
+          className="mt-3 hidden h-8 w-8 place-items-center rounded-lg text-brand-800/80 transition hover:bg-white/70 hover:text-brand-900 lg:grid"
           aria-label="Expand sidebar"
           title="Expand sidebar"
         >
-          <ChevronRightIcon className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4" />
         </button>
       )}
 
@@ -247,7 +270,7 @@ function Sidebar({
         {nav.map((section) => (
           <div key={section.label}>
             {!isCollapsed && (
-              <div className="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-400">
+              <div className="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-800/70">
                 {section.label}
               </div>
             )}
@@ -269,15 +292,15 @@ function Sidebar({
                         ? 'h-10 w-10 justify-center'
                         : 'justify-between gap-3 px-3 py-2',
                       isActive
-                        ? 'bg-white text-brand-700 shadow-sm ring-1 ring-zinc-100'
-                        : 'text-zinc-600 hover:bg-white/60 hover:text-zinc-900',
+                        ? 'bg-white text-brand-800 shadow-sm ring-1 ring-brand-100'
+                        : 'text-brand-900/80 hover:bg-white/70 hover:text-brand-900',
                     )}
                   >
                     <span className={clsx('flex items-center', isCollapsed ? '' : 'gap-3')}>
                       <Icon
                         className={clsx(
                           'h-4 w-4 flex-shrink-0',
-                          isActive ? 'text-brand-600' : 'text-zinc-400',
+                          isActive ? 'text-brand-700' : 'text-brand-800/70',
                         )}
                       />
                       {!isCollapsed && item.label}
@@ -286,7 +309,7 @@ function Sidebar({
                       <span
                         className={clsx(
                           'rounded-full px-2 py-0.5 text-[10px] font-semibold',
-                          isActive ? 'bg-brand-100 text-brand-700' : 'bg-zinc-100 text-zinc-600',
+                          isActive ? 'bg-brand-100 text-brand-800' : 'bg-white/70 text-brand-800',
                         )}
                       >
                         {item.badge}
@@ -327,7 +350,7 @@ function Sidebar({
               className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg text-zinc-400 transition hover:bg-white/10 hover:text-white"
               title="Sign out"
             >
-              <SignOutIcon className="h-4 w-4" />
+              <LogOut className="h-4 w-4" />
             </button>
           </>
         )}
@@ -336,7 +359,7 @@ function Sidebar({
       {isCollapsed && (
         <button
           onClick={onLogout}
-          className="mt-2 grid h-9 w-9 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/60 hover:text-zinc-900"
+          className="mt-2 grid h-9 w-9 place-items-center rounded-lg text-brand-800/80 transition hover:bg-white/70 hover:text-brand-900"
           title="Sign out"
           aria-label="Sign out"
         >
@@ -375,7 +398,7 @@ function TopBar({ user, onMobileMenu }) {
             className="grid h-9 w-9 place-items-center rounded-lg text-zinc-600 hover:bg-zinc-100 lg:hidden"
             aria-label="Open menu"
           >
-            <MenuIcon className="h-5 w-5" />
+            <Menu className="h-5 w-5" />
           </button>
           <div>
             <div className="text-xs text-zinc-500">Welcome,</div>
@@ -385,7 +408,7 @@ function TopBar({ user, onMobileMenu }) {
 
         <div className="hidden flex-1 max-w-md md:block">
           <div className="relative">
-            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
             <input
               type="search"
               placeholder="Find something…"
@@ -403,7 +426,7 @@ function TopBar({ user, onMobileMenu }) {
             title="Help"
             aria-label="Help"
           >
-            <HelpIcon className="h-4 w-4" />
+            <HelpCircle className="h-4 w-4" />
           </button>
           <Link
             href="/dashboard/notifications"
@@ -411,7 +434,7 @@ function TopBar({ user, onMobileMenu }) {
             title="Notifications"
             aria-label="Notifications"
           >
-            <BellIcon className="h-4 w-4" />
+            <Bell className="h-4 w-4" />
             <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
           </Link>
         </div>
@@ -420,211 +443,3 @@ function TopBar({ user, onMobileMenu }) {
   );
 }
 
-// ============================================================================
-// Icons
-// ============================================================================
-
-function GridIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </svg>
-  );
-}
-function UserIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 21a8 8 0 0116 0" strokeLinecap="round" />
-    </svg>
-  );
-}
-function UsersIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="9" cy="8" r="4" />
-      <path d="M2 21a7 7 0 0114 0" strokeLinecap="round" />
-      <circle cx="17" cy="9" r="3" />
-      <path d="M14.5 14a5 5 0 017.5 4.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-function BuildingIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="4" y="3" width="16" height="18" rx="1" />
-      <path d="M9 8h.01M15 8h.01M9 12h.01M15 12h.01M9 16h.01M15 16h.01" strokeLinecap="round" />
-    </svg>
-  );
-}
-function LinkIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path
-        d="M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function WalletIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="6" width="18" height="14" rx="2" />
-      <path d="M16 13h2" strokeLinecap="round" />
-    </svg>
-  );
-}
-function ClipboardIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="6" y="4" width="12" height="17" rx="2" />
-      <path d="M9 4h6v3H9z" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function CashIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="2" y="6" width="20" height="12" rx="2" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-function ReceiptIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M5 2v20l3-2 3 2 3-2 3 2 3-2V2H5z" strokeLinejoin="round" />
-      <path d="M9 7h6M9 11h6M9 15h4" strokeLinecap="round" />
-    </svg>
-  );
-}
-function CartIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 5h2l3 11h10l3-8H7" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="9" cy="20" r="1.5" />
-      <circle cx="18" cy="20" r="1.5" />
-    </svg>
-  );
-}
-function PackageIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path
-        d="M3 7l9-4 9 4M3 7v10l9 4m-9-14l9 4m0 0v14m0-14l9-4m-9 18l9-4V7"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function BellIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path
-        d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 003.4 0"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function CogIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="3" />
-      <path
-        d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 008 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2a2 2 0 110-4h.09A1.65 1.65 0 004.6 8a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V2a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H22a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function SignOutIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path
-        d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function DocIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" strokeLinejoin="round" />
-      <path d="M14 2v6h6M8 13h8M8 17h6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function ChartIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 3v18h18" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7 15l3-4 4 2 5-7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function LifeBuoyIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="3" />
-      <path d="M4.93 4.93l3.54 3.54M15.54 15.54l3.54 3.54M4.93 19.07l3.54-3.54M15.54 8.46l3.54-3.54" strokeLinecap="round" />
-    </svg>
-  );
-}
-function ChevronLeftIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function CloseIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function ChevronRightIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function MenuIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round" />
-    </svg>
-  );
-}
-function SearchIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="11" cy="11" r="7" />
-      <path d="m17 17 4 4" strokeLinecap="round" />
-    </svg>
-  );
-}
-function HelpIcon(p) {
-  return (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10" />
-      <path
-        d="M9.5 9a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 3.5M12 17h.01"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}

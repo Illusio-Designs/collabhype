@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Check } from 'lucide-react';
 import { Avatar, Badge, Card } from '@/components/ui';
 import CreatorBadge from '@/components/CreatorBadge';
 import {
@@ -49,9 +50,7 @@ export default function InfluencerCard({
               : 'border-zinc-300 bg-white text-transparent hover:border-brand-500'
           }`}
         >
-          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden="true">
-            <path d="M8.143 14.428a1 1 0 0 1-1.414 0L3.272 10.97a1 1 0 1 1 1.414-1.415l2.75 2.75 7.95-7.95a1 1 0 1 1 1.415 1.414l-8.658 8.658Z" />
-          </svg>
+          <Check className="h-4 w-4" strokeWidth={3} />
         </button>
       )}
 

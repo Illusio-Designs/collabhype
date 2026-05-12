@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Wraps a table (or any wide block) so it scrolls horizontally when content
 // exceeds the viewport. Edge fades + clickable chevron buttons surface the
@@ -69,7 +70,7 @@ export default function ScrollTable({ children, className }) {
           aria-label="Scroll left"
           className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-zinc-900 text-white shadow-md ring-1 ring-zinc-700/40 transition hover:scale-105 hover:bg-zinc-800 disabled:opacity-0"
         >
-          <ChevronIcon className="h-4 w-4" dir="left" />
+          <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
         </button>
       </div>
 
@@ -88,28 +89,10 @@ export default function ScrollTable({ children, className }) {
           aria-label="Scroll right"
           className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-zinc-900 text-white shadow-md ring-1 ring-zinc-700/40 transition hover:scale-105 hover:bg-zinc-800 disabled:opacity-0"
         >
-          <ChevronIcon className="h-4 w-4" dir="right" />
+          <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
         </button>
       </div>
     </div>
   );
 }
 
-function ChevronIcon({ className, dir = 'right' }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      aria-hidden="true"
-    >
-      <path
-        d={dir === 'left' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}

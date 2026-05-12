@@ -1,18 +1,14 @@
 import Link from 'next/link';
+import { Check } from 'lucide-react';
 import { Card } from '@/components/ui';
 import { DELIVERABLE_LABEL, formatINR } from '@/lib/format';
 
 const CHECK_ICON = (
-  <svg
+  <Check
     aria-hidden="true"
-    viewBox="0 0 20 20"
     className="mt-[3px] h-4 w-4 flex-shrink-0 text-brand-600"
-  >
-    <path
-      fill="currentColor"
-      d="M8.143 14.428a1 1 0 0 1-1.414 0L3.272 10.97a1 1 0 1 1 1.414-1.415l2.75 2.75 7.95-7.95a1 1 0 1 1 1.415 1.414l-8.658 8.658Z"
-    />
-  </svg>
+    strokeWidth={3}
+  />
 );
 
 export default function PackageCard({ pkg }) {

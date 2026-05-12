@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
+import { UploadCloud, X } from 'lucide-react';
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -113,19 +114,7 @@ export default function FileUpload({
           transition={{ duration: 0.2 }}
           className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-brand-50 text-brand-700"
         >
-          <svg
-            className="h-6 w-6"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              d="M12 4v12m0-12l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <UploadCloud className="h-6 w-6" />
         </motion.div>
         <div className="mt-3 text-sm font-medium text-zinc-900">{label}</div>
         {hint && <div className="mt-1 text-xs text-zinc-500">{hint}</div>}
@@ -163,13 +152,7 @@ export default function FileUpload({
                   className="rounded-md p-1.5 text-zinc-400 transition hover:bg-red-50 hover:text-red-600"
                   aria-label={`Remove ${f.name}`}
                 >
-                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <X className="h-4 w-4" />
                 </button>
               </motion.div>
             ))}

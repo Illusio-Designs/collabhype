@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Alert, Button, Card, FormField, Input, Select, Textarea, useToast } from '@/components/ui';
+import { Alert, Breadcrumb, Button, Card, FormField, Input, Select, Textarea, useToast } from '@/components/ui';
 
 const REASONS = [
   { value: 'general', label: 'General inquiry' },
@@ -33,7 +33,11 @@ export default function ContactPage() {
   return (
     <div>
       <section className="bg-gradient-to-b from-brand-50 to-white">
-        <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mb-6 flex justify-center">
+            <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Contact' }]} />
+          </div>
+          <div className="text-center">
           <span className="eyebrow">Get in touch</span>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
             We&apos;d love to hear from you
@@ -42,6 +46,7 @@ export default function ContactPage() {
             Questions, partnerships, or press — drop us a line and we&apos;ll reply within one
             business day.
           </p>
+          </div>
         </div>
       </section>
 

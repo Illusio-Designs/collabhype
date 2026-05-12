@@ -7,6 +7,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { Badge, Card, EmptyState, Spinner, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
+import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR } from '@/lib/format';
 
@@ -71,11 +72,15 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <span className="eyebrow">Billing</span>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Orders</h1>
-        <p className="mt-2 text-zinc-600">Every checkout, with escrow + campaign status.</p>
-      </header>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Orders' },
+        ]}
+        eyebrow="Billing"
+        title="Orders"
+        subtitle="Every checkout, with escrow + campaign status."
+      />
 
       <KpiStrip kpis={kpis} />
 

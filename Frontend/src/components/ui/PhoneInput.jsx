@@ -2,6 +2,7 @@
 
 import { forwardRef, useEffect, useId, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
+import { ChevronDown } from 'lucide-react';
 import { inputClasses } from './FormField';
 
 // Curated country list — India first since the platform is India-focused.
@@ -111,14 +112,10 @@ const PhoneInput = forwardRef(function PhoneInput(
         >
           <span className="text-base leading-none" aria-hidden="true">{country.flag}</span>
           <span className="tabular-nums">{country.dial}</span>
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 20 20"
+          <ChevronDown
             className={clsx('h-3.5 w-3.5 text-zinc-500 transition-transform', open && 'rotate-180')}
-            fill="currentColor"
-          >
-            <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" />
-          </svg>
+            aria-hidden="true"
+          />
         </button>
 
         <input

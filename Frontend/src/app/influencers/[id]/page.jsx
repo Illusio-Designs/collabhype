@@ -10,7 +10,7 @@ import {
 } from '@/lib/format';
 import AddInfluencerForm from '@/components/cart/AddInfluencerForm';
 import CreatorBadge from '@/components/CreatorBadge';
-import { Badge } from '@/components/ui';
+import { Badge, Breadcrumb } from '@/components/ui';
 import { DUMMY_INFLUENCERS } from '@/lib/dummyData';
 
 async function loadInfluencer(id) {
@@ -52,6 +52,15 @@ export default async function InfluencerDetailPage({ params }) {
     <article>
       <section className="bg-gradient-to-b from-brand-50 to-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <Breadcrumb
+              items={[
+                { label: 'Home', href: '/' },
+                { label: 'Influencers', href: '/influencers' },
+                { label: name },
+              ]}
+            />
+          </div>
           <div className="grid gap-10 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <div className="flex items-center gap-4">

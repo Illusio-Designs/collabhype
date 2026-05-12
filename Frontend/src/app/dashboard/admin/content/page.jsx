@@ -16,6 +16,8 @@ import {
   Textarea,
   useToast,
 } from '@/components/ui';
+import { ChevronRight } from 'lucide-react';
+import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 
 export default function AdminContentPage() {
@@ -57,16 +59,17 @@ export default function AdminContentPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <span className="eyebrow">Platform admin</span>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">SEO & content</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Page-level SEO (title, description, OG image) editable per slug.
-          </p>
-        </div>
-        <Button onClick={() => setEditing('new')}>+ New entry</Button>
-      </div>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Admin' },
+          { label: 'SEO & content' },
+        ]}
+        eyebrow="Platform admin"
+        title="SEO & content"
+        subtitle="Page-level SEO (title, description, OG image) editable per slug."
+        action={<Button onClick={() => setEditing('new')}>+ New entry</Button>}
+      />
 
       <Card padding="none" className="overflow-hidden">
        <ScrollTable hintLabel="Scroll">
@@ -114,7 +117,7 @@ export default function AdminContentPage() {
                     size="sm"
                     variant="outline"
                     onClick={() => setEditing(c)}
-                    iconRight={<ChevronRight />}
+                    iconRight={<ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />}
                   >
                     Edit
                   </Button>
@@ -281,10 +284,3 @@ function ContentEditorModal({ editing, onClose, onSaved }) {
   );
 }
 
-function ChevronRight() {
-  return (
-    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-      <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}

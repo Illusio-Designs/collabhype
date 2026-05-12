@@ -1,26 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { Heart } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="relative bg-zinc-50 pb-2 pt-6">
-      {/* Giant watermark of the brand name behind the footer card */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 select-none overflow-hidden"
-      >
-        <div
-          className="text-center font-black tracking-tighter text-zinc-200/70"
-          style={{ fontSize: 'clamp(72px, 17vw, 260px)', lineHeight: 0.85 }}
-        >
-          Collabhype
-        </div>
-      </div>
-
+    <footer className="relative bg-zinc-50 pt-2">
       {/* The footer card itself */}
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm sm:p-10">
+        <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="grid gap-10 md:grid-cols-[1.2fr,2fr]">
             {/* ===== Left: brand + tagline + socials ===== */}
             <div>
@@ -122,13 +110,32 @@ export default function Footer() {
           {/* Crafted in Rajkot strip */}
           <div className="mt-4 flex items-center justify-center gap-2 border-t border-zinc-100 pt-4 text-xs font-medium text-zinc-500">
             <span>Crafted with</span>
-            <HeartIcon />
+            <Heart className="h-4 w-4 fill-accent-500 text-accent-500" />
             <span>in Rajkot, India</span>
           </div>
         </div>
 
-        {/* Spacer so the watermark text peeks below the card a bit */}
-        <div className="h-24 sm:h-32 lg:h-40" />
+        {/* Brand watermark — soft, polished, never overflows.
+            Font-size clamp keeps the text width inside max-w-7xl on every
+            viewport; the mask fades the bottom into the page so the cut is
+            intentional, not a glitch. */}
+        <div
+          aria-hidden
+          className="pointer-events-none relative mt-2 select-none overflow-hidden sm:mt-3"
+          style={{
+            WebkitMaskImage:
+              'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.55) 65%, transparent 100%)',
+            maskImage:
+              'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.55) 65%, transparent 100%)',
+          }}
+        >
+          <div
+            className="text-center font-black leading-none tracking-tighter text-zinc-300"
+            style={{ fontSize: 'clamp(56px, 13vw, 176px)' }}
+          >
+            Collabhype
+          </div>
+        </div>
       </div>
     </footer>
   );
@@ -148,19 +155,6 @@ function FooterColumn({ title, links }) {
         ))}
       </ul>
     </div>
-  );
-}
-
-function HeartIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-4 w-4 text-accent-500"
-      fill="currentColor"
-    >
-      <path d="M12 21s-7.5-4.5-9.5-9.4C1 8 3.4 4.5 7 4.5c2 0 3.7 1 5 2.6 1.3-1.6 3-2.6 5-2.6 3.6 0 6 3.5 4.5 7.1C19.5 16.5 12 21 12 21z" />
-    </svg>
   );
 }
 

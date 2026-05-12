@@ -1,3 +1,5 @@
+import { Breadcrumb } from '@/components/ui';
+
 export const metadata = {
   title: 'Privacy Policy — Collabhype',
 };
@@ -49,6 +51,9 @@ export default function PrivacyPage() {
   return (
     <div className="bg-white">
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Privacy' }]} />
+        </div>
         <span className="eyebrow">Legal</span>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-900">Privacy Policy</h1>
         <p className="mt-2 text-sm text-zinc-500">Last updated: May 11, 2026</p>

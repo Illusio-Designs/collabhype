@@ -6,6 +6,7 @@ import { apiClient, apiError } from '@/lib/apiClient';
 import { isDemoMode } from '@/lib/auth';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Alert, Badge, Button, Card, Spinner, useToast } from '@/components/ui';
+import PageHeader from '@/components/dashboard/PageHeader';
 import { formatCount, PLATFORM_LABEL } from '@/lib/format';
 
 // Demo follower presets used when "Connect" is clicked in demo mode (no
@@ -142,11 +143,15 @@ function SocialsInner() {
 
   return (
     <div>
-      <span className="eyebrow">Settings</span>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Connect socials</h1>
-      <p className="mt-2 text-zinc-600">
-        We pull real follower counts and engagement from your accounts — never self-reported.
-      </p>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Connect socials' },
+        ]}
+        eyebrow="Settings"
+        title="Connect socials"
+        subtitle="We pull real follower counts and engagement from your accounts — never self-reported."
+      />
 
       <div className="mt-8 space-y-4">
         <PlatformCard

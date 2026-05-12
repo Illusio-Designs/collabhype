@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { Check } from 'lucide-react';
 
 const BRAND_POINTS = [
   'Browse, book, and brief without a single sales call',
@@ -117,9 +118,7 @@ export default function ForBrandsAndCreators() {
 function CheckBadge() {
   return (
     <span className="mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded-full bg-white/20">
-      <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <Check className="h-3 w-3 text-white" strokeWidth={3} />
     </span>
   );
 }
@@ -127,15 +126,7 @@ function CheckBadge() {
 function CheckBadgeDark() {
   return (
     <span className="mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded-full bg-brand-50">
-      <svg
-        className="h-3 w-3 text-brand-700"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-      >
-        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <Check className="h-3 w-3 text-brand-700" strokeWidth={3} />
     </span>
   );
 }

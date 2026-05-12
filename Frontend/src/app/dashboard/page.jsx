@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Avatar, Badge, Button, Card, Stat } from '@/components/ui';
 import ScrollTable from '@/components/dashboard/ScrollTable';
+import PageHeader from '@/components/dashboard/PageHeader';
 import { formatINR, formatCount } from '@/lib/format';
 import {
   DUMMY_ADMIN_USERS_LIST,
@@ -343,21 +344,6 @@ function AdminOverview({ user }) {
 // ============================================================================
 // Shared
 // ============================================================================
-
-function PageHeader({ eyebrow, title, subtitle, action }) {
-  return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0 flex-1">
-        <span className="eyebrow">{eyebrow}</span>
-        <h1 className="mt-2 break-words text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
-          {title}
-        </h1>
-        {subtitle && <p className="mt-1 text-sm text-zinc-600">{subtitle}</p>}
-      </div>
-      {action && <div className="flex-shrink-0">{action}</div>}
-    </div>
-  );
-}
 
 function SectionHead({ title, link }) {
   return (

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { Badge, Button, Card, EmptyState, Spinner, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
+import PageHeader from '@/components/dashboard/PageHeader';
 
 function timeAgo(d) {
   const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
@@ -92,20 +93,22 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-end justify-between">
-        <div>
-          <span className="eyebrow">Inbox</span>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Notifications</h1>
-          <p className="mt-2 text-zinc-600">
-            {unread > 0 ? `You have ${unread} unread` : "You're all caught up"}.
-          </p>
-        </div>
-        {unread > 0 && (
-          <Button variant="outline" onClick={markAllRead} loading={busy}>
-            Mark all read
-          </Button>
-        )}
-      </header>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Notifications' },
+        ]}
+        eyebrow="Inbox"
+        title="Notifications"
+        subtitle={unread > 0 ? `You have ${unread} unread.` : "You're all caught up."}
+        action={
+          unread > 0 && (
+            <Button variant="outline" onClick={markAllRead} loading={busy}>
+              Mark all read
+            </Button>
+          )
+        }
+      />
 
       <KpiStrip
         kpis={[

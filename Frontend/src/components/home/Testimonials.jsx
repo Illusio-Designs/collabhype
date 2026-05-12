@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { Quote } from 'lucide-react';
 import { StaggerContainer, StaggerItem } from '@/components/motion/Stagger';
 
 const TESTIMONIALS = [
@@ -55,14 +56,7 @@ export default function Testimonials() {
                 transition={{ duration: 0.25 }}
                 className="card h-full"
               >
-                <svg
-                  className="h-7 w-7 text-brand-200"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden
-                >
-                  <path d="M9.5 5C6.5 5 4 7.5 4 10.5c0 2 1 3.5 2.5 4.5L4 22h5l1.5-7c1-1 1.5-2.5 1.5-4.5C12 7.5 9.5 5 9.5 5zM19.5 5c-3 0-5.5 2.5-5.5 5.5 0 2 1 3.5 2.5 4.5L14 22h5l1.5-7c1-1 1.5-2.5 1.5-4.5C22 7.5 19.5 5 19.5 5z" />
-                </svg>
+                <Quote className="h-7 w-7 text-brand-200" fill="currentColor" />
                 <p className="mt-4 text-base leading-7 text-zinc-700">"{t.quote}"</p>
                 <div className="mt-6 flex items-center gap-3 border-t border-zinc-100 pt-5">
                   <div className="grid h-10 w-10 place-items-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">

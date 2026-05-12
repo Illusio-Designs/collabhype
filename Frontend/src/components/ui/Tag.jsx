@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { X } from 'lucide-react';
 
 const VARIANTS = {
   default: 'bg-zinc-100 text-zinc-700',
@@ -23,9 +24,7 @@ export default function Tag({ children, onClose, variant = 'default', className 
           className="grid h-3.5 w-3.5 place-items-center rounded opacity-50 hover:bg-black/10 hover:opacity-100"
           aria-label="Remove tag"
         >
-          <svg className="h-2.5 w-2.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 4l12 12M16 4L4 16" strokeLinecap="round" />
-          </svg>
+          <X className="h-2.5 w-2.5" />
         </button>
       )}
     </span>

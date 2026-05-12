@@ -3,8 +3,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { ChevronRight } from 'lucide-react';
 import { Badge, Button, Card, Spinner } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
+import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR, formatCount, TIER_LABEL } from '@/lib/format';
 import { DUMMY_PACKAGES } from '@/lib/dummyData';
@@ -27,16 +29,17 @@ export default function AdminPackagesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <span className="eyebrow">Platform admin</span>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Packages</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Curated bundles shown to brands in the marketplace.
-          </p>
-        </div>
-        <Button>+ New package</Button>
-      </div>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Admin' },
+          { label: 'Packages' },
+        ]}
+        eyebrow="Platform admin"
+        title="Packages"
+        subtitle="Curated bundles shown to brands in the marketplace."
+        action={<Button>+ New package</Button>}
+      />
 
       <KpiStrip
         kpis={[
@@ -90,7 +93,7 @@ export default function AdminPackagesPage() {
                 <td className="px-3 py-3 sm:px-6 font-semibold text-zinc-900">{formatINR(p.price)}</td>
                 <td className="px-3 py-3 sm:px-6 text-zinc-600">{formatCount(p.estReach)}</td>
                 <td className="whitespace-nowrap px-3 py-3 sm:px-6 text-right">
-                  <Button size="sm" variant="outline" iconRight={<ChevronRight />}>
+                  <Button size="sm" variant="outline" iconRight={<ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />}>
                     Edit
                   </Button>
                 </td>
@@ -104,10 +107,3 @@ export default function AdminPackagesPage() {
   );
 }
 
-function ChevronRight() {
-  return (
-    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-      <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}

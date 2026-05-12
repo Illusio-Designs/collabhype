@@ -3,8 +3,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { ChevronRight } from 'lucide-react';
 import { Avatar, Badge, Button, Card, Input, Spinner } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
+import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 import { DUMMY_ADMIN_USERS_LIST, DUMMY_PLATFORM_STATS } from '@/lib/dummyData';
 import { formatCount } from '@/lib/format';
@@ -27,17 +29,22 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <span className="eyebrow">Platform admin</span>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Users</h1>
-          <p className="mt-1 text-sm text-zinc-600">Search, suspend, or manage every account.</p>
-        </div>
-        <div className="flex gap-2">
-          <Input placeholder="Search users…" className="w-64" />
-          <Button>Invite</Button>
-        </div>
-      </div>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Admin' },
+          { label: 'Users' },
+        ]}
+        eyebrow="Platform admin"
+        title="Users"
+        subtitle="Search, suspend, or manage every account."
+        action={
+          <div className="flex gap-2">
+            <Input placeholder="Search users…" className="w-64" />
+            <Button>Invite</Button>
+          </div>
+        }
+      />
 
       <KpiStrip
         kpis={[
@@ -89,7 +96,7 @@ export default function AdminUsersPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    iconRight={<ChevronRight />}
+                    iconRight={<ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />}
                   >
                     Manage
                   </Button>
@@ -104,10 +111,3 @@ export default function AdminUsersPage() {
   );
 }
 
-function ChevronRight() {
-  return (
-    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-      <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}

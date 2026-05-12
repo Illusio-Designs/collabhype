@@ -3,6 +3,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { Check } from 'lucide-react';
 import { Button, Spinner } from '@/components/ui';
 
 function SuccessContent() {
@@ -11,15 +12,7 @@ function SuccessContent() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6 lg:px-8">
       <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-green-100">
-        <svg
-          className="h-8 w-8 text-green-600"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        >
-          <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <Check className="h-8 w-8 text-green-600" strokeWidth={2.5} />
       </div>
       <h1 className="mt-6 text-3xl font-bold tracking-tight text-zinc-900">Payment received</h1>
       <p className="mt-3 text-zinc-600">

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { Avatar, Badge, Card, Select, Spinner, Stat, useToast } from '@/components/ui';
+import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 
 const RANGE_OPTIONS = [
@@ -56,18 +57,21 @@ export default function AdminTrackingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <span className="eyebrow">Platform admin</span>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Platform tracking</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Events captured server-side from every page view and key action.
-          </p>
-        </div>
-        <div className="w-44">
-          <Select value={days} onChange={setDays} options={RANGE_OPTIONS} />
-        </div>
-      </div>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Admin' },
+          { label: 'Platform tracking' },
+        ]}
+        eyebrow="Platform admin"
+        title="Platform tracking"
+        subtitle="Events captured server-side from every page view and key action."
+        action={
+          <div className="w-44">
+            <Select value={days} onChange={setDays} options={RANGE_OPTIONS} />
+          </div>
+        }
+      />
 
       {/* Summary stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

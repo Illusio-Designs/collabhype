@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Card } from '@/components/ui';
+import { Check } from 'lucide-react';
+import { Breadcrumb, Card } from '@/components/ui';
 
 export const metadata = {
   title: 'How it works — Collabhype',
@@ -73,7 +74,11 @@ export default function HowItWorksPage() {
     <div>
       {/* Hero */}
       <section className="bg-gradient-to-b from-brand-50 to-white">
-        <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mb-6 flex justify-center">
+            <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'How it works' }]} />
+          </div>
+          <div className="text-center">
           <span className="eyebrow">How it works</span>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
             From cart to campaign in{' '}
@@ -83,6 +88,7 @@ export default function HowItWorksPage() {
             Run influencer marketing at the speed of software. No sales calls, no agency
             handlers, no email threads — just clear status at every step.
           </p>
+          </div>
         </div>
       </section>
 
@@ -99,9 +105,7 @@ export default function HowItWorksPage() {
                   <ul className="mt-5 grid gap-2 sm:grid-cols-2">
                     {s.points.map((p) => (
                       <li key={p} className="flex items-start gap-2 text-sm text-zinc-700">
-                        <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 011.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z" clipRule="evenodd" />
-                        </svg>
+                        <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" strokeWidth={2.5} />
                         {p}
                       </li>
                     ))}

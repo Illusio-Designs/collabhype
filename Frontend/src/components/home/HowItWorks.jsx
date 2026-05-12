@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { ChevronRight } from 'lucide-react';
 import { StaggerContainer, StaggerItem } from '@/components/motion/Stagger';
 
 const STEPS = [
@@ -57,9 +58,7 @@ export default function HowItWorks() {
                 <div className="text-4xl font-bold text-brand-700">{s.n}</div>
                 {i < STEPS.length - 1 && (
                   <div className="absolute right-5 top-7 hidden text-brand-200 lg:block">
-                    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M9 5l7 7-7 7V5z" />
-                    </svg>
+                    <ChevronRight className="h-6 w-6" />
                   </div>
                 )}
                 <h3 className="mt-4 text-lg font-semibold text-zinc-900">{s.t}</h3>

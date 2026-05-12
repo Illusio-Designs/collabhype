@@ -4,6 +4,7 @@ import Stats from '@/components/home/Stats';
 import Services from '@/components/home/Services';
 import HowItWorks from '@/components/home/HowItWorks';
 import Tiers from '@/components/home/Tiers';
+import CreatorReels from '@/components/home/CreatorReels';
 import FeaturedPackages from '@/components/home/FeaturedPackages';
 import ForBrandsAndCreators from '@/components/home/ForBrandsAndCreators';
 import Niches from '@/components/home/Niches';
@@ -27,6 +28,7 @@ export default function HomePage() {
       <Services />
       <HowItWorks />
       <Tiers />
+      <CreatorReels />
       <FeaturedPackages packages={featured} />
       <ForBrandsAndCreators />
       <Niches niches={niches} />

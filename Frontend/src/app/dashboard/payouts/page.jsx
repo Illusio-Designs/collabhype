@@ -6,6 +6,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { Badge, Card, EmptyState, Spinner, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
+import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR } from '@/lib/format';
 
@@ -70,13 +71,15 @@ export default function PayoutsPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <span className="eyebrow">Earnings</span>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Payouts</h1>
-        <p className="mt-2 text-zinc-600">
-          Released to your UPI within 1–2 business days after a brand approves your post.
-        </p>
-      </header>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Payouts' },
+        ]}
+        eyebrow="Earnings"
+        title="Payouts"
+        subtitle="Released to your UPI within 1–2 business days after a brand approves your post."
+      />
 
       <KpiStrip kpis={kpis} />
 

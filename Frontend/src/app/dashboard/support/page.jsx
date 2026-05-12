@@ -19,6 +19,7 @@ import {
   useToast,
 } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
+import PageHeader from '@/components/dashboard/PageHeader';
 
 const STATUS_META = {
   OPEN:           { variant: 'warning', label: 'Open' },
@@ -125,14 +126,16 @@ export default function SupportPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <span className="eyebrow">Support</span>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Help & disputes</h1>
-          <p className="mt-2 text-zinc-600">Open a ticket when something needs the platform team to step in.</p>
-        </div>
-        <Button onClick={() => setShowNew(true)}>+ New ticket</Button>
-      </header>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Help & disputes' },
+        ]}
+        eyebrow="Support"
+        title="Help & disputes"
+        subtitle="Open a ticket when something needs the platform team to step in."
+        action={<Button onClick={() => setShowNew(true)}>+ New ticket</Button>}
+      />
 
       <KpiStrip kpis={kpis} />
 

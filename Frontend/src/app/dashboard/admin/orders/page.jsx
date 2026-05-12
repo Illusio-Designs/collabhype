@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Badge, Card, Spinner } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
+import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR } from '@/lib/format';
 import { DUMMY_ORDERS, DUMMY_PLATFORM_STATS } from '@/lib/dummyData';
@@ -36,13 +37,16 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <span className="eyebrow">Platform admin</span>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">All orders</h1>
-        <p className="mt-1 text-sm text-zinc-600">
-          Every checkout across the platform with escrow status.
-        </p>
-      </div>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Admin' },
+          { label: 'All orders' },
+        ]}
+        eyebrow="Platform admin"
+        title="All orders"
+        subtitle="Every checkout across the platform with escrow status."
+      />
 
       <KpiStrip
         kpis={[

@@ -16,6 +16,7 @@ import {
   Textarea,
   useToast,
 } from '@/components/ui';
+import PageHeader from '@/components/dashboard/PageHeader';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -85,9 +86,15 @@ function BrandProfileForm() {
 
   return (
     <div>
-      <span className="eyebrow">Settings</span>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Brand profile</h1>
-      <p className="mt-2 text-zinc-600">How creators see your brand when accepting briefs.</p>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Brand profile' },
+        ]}
+        eyebrow="Settings"
+        title="Brand profile"
+        subtitle="How creators see your brand when accepting briefs."
+      />
 
       <form onSubmit={onSubmit} className="mt-8 space-y-6">
         <Card padding="lg">
@@ -260,11 +267,15 @@ function InfluencerProfileForm() {
 
   return (
     <div>
-      <span className="eyebrow">Settings</span>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Your profile</h1>
-      <p className="mt-2 text-zinc-600">
-        Brands see this when browsing creators. Stay accurate to get matched well.
-      </p>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Profile' },
+        ]}
+        eyebrow="Settings"
+        title="Your profile"
+        subtitle="Brands see this when browsing creators. Stay accurate to get matched well."
+      />
 
       <form onSubmit={onSubmit} className="mt-8 space-y-6">
         {/* Availability + basics */}

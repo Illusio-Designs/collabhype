@@ -2,6 +2,7 @@
 
 import { forwardRef, useState } from 'react';
 import clsx from 'clsx';
+import { Eye, EyeOff } from 'lucide-react';
 
 const PasswordInput = forwardRef(function PasswordInput(
   { error, icon, className, ...rest },
@@ -36,20 +37,7 @@ const PasswordInput = forwardRef(function PasswordInput(
         aria-label={visible ? 'Hide password' : 'Show password'}
         tabIndex={-1}
       >
-        {visible ? (
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 3l18 18M10.58 10.58a2 2 0 002.83 2.83M9.88 5.09A10.94 10.94 0 0112 5c5 0 9.27 3.11 11 7-.51 1.16-1.24 2.21-2.13 3.12M6.07 6.16C3.95 7.61 2.31 9.66 1 12c1.73 3.89 6 7 11 7 1.99 0 3.86-.45 5.5-1.27"
-            />
-          </svg>
-        ) : (
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
-            <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
+        {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
       </button>
     </div>
   );

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Stat } from '@/components/ui';
+import { Breadcrumb, Stat } from '@/components/ui';
 
 export const metadata = {
   title: 'About — Collabhype',
@@ -30,7 +30,13 @@ export default function AboutPage() {
     <div>
       {/* Hero */}
       <section className="bg-gradient-to-b from-brand-50 to-white">
-        <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mb-6 flex justify-center">
+            <Breadcrumb
+              items={[{ label: 'Home', href: '/' }, { label: 'About' }]}
+            />
+          </div>
+          <div className="text-center">
           <span className="eyebrow">About us</span>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
             Influencer marketing, finally{' '}
@@ -40,6 +46,7 @@ export default function AboutPage() {
             Collabhype is a marketplace where brands and creators meet directly — no agency
             markups, no DM chaos. Built for India, by people who&apos;ve run campaigns at scale.
           </p>
+          </div>
         </div>
       </section>
 

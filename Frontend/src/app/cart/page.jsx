@@ -8,6 +8,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import {
   Alert,
   Badge,
+  Breadcrumb,
   Button,
   Card,
   EmptyState,
@@ -131,6 +132,9 @@ export default function CartPage() {
   if (!cart?.items?.length) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
+        </div>
         <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Your cart</h1>
         <div className="mt-10">
           <EmptyState
@@ -154,6 +158,9 @@ export default function CartPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
+      </div>
       <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Your cart</h1>
       <p className="mt-2 text-zinc-600">
         {cart.items.length} {cart.items.length === 1 ? 'item' : 'items'}

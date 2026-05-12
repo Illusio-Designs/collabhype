@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { formatINR, formatCount, TIER_LABEL, DELIVERABLE_LABEL, PLATFORM_LABEL } from '@/lib/format';
 import AddPackageButton from '@/components/cart/AddPackageButton';
-import { Badge, Card } from '@/components/ui';
+import { Badge, Breadcrumb, Card } from '@/components/ui';
 import { DUMMY_PACKAGES, DUMMY_INFLUENCERS } from '@/lib/dummyData';
 
 async function loadPackage(slug) {
@@ -46,6 +46,15 @@ export default async function PackageDetailPage({ params }) {
       {/* Hero */}
       <section className="bg-gradient-to-b from-brand-50 to-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <Breadcrumb
+              items={[
+                { label: 'Home', href: '/' },
+                { label: 'Packages', href: '/packages' },
+                { label: pkg.title },
+              ]}
+            />
+          </div>
           <div className="grid gap-10 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <div className="flex flex-wrap gap-2">

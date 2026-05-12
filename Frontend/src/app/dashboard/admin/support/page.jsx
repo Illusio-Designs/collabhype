@@ -17,6 +17,7 @@ import {
   useToast,
 } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
+import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 
 const STATUS_META = {
@@ -111,13 +112,16 @@ export default function AdminSupportPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <span className="eyebrow">Platform admin</span>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Support queue</h1>
-        <p className="mt-1 text-sm text-zinc-600">
-          Every open ticket sorted by priority. Disputes show up first.
-        </p>
-      </header>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Admin' },
+          { label: 'Support queue' },
+        ]}
+        eyebrow="Platform admin"
+        title="Support queue"
+        subtitle="Every open ticket sorted by priority. Disputes show up first."
+      />
 
       <KpiStrip kpis={kpis} />
 

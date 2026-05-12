@@ -1,6 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
+import { Check } from 'lucide-react';
 
 // Visual milestone tracker for multi-step workflows. Each step has:
 //   { key: string, label: string, sub?: string }
@@ -110,9 +111,7 @@ export default function Milestone({ steps, activeKey, completedKeys, className }
               aria-current={isActive ? 'step' : undefined}
             >
               {isCompleted ? (
-                <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
-                  <path d="M8.143 14.428a1 1 0 0 1-1.414 0L3.272 10.97a1 1 0 1 1 1.414-1.415l2.75 2.75 7.95-7.95a1 1 0 1 1 1.415 1.414l-8.658 8.658Z" />
-                </svg>
+                <Check className="h-3.5 w-3.5" strokeWidth={3} />
               ) : (
                 i + 1
               )}

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { Check, FileText } from 'lucide-react';
 import { Button } from '@/components/ui';
 
 const childInit = { opacity: 0, y: 18 };
@@ -95,13 +96,13 @@ export default function Hero() {
                 className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-zinc-500"
               >
                 <span className="flex items-center gap-1.5">
-                  <Check /> No setup fees
+                  <Check className="h-4 w-4 text-brand-600" strokeWidth={2.5} /> No setup fees
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Check /> Escrow-backed
+                  <Check className="h-4 w-4 text-brand-600" strokeWidth={2.5} /> Escrow-backed
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Check /> Razorpay secure
+                  <Check className="h-4 w-4 text-brand-600" strokeWidth={2.5} /> Razorpay secure
                 </span>
               </motion.div>
             </div>
@@ -189,15 +190,7 @@ export default function Hero() {
               >
                 <div className="flex items-center gap-3">
                   <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-green-100">
-                    <svg
-                      className="h-5 w-5 text-green-600"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                    >
-                      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <Check className="h-5 w-5 text-green-600" strokeWidth={2.5} />
                   </div>
                   <div className="min-w-0">
                     <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
@@ -221,10 +214,7 @@ export default function Hero() {
               >
                 <div className="flex items-center gap-2">
                   <span className="grid h-5 w-5 place-items-center rounded-full bg-brand-100">
-                    <svg className="h-3 w-3 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" strokeLinejoin="round" />
-                      <path d="M14 2v6h6" strokeLinejoin="round" />
-                    </svg>
+                    <FileText className="h-3 w-3 text-brand-700" strokeWidth={2.5} />
                   </span>
                   <span className="text-xs font-semibold text-zinc-900">Brief sent</span>
                 </div>
@@ -249,16 +239,3 @@ export default function Hero() {
   );
 }
 
-function Check() {
-  return (
-    <svg
-      className="h-4 w-4 text-brand-600"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-    >
-      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}

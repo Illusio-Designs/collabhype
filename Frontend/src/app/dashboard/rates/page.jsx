@@ -16,6 +16,7 @@ import {
   useToast,
 } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
+import PageHeader from '@/components/dashboard/PageHeader';
 import { DELIVERABLE_LABEL, formatINR } from '@/lib/format';
 
 // Creator-offerable deliverables only — UTM_LINK / VIDEO_DRIVE_LINK /
@@ -109,13 +110,15 @@ export default function RatesPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <span className="eyebrow">Pricing</span>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Rate card</h1>
-        <p className="mt-2 text-zinc-600">
-          Set your price per deliverable. Brands see this when booking you for a custom campaign.
-        </p>
-      </header>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Rate card' },
+        ]}
+        eyebrow="Pricing"
+        title="Rate card"
+        subtitle="Set your price per deliverable. Brands see this when booking you for a custom campaign."
+      />
 
       <KpiStrip
         kpis={[

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { apiFetchSafe } from '@/lib/api';
 import PackageCard from '@/components/PackageCard';
+import { Breadcrumb } from '@/components/ui';
 import { DUMMY_PACKAGES } from '@/lib/dummyData';
 
 export const metadata = {
@@ -38,6 +39,9 @@ export default async function PackagesPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mb-6 flex justify-center">
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Packages' }]} />
+      </div>
       <header className="mb-10 text-center">
         <span className="eyebrow">Bulk Nano packs</span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">

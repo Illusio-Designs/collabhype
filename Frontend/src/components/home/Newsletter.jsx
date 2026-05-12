@@ -45,18 +45,17 @@ export default function Newsletter() {
           ) : (
             <form
               onSubmit={onSubmit}
-              className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row"
+              className="mx-auto mt-8 flex max-w-md flex-col items-stretch gap-2 sm:flex-row"
             >
-              <FormField className="flex-1">
-                <Input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@brand.com"
-                />
-              </FormField>
-              <Button type="submit" size="lg">
+              <Input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@brand.com"
+                className="flex-1 !py-3"
+              />
+              <Button type="submit" size="md" className="!px-6">
                 Subscribe
               </Button>
             </form>
