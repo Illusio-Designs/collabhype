@@ -104,7 +104,6 @@ export default function InfluencerCard({
               <div className="truncate text-base font-bold text-zinc-900">
                 {formatINR(startingRate)}
               </div>
-              <div className="text-[10px] text-zinc-400">incl. 5% platform fee</div>
             </>
           ) : (
             <div className="text-xs text-zinc-400">Rate card pending</div>

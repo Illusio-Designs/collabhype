@@ -3,9 +3,17 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { isDemoMode } from '@/lib/auth';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Alert, Badge, Button, Card, Spinner, useToast } from '@/components/ui';
 import { formatCount, PLATFORM_LABEL } from '@/lib/format';
+
+// Demo follower presets used when "Connect" is clicked in demo mode (no
+// real OAuth round-trip available).
+const DEMO_CONNECT_PRESET = {
+  INSTAGRAM: { handle: 'creator.demo', followers: 24800, engagementRate: 4.3 },
+  YOUTUBE: { handle: 'CreatorDemo', followers: 6400, engagementRate: 2.7 },
+};
 
 function SocialsInner() {
   const { user, isLoading } = useAuth();
@@ -62,6 +70,38 @@ function SocialsInner() {
 
   async function connect(platform) {
     setBusy(platform);
+    const upper = platform.toUpperCase();
+
+    // Demo mode: skip the OAuth round-trip and locally simulate a connection
+    // so the UI updates immediately. Real backend still uses the proper
+    // OAuth redirect flow.
+    if (isDemoMode()) {
+      const preset = DEMO_CONNECT_PRESET[upper] ?? DEMO_CONNECT_PRESET.INSTAGRAM;
+      setSocials((prev) => {
+        const without = prev.filter((s) => s.platform !== upper);
+        return [
+          ...without,
+          {
+            id: `demo-${upper.toLowerCase()}`,
+            platform: upper,
+            handle: preset.handle,
+            profileUrl: `#demo-${upper.toLowerCase()}`,
+            followers: preset.followers,
+            engagementRate: preset.engagementRate,
+            isVerified: false,
+            lastSyncedAt: new Date().toISOString(),
+          },
+        ];
+      });
+      toast.push({
+        variant: 'success',
+        title: `${PLATFORM_LABEL[upper] ?? upper} connected`,
+        body: `Demo: @${preset.handle}`,
+      });
+      setBusy(null);
+      return;
+    }
+
     try {
       const { data } = await apiClient.get(`/api/v1/oauth/${platform}/start`);
       window.location.href = data.authUrl;
@@ -73,6 +113,12 @@ function SocialsInner() {
 
   async function disconnect(platform) {
     setBusy(platform);
+    if (isDemoMode()) {
+      setSocials((prev) => prev.filter((s) => s.platform !== platform));
+      toast.push({ variant: 'success', title: 'Disconnected', body: 'Demo' });
+      setBusy(null);
+      return;
+    }
     try {
       await apiClient.delete(`/api/v1/influencers/me/socials/${platform}`);
       toast.push({ variant: 'success', title: 'Disconnected' });
@@ -123,6 +169,17 @@ function SocialsInner() {
           onDisconnect={() => disconnect('YOUTUBE')}
           busy={busy === 'youtube' || busy === 'YOUTUBE'}
         />
+        <PlatformCard
+          platform="tiktok"
+          name="TikTok"
+          desc="Coming soon — TikTok for Creators API access pending."
+          gradient="from-zinc-800 via-zinc-900 to-black"
+          account={byPlatform('TIKTOK')}
+          onConnect={() => connect('tiktok')}
+          onDisconnect={() => disconnect('TIKTOK')}
+          busy={busy === 'tiktok' || busy === 'TIKTOK'}
+          disabled
+        />
       </div>
 
       <Alert variant="info" title="Privacy" className="mt-8">
@@ -133,7 +190,7 @@ function SocialsInner() {
   );
 }
 
-function PlatformCard({ name, desc, gradient, account, onConnect, onDisconnect, busy }) {
+function PlatformCard({ name, desc, gradient, account, onConnect, onDisconnect, busy, disabled }) {
   const connected = !!account;
   return (
     <Card padding="lg">
@@ -144,9 +201,11 @@ function PlatformCard({ name, desc, gradient, account, onConnect, onDisconnect, 
           {name[0]}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-semibold text-zinc-900">{name}</h3>
-            {connected ? (
+            {disabled ? (
+              <Badge variant="warning">Coming soon</Badge>
+            ) : connected ? (
               <Badge variant="success" dot>
                 Connected
               </Badge>
@@ -158,7 +217,7 @@ function PlatformCard({ name, desc, gradient, account, onConnect, onDisconnect, 
             <div className="mt-2 grid gap-3 text-sm sm:grid-cols-3">
               <div>
                 <div className="text-xs uppercase tracking-wider text-zinc-500">Handle</div>
-                <div className="font-medium text-zinc-900">@{account.handle}</div>
+                <div className="truncate font-medium text-zinc-900">@{account.handle}</div>
               </div>
               <div>
                 <div className="text-xs uppercase tracking-wider text-zinc-500">Followers</div>
@@ -175,13 +234,17 @@ function PlatformCard({ name, desc, gradient, account, onConnect, onDisconnect, 
             <p className="mt-1 text-sm text-zinc-600">{desc}</p>
           )}
         </div>
-        <div className="flex flex-shrink-0 gap-2">
-          {connected ? (
-            <Button variant="outline" onClick={onDisconnect} loading={busy}>
+        <div className="flex w-full flex-shrink-0 gap-2 sm:w-auto">
+          {disabled ? (
+            <Button variant="outline" disabled fullWidth>
+              Coming soon
+            </Button>
+          ) : connected ? (
+            <Button variant="outline" onClick={onDisconnect} loading={busy} fullWidth>
               Disconnect
             </Button>
           ) : (
-            <Button onClick={onConnect} loading={busy}>
+            <Button onClick={onConnect} loading={busy} fullWidth>
               Connect
             </Button>
           )}
