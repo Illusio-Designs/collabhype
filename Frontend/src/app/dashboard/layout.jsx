@@ -175,10 +175,11 @@ function Sidebar({
 }) {
   // `collapsed` only applies to the desktop sticky sidebar. The mobile drawer
   // always renders fully expanded since screen space is already constrained.
-  const renderContent = (isCollapsed) => (
+  // `isMobile` flag toggles the visible close button inside the drawer.
+  const renderContent = (isCollapsed, isMobile = false) => (
     <div
       className={clsx(
-        'flex h-full flex-col border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-white to-brand-50/60 p-4 transition-[width] duration-200',
+        'flex h-full flex-col border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-brand-100 to-brand-200 p-4 transition-[width] duration-200',
         isCollapsed ? 'w-20 items-center' : 'w-72',
       )}
     >
@@ -196,7 +197,20 @@ function Sidebar({
           </span>
           {!isCollapsed && <span>Collabhype</span>}
         </Link>
-        {!isCollapsed && onToggleCollapsed && (
+        {/* Close button — mobile only, always visible at the top of the drawer */}
+        {isMobile && (
+          <button
+            type="button"
+            onClick={onMobileClose}
+            className="grid h-9 w-9 place-items-center rounded-lg text-zinc-600 transition hover:bg-white/60 hover:text-zinc-900"
+            aria-label="Close menu"
+            title="Close menu"
+          >
+            <CloseIcon className="h-5 w-5" />
+          </button>
+        )}
+        {/* Collapse toggle — desktop only */}
+        {!isMobile && !isCollapsed && onToggleCollapsed && (
           <button
             type="button"
             onClick={onToggleCollapsed}
@@ -209,7 +223,7 @@ function Sidebar({
         )}
       </div>
 
-      {isCollapsed && onToggleCollapsed && (
+      {!isMobile && isCollapsed && onToggleCollapsed && (
         <button
           type="button"
           onClick={onToggleCollapsed}
@@ -327,12 +341,12 @@ function Sidebar({
   return (
     <>
       <aside className="sticky top-0 hidden h-screen flex-shrink-0 lg:flex">
-        {renderContent(collapsed)}
+        {renderContent(collapsed, false)}
       </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={onMobileClose} />
-          <aside className="relative h-full">{renderContent(false)}</aside>
+          <aside className="relative h-full">{renderContent(false, true)}</aside>
         </div>
       )}
     </>
@@ -553,6 +567,13 @@ function ChevronLeftIcon(p) {
   return (
     <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function CloseIcon(p) {
+  return (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

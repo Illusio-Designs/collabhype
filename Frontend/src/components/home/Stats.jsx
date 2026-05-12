@@ -34,17 +34,17 @@ export default function Stats() {
           </p>
         </motion.div>
 
-        <StaggerContainer className="mt-14 grid grid-cols-2 gap-6 lg:grid-cols-4">
+        <StaggerContainer className="mt-14 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
           {STATS.map((s) => (
             <StaggerItem
               key={s.label}
-              className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur"
+              className="min-w-0 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 backdrop-blur sm:p-6"
             >
-              <div className="text-5xl font-bold tracking-tight text-white">
+              <div className="truncate text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
                 <Counter to={s.value} suffix={s.suffix} />
               </div>
-              <div className="mt-2 text-sm font-semibold text-brand-300">{s.label}</div>
-              <div className="mt-1 text-xs text-zinc-500">{s.sub}</div>
+              <div className="mt-2 truncate text-sm font-semibold text-brand-300">{s.label}</div>
+              <div className="mt-1 line-clamp-2 text-xs text-zinc-500">{s.sub}</div>
             </StaggerItem>
           ))}
         </StaggerContainer>
