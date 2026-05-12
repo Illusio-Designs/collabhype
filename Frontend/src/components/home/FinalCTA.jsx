@@ -73,12 +73,13 @@ export default function FinalCTA() {
             transition={{ duration: 0.6 }}
             className="relative px-5 py-16 text-center sm:px-8 sm:py-20 lg:px-10"
           ><div className="mx-auto max-w-3xl">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-md">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur-md sm:px-4 sm:text-xs">
               <span className="h-1.5 w-1.5 rounded-full bg-accent-300" />
-              Take your campaigns to the next level
+              <span className="sm:hidden">Level up your campaigns</span>
+              <span className="hidden sm:inline">Take your campaigns to the next level</span>
               <span className="h-1.5 w-1.5 rounded-full bg-accent-300" />
             </span>
-            <h2 className="mt-6 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            <h2 className="mt-6 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
               Bring your customer reach to the next level of excellence.
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-lg text-brand-100">
