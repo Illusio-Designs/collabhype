@@ -1,38 +1,48 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 
-// Wraps a table (or any wide block) so it scrolls horizontally on narrow
-// viewports. Shows a right-edge fade + "Swipe →" hint while there's more
-// content off-screen, so users on mobile know the table extends past the
-// viewport. Hint hides when scrolled fully to the right.
-export default function ScrollTable({ children, className, hintLabel = 'Swipe' }) {
+// Wraps a table (or any wide block) so it scrolls horizontally when content
+// exceeds the viewport. Edge fades + clickable chevron buttons surface the
+// overflow on both mobile and desktop. Buttons programmatically scroll by
+// roughly one viewport width; long-press isn't supported (intentionally
+// keep the impl simple — wheel/touch scrolling still works as expected).
+export default function ScrollTable({ children, className }) {
   const scrollerRef = useRef(null);
   const [hasOverflow, setHasOverflow] = useState(false);
-  const [atEnd, setAtEnd] = useState(false);
   const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(false);
+
+  const update = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const overflow = el.scrollWidth > el.clientWidth + 1;
+    setHasOverflow(overflow);
+    setAtStart(el.scrollLeft <= 0);
+    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
+  }, []);
 
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
-
-    const update = () => {
-      const overflow = el.scrollWidth > el.clientWidth + 1;
-      setHasOverflow(overflow);
-      setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1);
-      setAtStart(el.scrollLeft <= 0);
-    };
     update();
-
     el.addEventListener('scroll', update, { passive: true });
     const ro = new ResizeObserver(update);
     ro.observe(el);
-
     return () => {
       el.removeEventListener('scroll', update);
       ro.disconnect();
     };
+  }, [update]);
+
+  const scrollBy = useCallback((dir) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    // Scroll roughly 80% of viewport so a sliver of the previous column
+    // stays visible — gives the user a clear sense of position.
+    const distance = Math.max(160, Math.round(el.clientWidth * 0.8));
+    el.scrollBy({ left: dir * distance, behavior: 'smooth' });
   }, []);
 
   return (
@@ -44,27 +54,62 @@ export default function ScrollTable({ children, className, hintLabel = 'Swipe' }
         {children}
       </div>
 
-      {/* Left fade (only when scrolled past the start) */}
+      {/* Left edge: fade + scroll-back button (visible only when scrolled away from start) */}
       <div
-        aria-hidden
+        aria-hidden={atStart || !hasOverflow}
         className={clsx(
-          'pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent transition-opacity duration-200',
-          atStart ? 'opacity-0' : 'opacity-100',
+          'pointer-events-none absolute inset-y-0 left-0 flex w-14 items-center justify-start pl-1 bg-gradient-to-r from-white to-transparent transition-opacity duration-200',
+          hasOverflow && !atStart ? 'opacity-100' : 'opacity-0',
         )}
-      />
+      >
+        <button
+          type="button"
+          onClick={() => scrollBy(-1)}
+          tabIndex={hasOverflow && !atStart ? 0 : -1}
+          aria-label="Scroll left"
+          className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-zinc-900 text-white shadow-md ring-1 ring-zinc-700/40 transition hover:scale-105 hover:bg-zinc-800 disabled:opacity-0"
+        >
+          <ChevronIcon className="h-4 w-4" dir="left" />
+        </button>
+      </div>
 
-      {/* Right fade + swipe hint (only while more content sits off-screen) */}
+      {/* Right edge: fade + scroll-forward button */}
       <div
-        aria-hidden
+        aria-hidden={atEnd || !hasOverflow}
         className={clsx(
-          'pointer-events-none absolute inset-y-0 right-0 flex w-12 items-center justify-end bg-gradient-to-l from-white to-transparent pr-2 transition-opacity duration-200',
+          'pointer-events-none absolute inset-y-0 right-0 flex w-14 items-center justify-end pr-1 bg-gradient-to-l from-white to-transparent transition-opacity duration-200',
           hasOverflow && !atEnd ? 'opacity-100' : 'opacity-0',
         )}
       >
-        <span className="rounded-full bg-zinc-900/80 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm md:hidden">
-          {hintLabel} →
-        </span>
+        <button
+          type="button"
+          onClick={() => scrollBy(1)}
+          tabIndex={hasOverflow && !atEnd ? 0 : -1}
+          aria-label="Scroll right"
+          className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-zinc-900 text-white shadow-md ring-1 ring-zinc-700/40 transition hover:scale-105 hover:bg-zinc-800 disabled:opacity-0"
+        >
+          <ChevronIcon className="h-4 w-4" dir="right" />
+        </button>
       </div>
     </div>
+  );
+}
+
+function ChevronIcon({ className, dir = 'right' }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      aria-hidden="true"
+    >
+      <path
+        d={dir === 'left' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
