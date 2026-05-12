@@ -21,6 +21,10 @@ import {
   Textarea,
   useToast,
 } from '@/components/ui';
+import Milestone, {
+  DELIVERABLE_STEPS,
+  deliverableActiveKey,
+} from '@/components/dashboard/Milestone';
 import { DELIVERABLE_LABEL, formatCount, formatINR, PLATFORM_LABEL } from '@/lib/format';
 
 const CAMPAIGN_BADGE = {
@@ -340,72 +344,77 @@ function DeliverableList({ deliverables, isBrand, onAction, onApprove, onRelease
 function DeliverableRow({ deliverable: d, isBrand, onAction, onApprove, onRelease }) {
   const meta = DELIV_BADGE[d.status] ?? { variant: 'default', label: d.status };
   return (
-    <li className="flex flex-wrap items-center gap-3 rounded-lg border border-zinc-100 bg-zinc-50/50 px-3 py-2.5">
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium text-zinc-900">
-          {DELIVERABLE_LABEL[d.deliverable] ?? d.deliverable}
-        </div>
-        <div className="text-xs text-zinc-500">
-          {formatINR(d.amountPayable)} · {meta.label}
-        </div>
-        {d.feedback && (
-          <div className="mt-1 rounded bg-amber-50 px-2 py-1 text-xs text-amber-900">
-            Feedback: {d.feedback}
+    <li className="rounded-lg border border-zinc-100 bg-zinc-50/50 px-3 py-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold text-zinc-900">
+            {DELIVERABLE_LABEL[d.deliverable] ?? d.deliverable}
           </div>
-        )}
-        {(d.draftUrl || d.postedUrl) && (
-          <div className="mt-1 flex gap-3 text-xs">
-            {d.draftUrl && (
-              <a
-                href={d.draftUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-brand-700 hover:underline"
-              >
-                View draft →
-              </a>
-            )}
-            {d.postedUrl && (
-              <a
-                href={d.postedUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-brand-700 hover:underline"
-              >
-                View live post →
-              </a>
-            )}
-          </div>
-        )}
+          <div className="text-xs text-zinc-500">{formatINR(d.amountPayable)}</div>
+          {d.feedback && (
+            <div className="mt-2 rounded bg-amber-50 px-2 py-1 text-xs text-amber-900">
+              Feedback: {d.feedback}
+            </div>
+          )}
+          {(d.draftUrl || d.postedUrl) && (
+            <div className="mt-2 flex gap-3 text-xs">
+              {d.draftUrl && (
+                <a
+                  href={d.draftUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-700 hover:underline"
+                >
+                  View draft →
+                </a>
+              )}
+              {d.postedUrl && (
+                <a
+                  href={d.postedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-700 hover:underline"
+                >
+                  View live post →
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Badge variant={meta.variant}>{meta.label}</Badge>
+          {!isBrand && (d.status === 'PENDING' || d.status === 'REVISION_REQUESTED') && (
+            <Button size="sm" onClick={() => onAction(d.id, 'draft')}>
+              Submit draft
+            </Button>
+          )}
+          {!isBrand && d.status === 'APPROVED' && (
+            <Button size="sm" onClick={() => onAction(d.id, 'posted')}>
+              Mark posted
+            </Button>
+          )}
+          {isBrand && d.status === 'DRAFT_SUBMITTED' && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => onAction(d.id, 'revise')}>
+                Request revision
+              </Button>
+              <Button size="sm" onClick={() => onApprove(d)}>
+                Approve
+              </Button>
+            </>
+          )}
+          {isBrand && d.status === 'POSTED' && (
+            <Button size="sm" onClick={() => onRelease(d)}>
+              Release payment
+            </Button>
+          )}
+        </div>
       </div>
-      <Badge variant={meta.variant}>{meta.label}</Badge>
 
-      {/* Actions */}
-      {!isBrand && (d.status === 'PENDING' || d.status === 'REVISION_REQUESTED') && (
-        <Button size="sm" onClick={() => onAction(d.id, 'draft')}>
-          Submit draft
-        </Button>
-      )}
-      {!isBrand && d.status === 'APPROVED' && (
-        <Button size="sm" onClick={() => onAction(d.id, 'posted')}>
-          Mark posted
-        </Button>
-      )}
-      {isBrand && d.status === 'DRAFT_SUBMITTED' && (
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => onAction(d.id, 'revise')}>
-            Request revision
-          </Button>
-          <Button size="sm" onClick={() => onApprove(d)}>
-            Approve
-          </Button>
-        </div>
-      )}
-      {isBrand && d.status === 'POSTED' && (
-        <Button size="sm" onClick={() => onRelease(d)}>
-          Release payment
-        </Button>
-      )}
+      {/* Milestone tracker — visualises where this deliverable sits in its lifecycle */}
+      <div className="mt-4 rounded-md bg-white px-3 py-3">
+        <Milestone steps={DELIVERABLE_STEPS} activeKey={deliverableActiveKey(d)} />
+      </div>
     </li>
   );
 }
