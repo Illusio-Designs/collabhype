@@ -27,6 +27,7 @@ const NAV = {
       items: [
         { href: '/dashboard/profile', label: 'Brand profile', icon: BuildingIcon },
         { href: '/dashboard/notifications', label: 'Notifications', icon: BellIcon, dot: true },
+        { href: '/dashboard/support', label: 'Help & disputes', icon: LifeBuoyIcon },
         { href: '/dashboard/settings', label: 'Settings', icon: CogIcon },
       ],
     },
@@ -52,6 +53,7 @@ const NAV = {
       label: 'Account',
       items: [
         { href: '/dashboard/notifications', label: 'Notifications', icon: BellIcon, dot: true },
+        { href: '/dashboard/support', label: 'Help & disputes', icon: LifeBuoyIcon },
         { href: '/dashboard/settings', label: 'Settings', icon: CogIcon },
       ],
     },
@@ -71,6 +73,12 @@ const NAV = {
       items: [
         { href: '/dashboard/admin/content', label: 'SEO & content', icon: DocIcon },
         { href: '/dashboard/admin/tracking', label: 'Tracking', icon: ChartIcon },
+      ],
+    },
+    {
+      label: 'Support',
+      items: [
+        { href: '/dashboard/admin/support', label: 'Support queue', icon: LifeBuoyIcon, dot: true },
       ],
     },
     {
@@ -560,6 +568,15 @@ function ChartIcon(p) {
     <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M3 3v18h18" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M7 15l3-4 4 2 5-7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function LifeBuoyIcon(p) {
+  return (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M4.93 4.93l3.54 3.54M15.54 15.54l3.54 3.54M4.93 19.07l3.54-3.54M15.54 8.46l3.54-3.54" strokeLinecap="round" />
     </svg>
   );
 }

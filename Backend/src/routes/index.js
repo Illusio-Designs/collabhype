@@ -16,6 +16,7 @@ import notificationRoutes from '../modules/notification/notification.routes.js';
 import oauthRoutes from '../modules/oauth/oauth.routes.js';
 import orderRoutes from '../modules/order/order.routes.js';
 import packageRoutes from '../modules/package/package.routes.js';
+import supportRoutes from '../modules/support/support.routes.js';
 import {
   publicRouter as trackingPublicRoutes,
   adminRouter as trackingAdminRoutes,
@@ -36,6 +37,7 @@ router.use('/orders', orderRoutes);
 router.use('/campaigns', campaignRoutes);
 router.use('/deliverables', deliverableRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/support', supportRoutes);
 
 // Public content (SEO + page bodies)
 router.use('/content', contentPublicRoutes);

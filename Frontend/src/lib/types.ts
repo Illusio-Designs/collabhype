@@ -258,6 +258,64 @@ export interface Notification {
   createdAt: string;
 }
 
+export type SupportCategory =
+  | 'DISPUTE'
+  | 'PAYOUT'
+  | 'BILLING'
+  | 'CAMPAIGN'
+  | 'TECHNICAL'
+  | 'OTHER';
+
+export type SupportPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+
+export type SupportStatus =
+  | 'OPEN'
+  | 'IN_PROGRESS'
+  | 'AWAITING_USER'
+  | 'RESOLVED'
+  | 'CLOSED';
+
+export interface SupportMessage {
+  id: string;
+  ticketId: string;
+  authorId: string | null;
+  authorRole: Role;
+  body: string;
+  attachmentUrl?: string | null;
+  createdAt: string;
+  author?: {
+    id: string;
+    fullName: string;
+    role: Role;
+    avatarUrl: string | null;
+  } | null;
+}
+
+export interface SupportTicket {
+  id: string;
+  ticketNumber: string;
+  userId: string;
+  subject: string;
+  category: SupportCategory;
+  priority: SupportPriority;
+  status: SupportStatus;
+  orderId?: string | null;
+  campaignId?: string | null;
+  deliverableId?: string | null;
+  resolution?: string | null;
+  resolvedAt?: string | null;
+  closedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: { id: string; fullName: string; email: string; role: Role; avatarUrl: string | null };
+  assignedTo?: { id: string; fullName: string; email: string } | null;
+  order?: { id: string; orderNumber: string; total: number; status: string } | null;
+  campaign?: { id: string; title: string; status: string } | null;
+  deliverable?: { id: string; deliverable: string; status: string; amountPayable: number } | null;
+  messages?: SupportMessage[];
+  _count?: { messages: number };
+}
+
 export interface PlatformStats {
   totalUsers: number;
   totalBrands: number;

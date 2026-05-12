@@ -107,6 +107,30 @@ enum PayoutStatus {
   FAILED
 }
 
+enum SupportCategory {
+  DISPUTE        // payment / deliverable dispute between brand and creator
+  PAYOUT         // creator chasing a missing payout
+  BILLING        // brand has a billing / invoice question
+  CAMPAIGN       // anything campaign-flow related (briefs, approvals, etc.)
+  TECHNICAL      // bug / UX issue
+  OTHER
+}
+
+enum SupportPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum SupportStatus {
+  OPEN
+  IN_PROGRESS
+  AWAITING_USER   // platform replied, ball is in user's court
+  RESOLVED
+  CLOSED
+}
+
 // ---------- Users ----------
 
 model User {
@@ -130,6 +154,9 @@ model User {
   orders            Order[]            @relation("BrandOrders")
   notifications     Notification[]
   trackingEvents    TrackingEvent[]
+  supportTickets    SupportTicket[]    @relation("UserTickets")
+  assignedTickets   SupportTicket[]    @relation("AssignedTickets")
+  supportMessages   SupportMessage[]   @relation("MessageAuthor")
 
   @@index([role])
 }
@@ -361,6 +388,7 @@ model Order {
   items     OrderItem[]
   campaigns Campaign[]
   escrows   EscrowHold[]
+  tickets   SupportTicket[] @relation("OrderTickets")
 
   @@index([brandUserId])
   @@index([status])
@@ -396,6 +424,7 @@ model Campaign {
   updatedAt DateTime       @updatedAt
 
   deliverables CampaignDeliverable[]
+  tickets      SupportTicket[] @relation("CampaignTickets")
 
   @@index([orderId])
   @@index([status])
@@ -426,6 +455,8 @@ model CampaignDeliverable {
 
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+
+  tickets       SupportTicket[]   @relation("DeliverableTickets")
 
   @@index([influencerId])
   @@index([status])
@@ -473,6 +504,67 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, isRead])
+}
+
+// ---------- Support / disputes ----------
+//
+// SupportTicket: a thread between a single user and the platform team. Can
+// optionally be linked to a related Order / Campaign / Deliverable so admin
+// has the full context when resolving a dispute.
+
+model SupportTicket {
+  id            String          @id @default(cuid())
+  ticketNumber  String          @unique
+  userId        String                                 // the user who opened it
+  user          User            @relation("UserTickets", fields: [userId], references: [id], onDelete: Cascade)
+  assignedToId  String?                                // admin currently handling
+  assignedTo    User?           @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  subject       String
+  category      SupportCategory @default(OTHER)
+  priority      SupportPriority @default(NORMAL)
+  status        SupportStatus   @default(OPEN)
+
+  // Optional links to the entity in question. Helps admins triage disputes.
+  orderId        String?
+  order          Order?                @relation("OrderTickets", fields: [orderId], references: [id], onDelete: SetNull)
+  campaignId     String?
+  campaign       Campaign?             @relation("CampaignTickets", fields: [campaignId], references: [id], onDelete: SetNull)
+  deliverableId  String?
+  deliverable    CampaignDeliverable?  @relation("DeliverableTickets", fields: [deliverableId], references: [id], onDelete: SetNull)
+
+  resolution    String?         @db.Text                // admin's written resolution
+  resolvedAt    DateTime?
+  closedAt      DateTime?
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  messages      SupportMessage[]
+
+  @@index([userId, status])
+  @@index([status, priority])
+  @@index([category])
+  @@index([orderId])
+  @@index([campaignId])
+  @@index([deliverableId])
+}
+
+// SupportMessage: a single message in the ticket thread. authorRole is
+// denormalised so admin badges still render correctly even if the author
+// later changes role (or the user is deleted).
+model SupportMessage {
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId    String?                                  // null when the platform replies as a system actor
+  author      User?         @relation("MessageAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  authorRole  Role
+  body        String        @db.Text
+  attachmentUrl String?
+  createdAt   DateTime      @default(now())
+
+  @@index([ticketId, createdAt])
 }
 
 // ---------- SEO / Content (admin-managed) ----------
