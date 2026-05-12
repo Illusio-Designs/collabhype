@@ -16,7 +16,9 @@ export async function createOrder(userId) {
   const cart = await getCart(userId);
   if (!cart.items.length) throw ApiError.badRequest('Cart is empty');
 
-  // Build per-item snapshots — exact pricing/deliverables frozen at order time
+  // Build per-item snapshots — exact pricing/deliverables frozen at order time.
+  // creatorRate + platformFee are recorded so the breakdown is auditable from
+  // the OrderItem alone, even if the creator updates their rate card later.
   const itemsSnapshot = cart.items.map((ci) => ({
     itemType: ci.itemType,
     packageId: ci.packageId,
@@ -26,6 +28,8 @@ export async function createOrder(userId) {
     lineTotal: Number(ci.price) * ci.qty,
     deliverables: ci.deliverables ?? ci.package?.deliverables ?? null,
     packageTitle: ci.package?.title ?? null,
+    creatorRate: ci.creatorRate != null ? Number(ci.creatorRate) : null,
+    platformFee: ci.platformFee != null ? Number(ci.platformFee) : null,
   }));
   const subtotal = itemsSnapshot.reduce((s, i) => s + i.lineTotal, 0);
   const tax = 0; // GST handling deferred to a later phase

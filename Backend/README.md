@@ -1,6 +1,6 @@
-# Collabcreator — Backend
+# Collabhype — Backend
 
-Node + Express + MySQL (via Prisma) REST API for the Collabcreator influencer marketplace.
+Node + Express + MySQL (via Prisma) REST API for the Collabhype influencer marketplace.
 
 ## Stack
 
@@ -17,7 +17,7 @@ Node + Express + MySQL (via Prisma) REST API for the Collabcreator influencer ma
 
 1. Install MySQL locally (or use Docker / XAMPP / a hosted DB) and create a database:
    ```sql
-   CREATE DATABASE collabcreator CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE DATABASE collabhype CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
 2. Copy env and fill values:
    ```powershell
