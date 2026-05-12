@@ -3,13 +3,13 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import clsx from 'clsx';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiError } from '@/lib/apiClient';
-import { Alert, Button, Card, FormField, Input, PasswordInput, Spinner } from '@/components/ui';
+import { Alert, Button, Card, FormField, Input, PasswordInput, PhoneInput, Spinner } from '@/components/ui';
 
 const schema = z.object({
   fullName: z.string().min(2, 'At least 2 characters'),
@@ -30,8 +30,9 @@ function RegisterForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(schema) });
+  } = useForm({ resolver: zodResolver(schema), defaultValues: { phone: '' } });
 
   async function onSubmit(values) {
     setServerError(null);
@@ -105,7 +106,17 @@ function RegisterForm() {
           </FormField>
 
           <FormField label="Phone (optional)" error={errors.phone?.message}>
-            <Input type="tel" autoComplete="tel" {...register('phone')} />
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <PhoneInput
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  error={!!errors.phone}
+                />
+              )}
+            />
           </FormField>
 
           <FormField
