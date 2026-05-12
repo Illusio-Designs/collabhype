@@ -73,11 +73,11 @@ export default function AdminContentPage() {
         <table className="min-w-full">
           <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
             <tr>
-              <th className="px-6 py-3 text-left font-semibold">Slug</th>
-              <th className="px-6 py-3 text-left font-semibold">SEO title</th>
-              <th className="px-6 py-3 text-left font-semibold">Status</th>
-              <th className="px-6 py-3 text-left font-semibold">Updated</th>
-              <th className="px-6 py-3" />
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Slug</th>
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">SEO title</th>
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Status</th>
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Updated</th>
+              <th className="px-3 py-3 sm:px-6" />
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 text-sm">
@@ -90,10 +90,10 @@ export default function AdminContentPage() {
             )}
             {items.map((c) => (
               <tr key={c.id} className="hover:bg-zinc-50">
-                <td className="px-6 py-3 font-mono text-xs font-semibold text-brand-700">
+                <td className="px-3 py-3 sm:px-6 font-mono text-xs font-semibold text-brand-700">
                   /{c.slug}
                 </td>
-                <td className="px-6 py-3 text-zinc-700">
+                <td className="px-3 py-3 sm:px-6 text-zinc-700">
                   <div className="line-clamp-1 max-w-md">{c.title || '—'}</div>
                   {c.description && (
                     <div className="line-clamp-1 max-w-md text-xs text-zinc-500">
@@ -101,15 +101,15 @@ export default function AdminContentPage() {
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-3">
+                <td className="px-3 py-3 sm:px-6">
                   <Badge variant={c.isPublished ? 'success' : 'default'}>
                     {c.isPublished ? 'Published' : 'Hidden'}
                   </Badge>
                 </td>
-                <td className="px-6 py-3 text-zinc-500">
+                <td className="px-3 py-3 sm:px-6 text-zinc-500">
                   {new Date(c.updatedAt).toLocaleDateString('en-IN')}
                 </td>
-                <td className="whitespace-nowrap px-6 py-3 text-right">
+                <td className="whitespace-nowrap px-3 py-3 sm:px-6 text-right">
                   <Button
                     size="sm"
                     variant="outline"

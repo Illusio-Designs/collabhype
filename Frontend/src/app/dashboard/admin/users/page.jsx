@@ -53,17 +53,17 @@ export default function AdminUsersPage() {
         <table className="min-w-full">
           <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
             <tr>
-              <th className="px-6 py-3 text-left font-semibold">User</th>
-              <th className="px-6 py-3 text-left font-semibold">Role</th>
-              <th className="px-6 py-3 text-left font-semibold">Joined</th>
-              <th className="px-6 py-3 text-left font-semibold">Status</th>
-              <th className="px-6 py-3" />
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">User</th>
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Role</th>
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Joined</th>
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Status</th>
+              <th className="px-3 py-3 sm:px-6" />
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 text-sm">
             {DUMMY_ADMIN_USERS_LIST.map((u) => (
               <tr key={u.id} className="hover:bg-zinc-50">
-                <td className="px-6 py-3">
+                <td className="px-3 py-3 sm:px-6">
                   <div className="flex items-center gap-3">
                     <Avatar name={u.fullName} size="sm" />
                     <div>
@@ -72,20 +72,20 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-3">
+                <td className="px-3 py-3 sm:px-6">
                   <Badge variant={u.role === 'BRAND' ? 'brand' : u.role === 'INFLUENCER' ? 'info' : 'dark'}>
                     {u.role}
                   </Badge>
                 </td>
-                <td className="px-6 py-3 text-zinc-600">
+                <td className="px-3 py-3 sm:px-6 text-zinc-600">
                   {new Date(u.createdAt).toLocaleDateString('en-IN')}
                 </td>
-                <td className="px-6 py-3">
+                <td className="px-3 py-3 sm:px-6">
                   <Badge variant={u.isActive ? 'success' : 'default'}>
                     {u.isActive ? 'Active' : 'Suspended'}
                   </Badge>
                 </td>
-                <td className="whitespace-nowrap px-6 py-3 text-right">
+                <td className="whitespace-nowrap px-3 py-3 sm:px-6 text-right">
                   <Button
                     size="sm"
                     variant="outline"
