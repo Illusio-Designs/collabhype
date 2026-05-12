@@ -15,9 +15,14 @@ import {
   Spinner,
   useToast,
 } from '@/components/ui';
+import KpiStrip from '@/components/dashboard/KpiStrip';
 import { DELIVERABLE_LABEL, formatINR } from '@/lib/format';
 
-const DELIVERABLES = Object.keys(DELIVERABLE_LABEL);
+// Creator-offerable deliverables only — UTM_LINK / VIDEO_DRIVE_LINK /
+// PERFORMANCE_REPORT are pack-only add-ons that the platform provides, not
+// individually-priced creator outputs.
+const PACK_ONLY = new Set(['UTM_LINK', 'VIDEO_DRIVE_LINK', 'PERFORMANCE_REPORT']);
+const DELIVERABLES = Object.keys(DELIVERABLE_LABEL).filter((d) => !PACK_ONLY.has(d));
 
 export default function RatesPage() {
   const { user, isLoading } = useAuth();
@@ -93,50 +98,73 @@ export default function RatesPage() {
     0,
   );
 
-  return (
-    <div>
-      <span className="eyebrow">Pricing</span>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Rate card</h1>
-      <p className="mt-2 text-zinc-600">
-        Set your price per deliverable. Brands see this when booking you for a custom campaign.
-      </p>
+  const cheapest = DELIVERABLES
+    .filter((d) => rates[d].active && Number(rates[d].price) > 0)
+    .map((d) => Number(rates[d].price))
+    .sort((a, b) => a - b)[0];
+  const priciest = DELIVERABLES
+    .filter((d) => rates[d].active && Number(rates[d].price) > 0)
+    .map((d) => Number(rates[d].price))
+    .sort((a, b) => b - a)[0];
 
-      <Card padding="lg" className="mt-8">
-        <div className="flex items-center justify-between">
+  return (
+    <div className="space-y-6">
+      <header>
+        <span className="eyebrow">Pricing</span>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900">Rate card</h1>
+        <p className="mt-2 text-zinc-600">
+          Set your price per deliverable. Brands see this when booking you for a custom campaign.
+        </p>
+      </header>
+
+      <KpiStrip
+        kpis={[
+          { label: 'Active rates', value: `${activeCount}/${DELIVERABLES.length}` },
+          { label: 'Cheapest', value: cheapest ? formatINR(cheapest) : '—' },
+          { label: 'Priciest', value: priciest ? formatINR(priciest) : '—' },
+          { label: 'Sum of all', value: formatINR(total) },
+        ]}
+      />
+
+      <Card padding="lg">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-zinc-900">Pick what you offer</h2>
-          <div className="text-right">
-            <div className="text-xs text-zinc-500">Active deliverables</div>
-            <div className="text-xl font-bold text-zinc-900">
-              {activeCount}
-              <span className="ml-1 text-sm font-medium text-zinc-500">/ {DELIVERABLES.length}</span>
-            </div>
-          </div>
+          <span className="text-xs text-zinc-500">
+            Brand sees <strong className="font-semibold text-zinc-800">rate + 5% fee</strong> at checkout
+          </span>
         </div>
 
         <div className="mt-6 divide-y divide-zinc-100">
           {DELIVERABLES.map((d) => (
-            <div key={d} className="flex items-center gap-4 py-3">
-              <div className="flex w-64 flex-shrink-0 items-center gap-3">
+            <div
+              key={d}
+              className="flex flex-wrap items-center gap-3 py-3 sm:flex-nowrap sm:gap-4"
+            >
+              <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 sm:flex-[0_0_240px]">
                 <Checkbox
                   checked={rates[d].active}
                   onChange={(e) => update(d, { active: e.target.checked })}
                 />
-                <span className="text-sm font-medium text-zinc-800">{DELIVERABLE_LABEL[d]}</span>
+                <span className="truncate text-sm font-medium text-zinc-800">
+                  {DELIVERABLE_LABEL[d]}
+                </span>
+              </label>
+              <div className="flex w-full items-center gap-3 sm:w-auto sm:flex-1">
+                <FormField className="w-full max-w-[200px]">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="₹ price"
+                    disabled={!rates[d].active}
+                    value={rates[d].price}
+                    onChange={(e) => update(d, { price: e.target.value })}
+                  />
+                </FormField>
+                {rates[d].active && rates[d].price && (
+                  <Badge variant="brand">{formatINR(rates[d].price)}</Badge>
+                )}
               </div>
-              <FormField className="max-w-[200px]">
-                <Input
-                  type="number"
-                  min="0"
-                  step="1"
-                  placeholder="₹ price"
-                  disabled={!rates[d].active}
-                  value={rates[d].price}
-                  onChange={(e) => update(d, { price: e.target.value })}
-                />
-              </FormField>
-              {rates[d].active && rates[d].price && (
-                <Badge variant="brand">{formatINR(rates[d].price)}</Badge>
-              )}
             </div>
           ))}
         </div>
