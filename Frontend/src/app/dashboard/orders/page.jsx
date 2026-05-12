@@ -97,12 +97,12 @@ export default function OrdersPage() {
           <table className="min-w-full">
             <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
               <tr>
-                <th className="px-6 py-3 text-left font-semibold">Order</th>
-                <th className="px-6 py-3 text-left font-semibold">Items</th>
-                <th className="px-6 py-3 text-left font-semibold">Campaigns</th>
-                <th className="px-6 py-3 text-left font-semibold">Total</th>
-                <th className="px-6 py-3 text-left font-semibold">Status</th>
-                <th className="px-6 py-3 text-left font-semibold">Date</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Order</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Items</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Campaigns</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Total</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Status</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 text-sm">
@@ -114,7 +114,7 @@ export default function OrdersPage() {
                     className="cursor-pointer transition hover:bg-zinc-50"
                     onClick={() => router.push(`/dashboard/orders/${o.id}`)}
                   >
-                    <td className="px-6 py-3">
+                    <td className="px-3 py-3 sm:px-6">
                       <Link
                         href={`/dashboard/orders/${o.id}`}
                         className="font-mono text-xs font-semibold text-brand-700 hover:underline"
@@ -123,15 +123,15 @@ export default function OrdersPage() {
                         {o.orderNumber}
                       </Link>
                     </td>
-                    <td className="px-6 py-3 text-zinc-700">
+                    <td className="px-3 py-3 sm:px-6 text-zinc-700">
                       {o.items?.length ?? 0} item{o.items?.length === 1 ? '' : 's'}
                     </td>
-                    <td className="px-6 py-3 text-zinc-700">{o._count?.campaigns ?? 0}</td>
-                    <td className="px-6 py-3 font-semibold text-zinc-900">{formatINR(o.total)}</td>
-                    <td className="px-6 py-3">
+                    <td className="px-3 py-3 sm:px-6 text-zinc-700">{o._count?.campaigns ?? 0}</td>
+                    <td className="px-3 py-3 sm:px-6 font-semibold text-zinc-900">{formatINR(o.total)}</td>
+                    <td className="px-3 py-3 sm:px-6">
                       <Badge variant={meta.variant}>{meta.label}</Badge>
                     </td>
-                    <td className="px-6 py-3 text-zinc-500">{dateStr(o.paidAt ?? o.createdAt)}</td>
+                    <td className="px-3 py-3 sm:px-6 text-zinc-500">{dateStr(o.paidAt ?? o.createdAt)}</td>
                   </tr>
                 );
               })}

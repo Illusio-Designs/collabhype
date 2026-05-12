@@ -68,28 +68,28 @@ export default function AdminPackagesPage() {
         <table className="min-w-full">
           <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
             <tr>
-              <th className="px-6 py-3 text-left font-semibold">Title</th>
-              <th className="px-6 py-3 text-left font-semibold">Tier</th>
-              <th className="px-6 py-3 text-left font-semibold">Influencers</th>
-              <th className="px-6 py-3 text-left font-semibold">Price</th>
-              <th className="px-6 py-3 text-left font-semibold">Est. reach</th>
-              <th className="px-6 py-3" />
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Title</th>
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Tier</th>
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Influencers</th>
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Price</th>
+              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Est. reach</th>
+              <th className="px-3 py-3 sm:px-6" />
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 text-sm">
             {DUMMY_PACKAGES.map((p) => (
               <tr key={p.id} className="hover:bg-zinc-50">
-                <td className="px-6 py-3">
+                <td className="px-3 py-3 sm:px-6">
                   <div className="font-medium text-zinc-900">{p.title}</div>
                   <div className="text-xs text-zinc-500">{p.niche?.name}</div>
                 </td>
-                <td className="px-6 py-3">
+                <td className="px-3 py-3 sm:px-6">
                   <Badge variant="brand">{TIER_LABEL[p.tier]}</Badge>
                 </td>
-                <td className="px-6 py-3 text-zinc-600">{p.influencerCount}</td>
-                <td className="px-6 py-3 font-semibold text-zinc-900">{formatINR(p.price)}</td>
-                <td className="px-6 py-3 text-zinc-600">{formatCount(p.estReach)}</td>
-                <td className="whitespace-nowrap px-6 py-3 text-right">
+                <td className="px-3 py-3 sm:px-6 text-zinc-600">{p.influencerCount}</td>
+                <td className="px-3 py-3 sm:px-6 font-semibold text-zinc-900">{formatINR(p.price)}</td>
+                <td className="px-3 py-3 sm:px-6 text-zinc-600">{formatCount(p.estReach)}</td>
+                <td className="whitespace-nowrap px-3 py-3 sm:px-6 text-right">
                   <Button size="sm" variant="outline" iconRight={<ChevronRight />}>
                     Edit
                   </Button>

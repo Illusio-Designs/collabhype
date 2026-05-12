@@ -97,11 +97,11 @@ export default function PayoutsPage() {
           <table className="min-w-full">
             <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
               <tr>
-                <th className="px-6 py-3 text-left font-semibold">Date</th>
-                <th className="px-6 py-3 text-left font-semibold">Amount</th>
-                <th className="px-6 py-3 text-left font-semibold">Status</th>
-                <th className="px-6 py-3 text-left font-semibold">Paid at</th>
-                <th className="px-6 py-3 text-left font-semibold">Reference</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Date</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Amount</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Status</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Paid at</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Reference</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 text-sm">
@@ -109,15 +109,15 @@ export default function PayoutsPage() {
                 const meta = STATUS_BADGE[p.status] ?? { variant: 'default', label: p.status };
                 return (
                   <tr key={p.id} className="hover:bg-zinc-50">
-                    <td className="px-6 py-3 text-zinc-700">{dateStr(p.createdAt)}</td>
-                    <td className="px-6 py-3 font-semibold text-zinc-900">
+                    <td className="px-3 py-3 sm:px-6 text-zinc-700">{dateStr(p.createdAt)}</td>
+                    <td className="px-3 py-3 sm:px-6 font-semibold text-zinc-900">
                       {formatINR(p.amount)}
                     </td>
-                    <td className="px-6 py-3">
+                    <td className="px-3 py-3 sm:px-6">
                       <Badge variant={meta.variant}>{meta.label}</Badge>
                     </td>
-                    <td className="px-6 py-3 text-zinc-700">{dateStr(p.paidAt)}</td>
-                    <td className="px-6 py-3 font-mono text-xs text-zinc-500">
+                    <td className="px-3 py-3 sm:px-6 text-zinc-700">{dateStr(p.paidAt)}</td>
+                    <td className="px-3 py-3 sm:px-6 font-mono text-xs text-zinc-500">
                       {p.razorpayPayoutId ?? '—'}
                     </td>
                   </tr>

@@ -156,21 +156,21 @@ export default function AdminTrackingPage() {
           <table className="min-w-full">
             <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
               <tr>
-                <th className="px-6 py-3 text-left font-semibold">Event</th>
-                <th className="px-6 py-3 text-left font-semibold">User</th>
-                <th className="px-6 py-3 text-left font-semibold">Page</th>
-                <th className="px-6 py-3 text-left font-semibold">When</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Event</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">User</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Page</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">When</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 text-sm">
               {events.map((e) => (
                 <tr key={e.id} className="hover:bg-zinc-50">
-                  <td className="px-6 py-3">
+                  <td className="px-3 py-3 sm:px-6">
                     <span className="font-mono text-xs font-semibold text-brand-700">
                       {e.eventName}
                     </span>
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-3 py-3 sm:px-6">
                     {e.user ? (
                       <div className="flex items-center gap-2.5">
                         <Avatar name={e.user.fullName} size="sm" />
@@ -187,10 +187,10 @@ export default function AdminTrackingPage() {
                       <span className="text-xs text-zinc-400">Anonymous</span>
                     )}
                   </td>
-                  <td className="px-6 py-3 font-mono text-xs text-zinc-600">
+                  <td className="px-3 py-3 sm:px-6 font-mono text-xs text-zinc-600">
                     {e.pageUrl || '—'}
                   </td>
-                  <td className="px-6 py-3 text-xs text-zinc-500">
+                  <td className="px-3 py-3 sm:px-6 text-xs text-zinc-500">
                     {timeAgo(e.createdAt)}
                   </td>
                 </tr>
