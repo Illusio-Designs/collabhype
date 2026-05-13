@@ -1,5 +1,11 @@
 import { Tabs } from 'expo-router';
-import { Bell, ClipboardList, LayoutDashboard, User } from 'lucide-react-native';
+import {
+  Bell,
+  ClipboardList,
+  LayoutDashboard,
+  Receipt,
+  User,
+} from 'lucide-react-native';
 import { COLORS } from '@/lib/theme';
 
 export default function BrandTabsLayout() {
@@ -25,6 +31,13 @@ export default function BrandTabsLayout() {
         options={{
           title: 'Campaigns',
           tabBarIcon: ({ color, size }) => <ClipboardList size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="orders"
+        options={{
+          title: 'Orders',
+          tabBarIcon: ({ color, size }) => <Receipt size={size} color={color} />,
         }}
       />
       <Tabs.Screen
