@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { Heart } from 'lucide-react';
 
@@ -12,12 +13,15 @@ export default function Footer() {
           <div className="grid gap-10 md:grid-cols-[1.2fr,2fr]">
             {/* ===== Left: brand + tagline + socials ===== */}
             <div>
-              <div className="flex items-center gap-2 text-xl font-bold text-brand-800">
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-700 text-white">
-                  C
-                </span>
-                Collabhype
-              </div>
+              <Link href="/" aria-label="Collabhype — home" className="inline-flex">
+                <Image
+                  src="/logo.png"
+                  alt="Collabhype"
+                  width={1967}
+                  height={480}
+                  className="h-8 w-auto"
+                />
+              </Link>
               <p className="mt-4 max-w-sm text-sm leading-6 text-zinc-600">
                 Helping marketers run influencer campaigns at scale — curated creators,
                 escrow-backed payments, in-app briefs.

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutGrid, X } from 'lucide-react';
@@ -37,12 +38,17 @@ export default function Header() {
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white/90 px-3 shadow-md backdrop-blur-lg sm:h-16 sm:px-6">
           <Link
             href="/"
-            className="flex flex-shrink-0 items-center gap-2 text-base font-bold text-brand-800 sm:gap-2.5 sm:text-lg"
+            aria-label="Collabhype — home"
+            className="flex flex-shrink-0 items-center"
           >
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand-700 text-sm text-white shadow-sm sm:h-9 sm:w-9 sm:text-base">
-              C
-            </span>
-            <span>Collabhype</span>
+            <Image
+              src="/logo.png"
+              alt="Collabhype"
+              width={1967}
+              height={480}
+              priority
+              className="h-7 w-auto sm:h-8"
+            />
           </Link>
 
           <nav className="hidden items-center gap-7 text-sm font-medium text-zinc-700 md:flex">

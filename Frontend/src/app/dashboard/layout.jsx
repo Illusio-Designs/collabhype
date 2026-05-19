@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import clsx from 'clsx';
@@ -223,10 +224,23 @@ function Sidebar({
           )}
           title="Collabhype"
         >
-          <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-brand-700 text-white shadow-sm">
-            C
-          </span>
-          {!isCollapsed && <span>Collabhype</span>}
+          {isCollapsed ? (
+            <Image
+              src="/logo-mark.png"
+              alt="Collabhype"
+              width={512}
+              height={512}
+              className="h-9 w-9 flex-shrink-0"
+            />
+          ) : (
+            <Image
+              src="/logo.png"
+              alt="Collabhype"
+              width={1967}
+              height={480}
+              className="h-8 w-auto"
+            />
+          )}
         </Link>
         {/* Close button — mobile only, always visible at the top of the drawer */}
         {isMobile && (
