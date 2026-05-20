@@ -584,6 +584,21 @@ model SiteContent {
   @@index([isPublished])
 }
 
+// ---------- Platform Settings ----------
+
+model PlatformSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique                // e.g. "razorpay_key_id", "jwt_secret"
+  value     String   @db.LongText           // JSON-stringified for complex values
+  type      String   @default("string")     // "string", "number", "json", "boolean"
+  isSecret  Boolean  @default(false)        // if true, don't log/expose in API responses
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([isActive])
+}
+
 // ---------- Platform tracking ----------
 
 model TrackingEvent {

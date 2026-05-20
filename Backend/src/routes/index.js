@@ -21,6 +21,7 @@ import {
   publicRouter as trackingPublicRoutes,
   adminRouter as trackingAdminRoutes,
 } from '../modules/tracking/tracking.routes.js';
+import settingsRoutes from '../routes/admin/settings.js';
 
 const router = Router();
 
@@ -48,5 +49,6 @@ router.use('/track', trackingPublicRoutes);
 // Admin namespaces
 router.use('/admin/content', contentAdminRoutes);
 router.use('/admin/tracking', trackingAdminRoutes);
+router.use('/admin/settings', settingsRoutes);
 
 export default router;
