@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { dedupedGet, invalidate } from '@/lib/apiCache';
 import { useAuth } from '@/components/auth/AuthProvider';
 import {
   Alert,
@@ -30,6 +31,7 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   // Auth gate
   useEffect(() => {
@@ -38,11 +40,13 @@ export default function CartPage() {
     else if (user.role !== 'BRAND') router.replace('/dashboard');
   }, [authLoading, user, router]);
 
-  const loadCart = useCallback(async () => {
+  // De-duped read: concurrent/StrictMode double-mounts share one request.
+  // Pass { force: true } after a mutation to bypass the short-lived cache.
+  const loadCart = useCallback(async ({ force = false } = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await apiClient.get('/api/v1/cart');
+      const data = await dedupedGet('/api/v1/cart', { force });
       setCart(data.cart);
     } catch (e) {
       setError(apiError(e));
@@ -58,7 +62,8 @@ export default function CartPage() {
   async function removeItem(itemId) {
     try {
       await apiClient.delete(`/api/v1/cart/items/${itemId}`);
-      await loadCart();
+      invalidate('/api/v1/cart');
+      await loadCart({ force: true });
     } catch (e) {
       setError(apiError(e));
     }
@@ -68,9 +73,26 @@ export default function CartPage() {
     if (qty < 1) return;
     try {
       await apiClient.patch(`/api/v1/cart/items/${itemId}`, { qty });
-      await loadCart();
+      invalidate('/api/v1/cart');
+      await loadCart({ force: true });
     } catch (e) {
       setError(apiError(e));
+    }
+  }
+
+  async function clearCart() {
+    if (!cart?.items?.length) return;
+    if (!confirm('Remove all items from your cart?')) return;
+    setClearing(true);
+    setError(null);
+    try {
+      await apiClient.delete('/api/v1/cart');
+      invalidate('/api/v1/cart');
+      await loadCart({ force: true });
+    } catch (e) {
+      setError(apiError(e));
+    } finally {
+      setClearing(false);
     }
   }
 
@@ -161,7 +183,16 @@ export default function CartPage() {
       <div className="mb-6">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
       </div>
-      <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Your cart</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Your cart</h1>
+        <button
+          onClick={clearCart}
+          disabled={clearing}
+          className="text-sm font-medium text-red-600 transition hover:text-red-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {clearing ? 'Clearing…' : 'Clear cart'}
+        </button>
+      </div>
       <p className="mt-2 text-zinc-600">
         {cart.items.length} {cart.items.length === 1 ? 'item' : 'items'}
       </p>

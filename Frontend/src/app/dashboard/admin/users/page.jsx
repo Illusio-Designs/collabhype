@@ -1,23 +1,81 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { ChevronRight } from 'lucide-react';
-import { Avatar, Badge, Button, Card, Input, Spinner } from '@/components/ui';
+import { apiClient, apiError } from '@/lib/apiClient';
+import { dedupedGet, invalidate } from '@/lib/apiCache';
+import { Avatar, Badge, Button, Card, Input, Pagination, Spinner, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
-import { DUMMY_ADMIN_USERS_LIST, DUMMY_PLATFORM_STATS } from '@/lib/dummyData';
 import { formatCount } from '@/lib/format';
+
+const PAGE_SIZE = 20;
+const STATS_URL = '/api/v1/admin/stats';
 
 export default function AdminUsersPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const toast = useToast();
+
+  const [users, setUsers] = useState([]);
+  const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
+  const [stats, setStats] = useState(null);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
     if (!isLoading && user && user.role !== 'ADMIN') router.replace('/dashboard');
   }, [isLoading, user, router]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setQuery(search.trim());
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const url =
+        `/api/v1/admin/users?page=${page}&limit=${PAGE_SIZE}` +
+        (query ? `&q=${encodeURIComponent(query)}` : '');
+      const [usersData, statsData] = await Promise.all([dedupedGet(url), dedupedGet(STATS_URL)]);
+      setUsers(usersData.users ?? []);
+      setMeta(usersData.meta ?? { total: 0, page, totalPages: 1 });
+      setStats(statsData ?? null);
+    } catch (e) {
+      toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
+    } finally {
+      setLoading(false);
+    }
+  }, [page, query, toast]);
+
+  useEffect(() => {
+    if (user?.role === 'ADMIN') load();
+  }, [user, load]);
+
+  async function toggleActive(u) {
+    const next = !u.isActive;
+    if (!confirm(`${next ? 'Reactivate' : 'Suspend'} ${u.fullName}?`)) return;
+    setSavingId(u.id);
+    try {
+      await apiClient.patch(`/api/v1/admin/users/${u.id}`, { isActive: next });
+      setUsers((rows) => rows.map((r) => (r.id === u.id ? { ...r, isActive: next } : r)));
+      invalidate('/api/v1/admin/users');
+      toast.push({ variant: 'success', title: next ? 'Reactivated' : 'Suspended' });
+    } catch (e) {
+      toast.push({ variant: 'danger', title: 'Update failed', body: apiError(e) });
+    } finally {
+      setSavingId(null);
+    }
+  }
 
   if (isLoading || !user || user.role !== 'ADMIN') {
     return (
@@ -26,6 +84,13 @@ export default function AdminUsersPage() {
       </div>
     );
   }
+
+  const kpis = [
+    { label: 'Total users', value: formatCount(stats?.totalUsers ?? 0) },
+    { label: 'Brands', value: formatCount(stats?.totalBrands ?? 0) },
+    { label: 'Creators', value: formatCount(stats?.totalCreators ?? 0) },
+    { label: 'Signups (7d)', value: formatCount(stats?.signupsThisWeek ?? 0) },
+  ];
 
   return (
     <div className="space-y-6">
@@ -37,77 +102,101 @@ export default function AdminUsersPage() {
         ]}
         eyebrow="Platform admin"
         title="Users"
-        subtitle="Search, suspend, or manage every account."
+        subtitle="Search accounts and suspend or reactivate them."
         action={
-          <div className="flex gap-2">
-            <Input placeholder="Search users…" className="w-64" />
-            <Button>Invite</Button>
-          </div>
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search users…"
+            className="w-64"
+          />
         }
       />
 
-      <KpiStrip
-        kpis={[
-          { label: 'Total users', value: formatCount(DUMMY_PLATFORM_STATS.totalUsers) },
-          { label: 'Brands', value: formatCount(DUMMY_PLATFORM_STATS.totalBrands) },
-          { label: 'Creators', value: formatCount(DUMMY_PLATFORM_STATS.totalCreators) },
-          { label: 'Signups (7d)', value: formatCount(DUMMY_PLATFORM_STATS.signupsThisWeek) },
-        ]}
-      />
+      <KpiStrip kpis={kpis} />
 
       <Card padding="none" className="overflow-hidden">
-       <ScrollTable hintLabel="Scroll">
-        <table className="min-w-full">
-          <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
-            <tr>
-              <th className="px-3 py-3 sm:px-6 text-left font-semibold">User</th>
-              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Role</th>
-              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Joined</th>
-              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Status</th>
-              <th className="px-3 py-3 sm:px-6" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-100 text-sm">
-            {DUMMY_ADMIN_USERS_LIST.map((u) => (
-              <tr key={u.id} className="hover:bg-zinc-50">
-                <td className="px-3 py-3 sm:px-6">
-                  <div className="flex items-center gap-3">
-                    <Avatar name={u.fullName} size="sm" />
-                    <div>
-                      <div className="font-medium text-zinc-900">{u.fullName}</div>
-                      <div className="text-xs text-zinc-500">{u.email}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-3 py-3 sm:px-6">
-                  <Badge variant={u.role === 'BRAND' ? 'brand' : u.role === 'INFLUENCER' ? 'info' : 'dark'}>
-                    {u.role}
-                  </Badge>
-                </td>
-                <td className="px-3 py-3 sm:px-6 text-zinc-600">
-                  {new Date(u.createdAt).toLocaleDateString('en-IN')}
-                </td>
-                <td className="px-3 py-3 sm:px-6">
-                  <Badge variant={u.isActive ? 'success' : 'default'}>
-                    {u.isActive ? 'Active' : 'Suspended'}
-                  </Badge>
-                </td>
-                <td className="whitespace-nowrap px-3 py-3 sm:px-6 text-right">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    iconRight={<ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />}
-                  >
-                    Manage
-                  </Button>
-                </td>
+        <ScrollTable hintLabel="Scroll">
+          <table className="min-w-full">
+            <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
+              <tr>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">User</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Role</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Joined</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Status</th>
+                <th className="px-3 py-3 sm:px-6" />
               </tr>
-            ))}
-          </tbody>
-        </table>
-       </ScrollTable>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 text-sm">
+              {loading && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center">
+                    <Spinner />
+                  </td>
+                </tr>
+              )}
+              {!loading && users.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-zinc-500">
+                    No users match this search.
+                  </td>
+                </tr>
+              )}
+              {!loading &&
+                users.map((u) => (
+                  <tr key={u.id} className="hover:bg-zinc-50">
+                    <td className="px-3 py-3 sm:px-6">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={u.fullName} size="sm" />
+                        <div>
+                          <div className="font-medium text-zinc-900">{u.fullName}</div>
+                          <div className="text-xs text-zinc-500">{u.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 sm:px-6">
+                      <Badge
+                        variant={u.role === 'BRAND' ? 'brand' : u.role === 'INFLUENCER' ? 'info' : 'dark'}
+                      >
+                        {u.role}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-3 sm:px-6 text-zinc-600">
+                      {new Date(u.createdAt).toLocaleDateString('en-IN')}
+                    </td>
+                    <td className="px-3 py-3 sm:px-6">
+                      <Badge variant={u.isActive ? 'success' : 'default'}>
+                        {u.isActive ? 'Active' : 'Suspended'}
+                      </Badge>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-3 sm:px-6 text-right">
+                      {u.role === 'ADMIN' ? (
+                        <span className="text-xs text-zinc-400">—</span>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant={u.isActive ? 'outline' : 'primary'}
+                          loading={savingId === u.id}
+                          onClick={() => toggleActive(u)}
+                        >
+                          {u.isActive ? 'Suspend' : 'Reactivate'}
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </ScrollTable>
       </Card>
+
+      <div className="flex flex-col items-center gap-2">
+        <Pagination page={page} pageCount={meta.totalPages ?? 1} onChange={setPage} />
+        <p className="text-xs text-zinc-500">
+          {meta.total ?? 0} user{meta.total === 1 ? '' : 's'} · page {meta.page ?? page} of{' '}
+          {meta.totalPages ?? 1}
+        </p>
+      </div>
     </div>
   );
 }
-

@@ -1,12 +1,17 @@
 import Link from 'next/link';
 import { Check } from 'lucide-react';
 import { Breadcrumb, Card } from '@/components/ui';
+import { metadataForSlug } from '@/lib/content';
 
-export const metadata = {
+const FALLBACK_METADATA = {
   title: 'How it works — Collabhype',
   description:
     'From cart to campaign in four steps. Self-serve influencer marketing with escrow.',
 };
+
+export function generateMetadata() {
+  return metadataForSlug('how-it-works', FALLBACK_METADATA);
+}
 
 const STEPS = [
   {

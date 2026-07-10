@@ -2,6 +2,7 @@ import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig, type 
 import { clearAuth, getDemoRole, getToken, isDemoMode } from './auth';
 import {
   DUMMY_ADMIN_USER,
+  DUMMY_ADMIN_USERS_LIST,
   DUMMY_BRAND_USER,
   DUMMY_CAMPAIGN_DETAIL_BRAND,
   DUMMY_CAMPAIGN_DETAIL_INFLUENCER,
@@ -14,6 +15,7 @@ import {
   DUMMY_ORDER_DETAIL,
   DUMMY_ORDERS,
   DUMMY_PACKAGES,
+  DUMMY_PLATFORM_STATS,
   DUMMY_PAYOUT_SUMMARY,
   DUMMY_PAYOUTS,
   DUMMY_SUPPORT_MESSAGES,
@@ -126,6 +128,23 @@ function dummyResponseFor(
     return { payouts: DUMMY_PAYOUTS, summary: DUMMY_PAYOUT_SUMMARY };
   }
 
+  // === Influencers — admin browse (paginated) + badge management ===
+  // Recompute must be matched before the generic badge-by-id regex below,
+  // since the regex would otherwise capture "recompute" as an id.
+  if (path === '/influencers/admin/badges/recompute' && m === 'post') {
+    return { updated: DUMMY_INFLUENCERS.length };
+  }
+  const badgeSetMatch = path.match(/^\/influencers\/admin\/badges\/([^/?]+)$/);
+  if (badgeSetMatch && m === 'post') {
+    return { profile: { id: badgeSetMatch[1], badge: String(data.badge ?? 'NONE') } };
+  }
+  if (path === '/influencers' || path.startsWith('/influencers?')) {
+    return {
+      influencers: DUMMY_INFLUENCERS,
+      meta: { total: DUMMY_INFLUENCERS.length, page: 1, limit: 20, totalPages: 1 },
+    };
+  }
+
   // === OAuth ===
   if (path.startsWith('/oauth/') && path.endsWith('/start')) {
     return { authUrl: '#demo-no-oauth-in-demo-mode' };
@@ -202,6 +221,10 @@ function dummyResponseFor(
       if (it && data.qty != null) it.qty = Math.max(1, Number(data.qty));
       return { ok: true, cart: { ...demoCart, subtotal: cartSubtotal() } };
     }
+  }
+  if (path === '/cart' && m === 'delete') {
+    demoCart.items.length = 0;
+    return { ok: true, cart: { ...demoCart, subtotal: cartSubtotal() } };
   }
   if (path.startsWith('/checkout/')) {
     return { error: 'Checkout disabled in demo mode — connect a real backend to enable Razorpay.' };
@@ -483,6 +506,77 @@ function dummyResponseFor(
       ],
       meta: { total: 5, page: 1, limit: 20, totalPages: 1 },
     };
+  }
+
+  // === Admin: aggregate platform stats ===
+  if (path === '/admin/stats') {
+    const totalSlots = DUMMY_PACKAGES.reduce((s, p) => s + (p.influencerCount ?? 0), 0);
+    const avgPackagePrice = DUMMY_PACKAGES.length
+      ? DUMMY_PACKAGES.reduce((s, p) => s + Number(p.price ?? 0), 0) / DUMMY_PACKAGES.length
+      : 0;
+    return {
+      ...DUMMY_PLATFORM_STATS,
+      totalPackages: DUMMY_PACKAGES.length,
+      activePackages: DUMMY_PACKAGES.filter((p) => p.isActive).length,
+      totalSlots,
+      avgPackagePrice,
+    };
+  }
+
+  // === Admin: orders (platform-wide) ===
+  if (path === '/admin/orders' || path.startsWith('/admin/orders?')) {
+    return {
+      orders: DUMMY_ORDERS.map((o) => ({
+        ...o,
+        brand: { id: 'demo-brand-1', fullName: 'Acme Brand', email: 'demo@brand.com' },
+        _count: { items: o.items?.length ?? 0, campaigns: 0 },
+      })),
+      meta: { total: DUMMY_ORDERS.length, page: 1, limit: 20, totalPages: 1 },
+    };
+  }
+
+  // === Admin: users ===
+  const adminUserPatch = path.match(/^\/admin\/users\/([^/?]+)$/);
+  if (adminUserPatch && m === 'patch') {
+    return { user: { id: adminUserPatch[1], isActive: !!data.isActive } };
+  }
+  if (path === '/admin/users' || path.startsWith('/admin/users?')) {
+    return {
+      users: DUMMY_ADMIN_USERS_LIST,
+      meta: { total: DUMMY_ADMIN_USERS_LIST.length, page: 1, limit: 20, totalPages: 1 },
+    };
+  }
+
+  // === Admin: packages (CRUD) ===
+  const adminPkgMatch = path.match(/^\/admin\/packages\/([^/?]+)$/);
+  if (adminPkgMatch) {
+    if (m === 'delete') return { ok: true };
+    if (m === 'patch') return { package: { id: adminPkgMatch[1], ...data } };
+  }
+  if (path === '/admin/packages' || path.startsWith('/admin/packages?')) {
+    if (m === 'post') {
+      return { package: { id: `pkg-demo-${Math.random().toString(36).slice(2, 8)}`, ...data } };
+    }
+    return {
+      packages: DUMMY_PACKAGES,
+      meta: { total: DUMMY_PACKAGES.length, page: 1, limit: 20, totalPages: 1 },
+    };
+  }
+
+  // === Admin: platform settings ===
+  if (path === '/admin/settings' || path === '/admin/settings/') {
+    return {
+      platform_fee_rate: 0.05,
+      checkout_enabled: true,
+      support_email: 'help@collabhype.com',
+      min_payout_amount: 500,
+    };
+  }
+  const settingKeyMatch = path.match(/^\/admin\/settings\/([^/?]+)$/);
+  if (settingKeyMatch) {
+    if (m === 'put') return { key: settingKeyMatch[1], value: data.value };
+    if (m === 'delete') return { message: 'Setting deleted' };
+    return { key: settingKeyMatch[1], value: null };
   }
 
   // === Public track endpoint — accept events silently in demo mode ===

@@ -22,6 +22,7 @@ import {
   adminRouter as trackingAdminRoutes,
 } from '../modules/tracking/tracking.routes.js';
 import settingsRoutes from '../routes/admin/settings.js';
+import adminRoutes from '../modules/admin/admin.routes.js';
 
 const router = Router();
 
@@ -50,5 +51,9 @@ router.use('/track', trackingPublicRoutes);
 router.use('/admin/content', contentAdminRoutes);
 router.use('/admin/tracking', trackingAdminRoutes);
 router.use('/admin/settings', settingsRoutes);
+
+// Generic admin namespace (orders, users, packages, stats). Registered AFTER
+// the specific /admin/* mounts above so those take precedence.
+router.use('/admin', adminRoutes);
 
 export default router;

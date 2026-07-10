@@ -1,10 +1,15 @@
 import Link from 'next/link';
 import { Breadcrumb, Stat } from '@/components/ui';
+import { metadataForSlug } from '@/lib/content';
 
-export const metadata = {
+const FALLBACK_METADATA = {
   title: 'About — Collabhype',
   description: 'Why we built Collabhype and what we stand for.',
 };
+
+export function generateMetadata() {
+  return metadataForSlug('about', FALLBACK_METADATA);
+}
 
 const VALUES = [
   {

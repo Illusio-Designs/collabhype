@@ -28,6 +28,24 @@ export default function AdminContentPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // entry or 'new'
+  const [opening, setOpening] = useState(null); // slug currently being fetched for edit
+
+  // Open the editor with a FRESH single-record fetch rather than the possibly
+  // stale list row. Falls back to the row if the fetch fails.
+  const openEditor = useCallback(
+    async (entry) => {
+      setOpening(entry.slug);
+      try {
+        const { data } = await apiClient.get(`/api/v1/admin/content/${entry.slug}`);
+        setEditing(data.content ?? entry);
+      } catch {
+        setEditing(entry);
+      } finally {
+        setOpening(null);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!isLoading && user && user.role !== 'ADMIN') router.replace('/dashboard');
@@ -116,7 +134,8 @@ export default function AdminContentPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setEditing(c)}
+                    loading={opening === c.slug}
+                    onClick={() => openEditor(c)}
                     iconRight={<ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />}
                   >
                     Edit

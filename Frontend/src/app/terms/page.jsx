@@ -1,8 +1,13 @@
 import { Breadcrumb } from '@/components/ui';
+import { metadataForSlug } from '@/lib/content';
 
-export const metadata = {
+const FALLBACK_METADATA = {
   title: 'Terms of Service — Collabhype',
 };
+
+export function generateMetadata() {
+  return metadataForSlug('terms', FALLBACK_METADATA);
+}
 
 const SECTIONS = [
   {

@@ -6,11 +6,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import {
+  Award,
   Bell,
   Building2,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  SlidersHorizontal,
   HelpCircle,
   LayoutDashboard,
   LifeBuoy,
@@ -88,6 +90,7 @@ const NAV = {
       items: [
         { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
         { href: '/dashboard/admin/users', label: 'Users', icon: Users, badge: '1.2K' },
+        { href: '/dashboard/admin/creators', label: 'Creators & badges', icon: Award },
         { href: '/dashboard/admin/packages', label: 'Packages', icon: Package },
         { href: '/dashboard/admin/orders', label: 'All orders', icon: Receipt },
       ],
@@ -97,6 +100,12 @@ const NAV = {
       items: [
         { href: '/dashboard/admin/content', label: 'SEO & content', icon: ClipboardList },
         { href: '/dashboard/admin/tracking', label: 'Tracking', icon: LineChart },
+      ],
+    },
+    {
+      label: 'Configuration',
+      items: [
+        { href: '/dashboard/admin/settings', label: 'Platform settings', icon: SlidersHorizontal },
       ],
     },
     {

@@ -1,14 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { Badge, Card, Spinner } from '@/components/ui';
+import { apiError } from '@/lib/apiClient';
+import { dedupedGet } from '@/lib/apiCache';
+import { Badge, Card, Pagination, Spinner, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR } from '@/lib/format';
-import { DUMMY_ORDERS, DUMMY_PLATFORM_STATS } from '@/lib/dummyData';
+
+const PAGE_SIZE = 20;
+const STATS_URL = '/api/v1/admin/stats';
 
 const ORDER_BADGE = {
   PENDING: { variant: 'warning', label: 'Pending payment' },
@@ -22,10 +26,39 @@ const ORDER_BADGE = {
 export default function AdminOrdersPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const toast = useToast();
+
+  const [orders, setOrders] = useState([]);
+  const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
+  const [stats, setStats] = useState(null);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoading && user && user.role !== 'ADMIN') router.replace('/dashboard');
   }, [isLoading, user, router]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Stats is shared across admin pages — dedupedGet reuses it within its TTL.
+      const [ordersData, statsData] = await Promise.all([
+        dedupedGet(`/api/v1/admin/orders?page=${page}&limit=${PAGE_SIZE}`),
+        dedupedGet(STATS_URL),
+      ]);
+      setOrders(ordersData.orders ?? []);
+      setMeta(ordersData.meta ?? { total: 0, page, totalPages: 1 });
+      setStats(statsData ?? null);
+    } catch (e) {
+      toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
+    } finally {
+      setLoading(false);
+    }
+  }, [page, toast]);
+
+  useEffect(() => {
+    if (user?.role === 'ADMIN') load();
+  }, [user, load]);
 
   if (isLoading || !user || user.role !== 'ADMIN') {
     return (
@@ -34,6 +67,13 @@ export default function AdminOrdersPage() {
       </div>
     );
   }
+
+  const kpis = [
+    { label: 'GMV (30d)', value: formatINR(stats?.gmv30d ?? 0) },
+    { label: 'Active campaigns', value: String(stats?.activeCampaigns ?? 0) },
+    { label: 'Pending approvals', value: String(stats?.pendingApprovals ?? 0) },
+    { label: 'Payouts queued', value: String(stats?.payoutsQueued ?? 0) },
+  ];
 
   return (
     <div className="space-y-6">
@@ -48,54 +88,73 @@ export default function AdminOrdersPage() {
         subtitle="Every checkout across the platform with escrow status."
       />
 
-      <KpiStrip
-        kpis={[
-          { label: 'GMV (30d)', value: formatINR(DUMMY_PLATFORM_STATS.gmv30d) },
-          { label: 'Active campaigns', value: String(DUMMY_PLATFORM_STATS.activeCampaigns) },
-          { label: 'Pending approvals', value: String(DUMMY_PLATFORM_STATS.pendingApprovals) },
-          { label: 'Payouts queued', value: String(DUMMY_PLATFORM_STATS.payoutsQueued) },
-        ]}
-      />
+      <KpiStrip kpis={kpis} />
 
       <Card padding="none" className="overflow-hidden">
-       <ScrollTable hintLabel="Scroll">
-        <table className="min-w-full">
-          <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
-            <tr>
-              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Order</th>
-              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Brand</th>
-              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Items</th>
-              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Total</th>
-              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Status</th>
-              <th className="px-3 py-3 sm:px-6 text-left font-semibold">Paid at</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-100 text-sm">
-            {DUMMY_ORDERS.map((o) => {
-              const m = ORDER_BADGE[o.status] ?? { variant: 'default', label: o.status };
-              return (
-                <tr key={o.id} className="hover:bg-zinc-50">
-                  <td className="px-3 py-3 sm:px-6 font-mono text-xs font-semibold text-brand-700">
-                    {o.orderNumber}
-                  </td>
-                  <td className="px-3 py-3 sm:px-6 text-zinc-700">Acme Brand</td>
-                  <td className="px-3 py-3 sm:px-6 text-zinc-600">{o.items?.length ?? 0}</td>
-                  <td className="px-3 py-3 sm:px-6 font-semibold text-zinc-900">
-                    {formatINR(o.total)}
-                  </td>
-                  <td className="px-3 py-3 sm:px-6">
-                    <Badge variant={m.variant}>{m.label}</Badge>
-                  </td>
-                  <td className="px-3 py-3 sm:px-6 text-zinc-500">
-                    {o.paidAt ? new Date(o.paidAt).toLocaleDateString('en-IN') : '—'}
+        <ScrollTable hintLabel="Scroll">
+          <table className="min-w-full">
+            <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
+              <tr>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Order</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Brand</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Items</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Total</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Status</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Paid at</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 text-sm">
+              {loading && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center">
+                    <Spinner />
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-       </ScrollTable>
+              )}
+              {!loading && orders.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-zinc-500">
+                    No orders yet.
+                  </td>
+                </tr>
+              )}
+              {!loading &&
+                orders.map((o) => {
+                  const m = ORDER_BADGE[o.status] ?? { variant: 'default', label: o.status };
+                  return (
+                    <tr key={o.id} className="hover:bg-zinc-50">
+                      <td className="px-3 py-3 sm:px-6 font-mono text-xs font-semibold text-brand-700">
+                        {o.orderNumber}
+                      </td>
+                      <td className="px-3 py-3 sm:px-6 text-zinc-700">
+                        <div className="font-medium text-zinc-900">{o.brand?.fullName ?? '—'}</div>
+                        <div className="text-xs text-zinc-500">{o.brand?.email}</div>
+                      </td>
+                      <td className="px-3 py-3 sm:px-6 text-zinc-600">{o._count?.items ?? 0}</td>
+                      <td className="px-3 py-3 sm:px-6 font-semibold text-zinc-900">
+                        {formatINR(o.total)}
+                      </td>
+                      <td className="px-3 py-3 sm:px-6">
+                        <Badge variant={m.variant}>{m.label}</Badge>
+                      </td>
+                      <td className="px-3 py-3 sm:px-6 text-zinc-500">
+                        {o.paidAt ? new Date(o.paidAt).toLocaleDateString('en-IN') : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </ScrollTable>
       </Card>
+
+      <div className="flex flex-col items-center gap-2">
+        <Pagination page={page} pageCount={meta.totalPages ?? 1} onChange={setPage} />
+        <p className="text-xs text-zinc-500">
+          {meta.total ?? 0} order{meta.total === 1 ? '' : 's'} · page {meta.page ?? page} of{' '}
+          {meta.totalPages ?? 1}
+        </p>
+      </div>
     </div>
   );
 }
