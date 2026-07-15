@@ -39,6 +39,21 @@ export async function listOrders({ status, q, page, limit }) {
   return { items, total };
 }
 
+export async function updateOrderStatus(orderId, status) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw ApiError.notFound('Order not found');
+  // Status-only transition. Does NOT trigger a Razorpay refund — money movement
+  // is handled separately; this just records the platform-side state.
+  return prisma.order.update({
+    where: { id: orderId },
+    data: { status },
+    include: {
+      brand: { select: { id: true, fullName: true, email: true } },
+      _count: { select: { items: true, campaigns: true } },
+    },
+  });
+}
+
 // ---------- Users --------------------------------------------------------
 
 export async function listUsers({ role, q, page, limit }) {
@@ -58,13 +73,41 @@ export async function listUsers({ role, q, page, limit }) {
   return { items, total };
 }
 
-export async function setUserActive(userId, isActive) {
+export async function updateUser(userId, patch) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw ApiError.notFound('User not found');
   if (user.role === 'ADMIN') {
-    throw ApiError.badRequest('Cannot change the status of an admin account');
+    throw ApiError.badRequest('Admin accounts cannot be modified here');
   }
-  return prisma.user.update({ where: { id: userId }, data: { isActive }, select: userSelect });
+  const data = {};
+  if (patch.isActive !== undefined) data.isActive = patch.isActive;
+  if (patch.role !== undefined) data.role = patch.role;
+  return prisma.user.update({ where: { id: userId }, data, select: userSelect });
+}
+
+export async function deleteUser(userId) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw ApiError.notFound('User not found');
+  if (user.role === 'ADMIN') throw ApiError.badRequest('Admin accounts cannot be deleted here');
+
+  // Guard against destroying financial/audit history. If the user has orders
+  // (brand) or payouts (creator), refuse the hard delete and tell the admin to
+  // suspend instead — those records must be preserved.
+  const [orderCount, payoutCount] = await prisma.$transaction([
+    prisma.order.count({ where: { brandUserId: userId } }),
+    user.role === 'INFLUENCER'
+      ? prisma.payout.count({ where: { influencer: { userId } } })
+      : prisma.order.count({ where: { id: '__none__' } }), // resolves to 0
+  ]);
+  if (orderCount > 0 || payoutCount > 0) {
+    throw ApiError.badRequest(
+      'User has financial records — suspend the account instead of deleting it.',
+    );
+  }
+
+  // Profiles, carts, notifications, tickets cascade on user delete.
+  await prisma.user.delete({ where: { id: userId } });
+  return { ok: true };
 }
 
 // ---------- Packages (CRUD) ----------------------------------------------
@@ -103,6 +146,55 @@ export async function deletePackage(id) {
   await prisma.cartItem.deleteMany({ where: { packageId: id } });
   await prisma.package.delete({ where: { id } });
   return { ok: true };
+}
+
+// ---------- Payouts (platform-wide) --------------------------------------
+
+export async function listPayouts({ status, q, page, limit }) {
+  const where = {};
+  if (status) where.status = status;
+  if (q) {
+    where.influencer = {
+      user: { OR: [{ fullName: { contains: q } }, { email: { contains: q } }] },
+    };
+  }
+  const [total, items] = await prisma.$transaction([
+    prisma.payout.count({ where }),
+    prisma.payout.findMany({
+      where,
+      include: {
+        influencer: {
+          select: {
+            id: true,
+            user: { select: { id: true, fullName: true, email: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+  ]);
+  return { items, total };
+}
+
+export async function updatePayoutStatus(payoutId, status, failureReason) {
+  const payout = await prisma.payout.findUnique({ where: { id: payoutId } });
+  if (!payout) throw ApiError.notFound('Payout not found');
+  // Status-only transition — does NOT call Razorpay Payouts. Records the
+  // platform-side state so admins can track manual/settled payouts.
+  const data = { status };
+  if (status === 'PAID' && !payout.paidAt) data.paidAt = new Date();
+  if (status === 'FAILED') data.failureReason = failureReason ?? null;
+  return prisma.payout.update({
+    where: { id: payoutId },
+    data,
+    include: {
+      influencer: {
+        select: { id: true, user: { select: { id: true, fullName: true, email: true } } },
+      },
+    },
+  });
 }
 
 // ---------- Platform stats (one call powers every admin KPI strip) --------

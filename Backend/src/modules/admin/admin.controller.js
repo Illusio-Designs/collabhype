@@ -3,7 +3,10 @@ import {
   listOrdersQuery,
   listUsersQuery,
   listPackagesQuery,
+  listPayoutsQuery,
   updateUserSchema,
+  updateOrderSchema,
+  updatePayoutSchema,
   createPackageSchema,
   updatePackageSchema,
 } from './admin.schema.js';
@@ -24,6 +27,12 @@ export async function listOrders(req, res) {
   res.json({ orders: items, meta: meta(total, q) });
 }
 
+export async function updateOrder(req, res) {
+  const { body } = updateOrderSchema.parse({ body: req.body });
+  const order = await svc.updateOrderStatus(req.params.id, body.status);
+  res.json({ order });
+}
+
 // ---- Users ----
 
 export async function listUsers(req, res) {
@@ -34,8 +43,27 @@ export async function listUsers(req, res) {
 
 export async function updateUser(req, res) {
   const { body } = updateUserSchema.parse({ body: req.body });
-  const user = await svc.setUserActive(req.params.id, body.isActive);
+  const user = await svc.updateUser(req.params.id, body);
   res.json({ user });
+}
+
+export async function deleteUser(req, res) {
+  const result = await svc.deleteUser(req.params.id);
+  res.json(result);
+}
+
+// ---- Payouts ----
+
+export async function listPayouts(req, res) {
+  const q = listPayoutsQuery.parse(req.query);
+  const { items, total } = await svc.listPayouts(q);
+  res.json({ payouts: items, meta: meta(total, q) });
+}
+
+export async function updatePayout(req, res) {
+  const { body } = updatePayoutSchema.parse({ body: req.body });
+  const payout = await svc.updatePayoutStatus(req.params.id, body.status, body.failureReason);
+  res.json({ payout });
 }
 
 // ---- Packages ----

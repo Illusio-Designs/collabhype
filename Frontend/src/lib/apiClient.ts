@@ -524,6 +524,10 @@ function dummyResponseFor(
   }
 
   // === Admin: orders (platform-wide) ===
+  const adminOrderPatch = path.match(/^\/admin\/orders\/([^/?]+)$/);
+  if (adminOrderPatch && m === 'patch') {
+    return { order: { id: adminOrderPatch[1], status: String(data.status ?? 'PENDING') } };
+  }
   if (path === '/admin/orders' || path.startsWith('/admin/orders?')) {
     return {
       orders: DUMMY_ORDERS.map((o) => ({
@@ -536,9 +540,18 @@ function dummyResponseFor(
   }
 
   // === Admin: users ===
-  const adminUserPatch = path.match(/^\/admin\/users\/([^/?]+)$/);
-  if (adminUserPatch && m === 'patch') {
-    return { user: { id: adminUserPatch[1], isActive: !!data.isActive } };
+  const adminUserMatch = path.match(/^\/admin\/users\/([^/?]+)$/);
+  if (adminUserMatch) {
+    if (m === 'delete') return { ok: true };
+    if (m === 'patch') {
+      return {
+        user: {
+          id: adminUserMatch[1],
+          isActive: data.isActive ?? true,
+          role: data.role ?? 'BRAND',
+        },
+      };
+    }
   }
   if (path === '/admin/users' || path.startsWith('/admin/users?')) {
     return {
@@ -560,6 +573,24 @@ function dummyResponseFor(
     return {
       packages: DUMMY_PACKAGES,
       meta: { total: DUMMY_PACKAGES.length, page: 1, limit: 20, totalPages: 1 },
+    };
+  }
+
+  // === Admin: payouts (platform-wide) ===
+  const adminPayoutMatch = path.match(/^\/admin\/payouts\/([^/?]+)$/);
+  if (adminPayoutMatch && m === 'patch') {
+    return { payout: { id: adminPayoutMatch[1], status: String(data.status ?? 'PENDING') } };
+  }
+  if (path === '/admin/payouts' || path.startsWith('/admin/payouts?')) {
+    return {
+      payouts: DUMMY_PAYOUTS.map((p, i) => ({
+        ...p,
+        influencer: {
+          id: `inf-demo-${i}`,
+          user: { id: `u-demo-${i}`, fullName: 'Demo Creator', email: 'creator@demo.com' },
+        },
+      })),
+      meta: { total: DUMMY_PAYOUTS.length, page: 1, limit: 20, totalPages: 1 },
     };
   }
 

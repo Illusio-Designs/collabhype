@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { apiError } from '@/lib/apiClient';
-import { dedupedGet } from '@/lib/apiCache';
-import { Badge, Card, Pagination, Spinner, useToast } from '@/components/ui';
+import { apiClient, apiError } from '@/lib/apiClient';
+import { dedupedGet, invalidate } from '@/lib/apiCache';
+import { Badge, Card, Pagination, Select, Spinner, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
@@ -23,6 +23,15 @@ const ORDER_BADGE = {
   REFUNDED: { variant: 'default', label: 'Refunded' },
 };
 
+const STATUS_OPTIONS = [
+  { value: 'PENDING', label: 'Pending payment' },
+  { value: 'PAID', label: 'Paid' },
+  { value: 'IN_PROGRESS', label: 'In progress' },
+  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+  { value: 'REFUNDED', label: 'Refunded' },
+];
+
 export default function AdminOrdersPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
@@ -33,6 +42,7 @@ export default function AdminOrdersPage() {
   const [stats, setStats] = useState(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
     if (!isLoading && user && user.role !== 'ADMIN') router.replace('/dashboard');
@@ -59,6 +69,30 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     if (user?.role === 'ADMIN') load();
   }, [user, load]);
+
+  async function changeStatus(order, status) {
+    if (status === order.status) return;
+    if (
+      (status === 'CANCELLED' || status === 'REFUNDED') &&
+      !confirm(
+        `Mark order ${order.orderNumber} as ${status}? This records the status only — it does NOT trigger a Razorpay refund.`,
+      )
+    ) {
+      return;
+    }
+    setSavingId(order.id);
+    try {
+      await apiClient.patch(`/api/v1/admin/orders/${order.id}`, { status });
+      setOrders((rows) => rows.map((r) => (r.id === order.id ? { ...r, status } : r)));
+      invalidate('/api/v1/admin/orders');
+      invalidate('/api/v1/admin/stats');
+      toast.push({ variant: 'success', title: 'Order updated' });
+    } catch (e) {
+      toast.push({ variant: 'danger', title: 'Update failed', body: apiError(e) });
+    } finally {
+      setSavingId(null);
+    }
+  }
 
   if (isLoading || !user || user.role !== 'ADMIN') {
     return (
@@ -101,19 +135,20 @@ export default function AdminOrdersPage() {
                 <th className="px-3 py-3 sm:px-6 text-left font-semibold">Total</th>
                 <th className="px-3 py-3 sm:px-6 text-left font-semibold">Status</th>
                 <th className="px-3 py-3 sm:px-6 text-left font-semibold">Paid at</th>
+                <th className="px-3 py-3 sm:px-6 text-left font-semibold">Set status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 text-sm">
               {loading && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center">
+                  <td colSpan={7} className="px-6 py-10 text-center">
                     <Spinner />
                   </td>
                 </tr>
               )}
               {!loading && orders.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-zinc-500">
+                  <td colSpan={7} className="px-6 py-8 text-center text-sm text-zinc-500">
                     No orders yet.
                   </td>
                 </tr>
@@ -139,6 +174,16 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="px-3 py-3 sm:px-6 text-zinc-500">
                         {o.paidAt ? new Date(o.paidAt).toLocaleDateString('en-IN') : '—'}
+                      </td>
+                      <td className="px-3 py-3 sm:px-6">
+                        <div className="w-44">
+                          <Select
+                            value={o.status}
+                            onChange={(v) => changeStatus(o, v)}
+                            options={STATUS_OPTIONS}
+                            disabled={savingId === o.id}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );

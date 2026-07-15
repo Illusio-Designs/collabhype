@@ -93,6 +93,7 @@ const NAV = {
         { href: '/dashboard/admin/creators', label: 'Creators & badges', icon: Award },
         { href: '/dashboard/admin/packages', label: 'Packages', icon: Package },
         { href: '/dashboard/admin/orders', label: 'All orders', icon: Receipt },
+        { href: '/dashboard/admin/payouts', label: 'Payouts', icon: Wallet },
       ],
     },
     {

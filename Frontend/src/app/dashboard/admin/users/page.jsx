@@ -5,7 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { dedupedGet, invalidate } from '@/lib/apiCache';
-import { Avatar, Badge, Button, Card, Input, Pagination, Spinner, useToast } from '@/components/ui';
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Input,
+  Pagination,
+  Select,
+  Spinner,
+  useToast,
+} from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
@@ -13,6 +23,11 @@ import { formatCount } from '@/lib/format';
 
 const PAGE_SIZE = 20;
 const STATS_URL = '/api/v1/admin/stats';
+
+const ROLE_OPTIONS = [
+  { value: 'BRAND', label: 'Brand' },
+  { value: 'INFLUENCER', label: 'Creator' },
+];
 
 export default function AdminUsersPage() {
   const { user, isLoading } = useAuth();
@@ -77,6 +92,45 @@ export default function AdminUsersPage() {
     }
   }
 
+  async function changeRole(u, role) {
+    if (role === u.role) return;
+    if (!confirm(`Change ${u.fullName}'s role to ${role}?`)) return;
+    setSavingId(u.id);
+    try {
+      await apiClient.patch(`/api/v1/admin/users/${u.id}`, { role });
+      setUsers((rows) => rows.map((r) => (r.id === u.id ? { ...r, role } : r)));
+      invalidate('/api/v1/admin/users');
+      invalidate('/api/v1/admin/stats');
+      toast.push({ variant: 'success', title: 'Role updated' });
+    } catch (e) {
+      toast.push({ variant: 'danger', title: 'Update failed', body: apiError(e) });
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  async function removeUser(u) {
+    if (
+      !confirm(
+        `Delete ${u.fullName}? This cannot be undone. Accounts with orders or payouts can't be deleted — suspend them instead.`,
+      )
+    ) {
+      return;
+    }
+    setSavingId(u.id);
+    try {
+      await apiClient.delete(`/api/v1/admin/users/${u.id}`);
+      setUsers((rows) => rows.filter((r) => r.id !== u.id));
+      invalidate('/api/v1/admin/users');
+      invalidate('/api/v1/admin/stats');
+      toast.push({ variant: 'success', title: 'User deleted' });
+    } catch (e) {
+      toast.push({ variant: 'danger', title: 'Delete failed', body: apiError(e) });
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   if (isLoading || !user || user.role !== 'ADMIN') {
     return (
       <div className="grid h-64 place-items-center text-brand-700">
@@ -124,7 +178,7 @@ export default function AdminUsersPage() {
                 <th className="px-3 py-3 sm:px-6 text-left font-semibold">Role</th>
                 <th className="px-3 py-3 sm:px-6 text-left font-semibold">Joined</th>
                 <th className="px-3 py-3 sm:px-6 text-left font-semibold">Status</th>
-                <th className="px-3 py-3 sm:px-6" />
+                <th className="px-3 py-3 sm:px-6 text-right font-semibold">Manage</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 text-sm">
@@ -169,18 +223,36 @@ export default function AdminUsersPage() {
                         {u.isActive ? 'Active' : 'Suspended'}
                       </Badge>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-3 sm:px-6 text-right">
+                    <td className="whitespace-nowrap px-3 py-3 sm:px-6">
                       {u.role === 'ADMIN' ? (
-                        <span className="text-xs text-zinc-400">—</span>
+                        <div className="text-right text-xs text-zinc-400">—</div>
                       ) : (
-                        <Button
-                          size="sm"
-                          variant={u.isActive ? 'outline' : 'primary'}
-                          loading={savingId === u.id}
-                          onClick={() => toggleActive(u)}
-                        >
-                          {u.isActive ? 'Suspend' : 'Reactivate'}
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="w-32">
+                            <Select
+                              value={u.role}
+                              onChange={(v) => changeRole(u, v)}
+                              options={ROLE_OPTIONS}
+                              disabled={savingId === u.id}
+                            />
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={u.isActive ? 'outline' : 'primary'}
+                            loading={savingId === u.id}
+                            onClick={() => toggleActive(u)}
+                          >
+                            {u.isActive ? 'Suspend' : 'Reactivate'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            loading={savingId === u.id}
+                            onClick={() => removeUser(u)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
                       )}
                     </td>
                   </tr>

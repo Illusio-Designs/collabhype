@@ -3,6 +3,7 @@ import { z } from 'zod';
 const TIERS = ['NANO', 'MICRO', 'MACRO', 'MEGA'];
 const ORDER_STATUSES = ['PENDING', 'PAID', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'REFUNDED'];
 const ROLES = ['BRAND', 'INFLUENCER', 'ADMIN'];
+const PAYOUT_STATUSES = ['PENDING', 'PROCESSING', 'PAID', 'FAILED'];
 
 const pagination = {
   page: z.coerce.number().int().min(1).default(1),
@@ -26,8 +27,32 @@ export const listPackagesQuery = z.object({
 });
 
 export const updateUserSchema = z.object({
+  body: z
+    .object({
+      isActive: z.boolean().optional(),
+      role: z.enum(ROLES).optional(),
+    })
+    .refine((b) => b.isActive !== undefined || b.role !== undefined, {
+      message: 'Provide isActive and/or role',
+    }),
+});
+
+export const updateOrderSchema = z.object({
   body: z.object({
-    isActive: z.boolean(),
+    status: z.enum(ORDER_STATUSES),
+  }),
+});
+
+export const listPayoutsQuery = z.object({
+  status: z.enum(PAYOUT_STATUSES).optional(),
+  q: z.string().min(1).max(100).optional(),
+  ...pagination,
+});
+
+export const updatePayoutSchema = z.object({
+  body: z.object({
+    status: z.enum(PAYOUT_STATUSES),
+    failureReason: z.string().max(500).nullable().optional(),
   }),
 });
 
