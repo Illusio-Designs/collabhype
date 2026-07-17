@@ -126,27 +126,6 @@ function SocialsInner() {
           onDisconnect={() => disconnect('INSTAGRAM')}
           busy={busy === 'instagram' || busy === 'INSTAGRAM'}
         />
-        <PlatformCard
-          platform="youtube"
-          name="YouTube"
-          desc="Any Google account with an active channel."
-          gradient="from-red-500 to-red-700"
-          account={byPlatform('YOUTUBE')}
-          onConnect={() => connect('youtube')}
-          onDisconnect={() => disconnect('YOUTUBE')}
-          busy={busy === 'youtube' || busy === 'YOUTUBE'}
-        />
-        <PlatformCard
-          platform="tiktok"
-          name="TikTok"
-          desc="Coming soon — TikTok for Creators API access pending."
-          gradient="from-zinc-800 via-zinc-900 to-black"
-          account={byPlatform('TIKTOK')}
-          onConnect={() => connect('tiktok')}
-          onDisconnect={() => disconnect('TIKTOK')}
-          busy={busy === 'tiktok' || busy === 'TIKTOK'}
-          disabled
-        />
       </div>
 
       <Alert variant="info" title="Privacy" className="mt-8">
