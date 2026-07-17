@@ -3,18 +3,10 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient, apiError } from '@/lib/apiClient';
-import { isDemoMode } from '@/lib/auth';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Alert, Badge, Button, Card, Spinner, useToast } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import { formatCount, PLATFORM_LABEL } from '@/lib/format';
-
-// Demo follower presets used when "Connect" is clicked in demo mode (no
-// real OAuth round-trip available).
-const DEMO_CONNECT_PRESET = {
-  INSTAGRAM: { handle: 'creator.demo', followers: 24800, engagementRate: 4.3 },
-  YOUTUBE: { handle: 'CreatorDemo', followers: 6400, engagementRate: 2.7 },
-};
 
 function SocialsInner() {
   const { user, isLoading } = useAuth();
@@ -71,38 +63,6 @@ function SocialsInner() {
 
   async function connect(platform) {
     setBusy(platform);
-    const upper = platform.toUpperCase();
-
-    // Demo mode: skip the OAuth round-trip and locally simulate a connection
-    // so the UI updates immediately. Real backend still uses the proper
-    // OAuth redirect flow.
-    if (isDemoMode()) {
-      const preset = DEMO_CONNECT_PRESET[upper] ?? DEMO_CONNECT_PRESET.INSTAGRAM;
-      setSocials((prev) => {
-        const without = prev.filter((s) => s.platform !== upper);
-        return [
-          ...without,
-          {
-            id: `demo-${upper.toLowerCase()}`,
-            platform: upper,
-            handle: preset.handle,
-            profileUrl: `#demo-${upper.toLowerCase()}`,
-            followers: preset.followers,
-            engagementRate: preset.engagementRate,
-            isVerified: false,
-            lastSyncedAt: new Date().toISOString(),
-          },
-        ];
-      });
-      toast.push({
-        variant: 'success',
-        title: `${PLATFORM_LABEL[upper] ?? upper} connected`,
-        body: `Demo: @${preset.handle}`,
-      });
-      setBusy(null);
-      return;
-    }
-
     try {
       const { data } = await apiClient.get(`/api/v1/oauth/${platform}/start`);
       window.location.href = data.authUrl;
@@ -114,12 +74,6 @@ function SocialsInner() {
 
   async function disconnect(platform) {
     setBusy(platform);
-    if (isDemoMode()) {
-      setSocials((prev) => prev.filter((s) => s.platform !== platform));
-      toast.push({ variant: 'success', title: 'Disconnected', body: 'Demo' });
-      setBusy(null);
-      return;
-    }
     try {
       await apiClient.delete(`/api/v1/influencers/me/socials/${platform}`);
       toast.push({ variant: 'success', title: 'Disconnected' });

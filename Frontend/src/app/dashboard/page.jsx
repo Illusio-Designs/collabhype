@@ -1,23 +1,30 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { Avatar, Badge, Button, Card, Stat } from '@/components/ui';
+import { apiClient, apiError } from '@/lib/apiClient';
+import { Avatar, Badge, Button, Card, Spinner, Stat } from '@/components/ui';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 import PageHeader from '@/components/dashboard/PageHeader';
 import { formatINR, formatCount } from '@/lib/format';
-import {
-  DUMMY_ADMIN_USERS_LIST,
-  DUMMY_CAMPAIGNS_BRAND,
-  DUMMY_CAMPAIGNS_INFLUENCER,
-  DUMMY_INFLUENCERS,
-  DUMMY_NOTIFICATIONS,
-  DUMMY_ORDERS,
-  DUMMY_PAYOUTS,
-  DUMMY_PAYOUT_SUMMARY,
-  DUMMY_PLATFORM_STATS,
-  DUMMY_SUPPORT_TICKETS,
-} from '@/lib/dummyData';
+
+// Small client-side fetch helper: loading / error / data.
+function useApi(fetcher, deps = []) {
+  const [state, setState] = useState({ data: null, loading: true, error: null });
+  useEffect(() => {
+    let active = true;
+    setState((s) => ({ ...s, loading: true, error: null }));
+    Promise.resolve(fetcher())
+      .then((data) => active && setState({ data, loading: false, error: null }))
+      .catch((e) => active && setState({ data: null, loading: false, error: apiError(e) }));
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  return state;
+}
 
 export default function DashboardHome() {
   const { user } = useAuth();
@@ -34,6 +41,25 @@ export default function DashboardHome() {
 
 function BrandOverview({ user }) {
   const firstName = (user.fullName || '').split(' ')[0];
+  const { data, loading, error } = useApi(async () => {
+    const [campaigns, orders] = await Promise.all([
+      apiClient.get('/api/v1/campaigns', { params: { limit: 5 } }),
+      apiClient.get('/api/v1/orders', { params: { limit: 5 } }),
+    ]);
+    return {
+      campaigns: campaigns.data.campaigns ?? [],
+      orders: orders.data.orders ?? [],
+    };
+  });
+
+  const campaigns = data?.campaigns ?? [];
+  const orders = data?.orders ?? [];
+  const activeCampaigns = campaigns.filter((c) =>
+    ['BRIEF_SENT', 'IN_PROGRESS', 'REVIEW'].includes(c.status),
+  ).length;
+  const liveDeliverables = campaigns.reduce((s, c) => s + (c._count?.deliverables ?? 0), 0);
+  const spend = orders.reduce((s, o) => s + Number(o.total ?? 0), 0);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -50,84 +76,75 @@ function BrandOverview({ user }) {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Active campaigns" value="2" change={50} />
-        <Stat label="Live deliverables" value="9" change={12} />
-        <Stat label="Spend this month" value={formatINR(100000)} change={18} />
-        <Stat label="Avg engagement" value="4.7%" change={3} />
+        <Stat label="Active campaigns" value={String(activeCampaigns)} />
+        <Stat label="Live deliverables" value={String(liveDeliverables)} />
+        <Stat label="Recent orders" value={String(orders.length)} />
+        <Stat label="Recent spend" value={formatINR(spend)} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card padding="lg" className="min-w-0 lg:col-span-2">
-          <SectionHead title="Recent campaigns" link="/dashboard/campaigns" />
-          <div className="mt-4 space-y-3">
-            {DUMMY_CAMPAIGNS_BRAND.map((c) => (
-              <Link
-                key={c.id}
-                href={`/dashboard/campaigns/${c.id}`}
-                className="flex items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 transition hover:border-brand-200 hover:bg-brand-50/40"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-zinc-900">{c.title}</div>
-                  <div className="truncate text-xs text-zinc-500">
-                    {c.order?.orderNumber} · {c._count?.deliverables ?? 0} deliverables
-                  </div>
-                </div>
-                <div className="flex-shrink-0">
-                  <CampaignBadge status={c.status} />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </Card>
+      {loading ? (
+        <LoadingCard />
+      ) : error ? (
+        <ErrorCard message={error} />
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card padding="lg" className="min-w-0 lg:col-span-2">
+            <SectionHead title="Recent campaigns" link="/dashboard/campaigns" />
+            <div className="mt-4 space-y-3">
+              {campaigns.length === 0 ? (
+                <Empty>No campaigns yet.</Empty>
+              ) : (
+                campaigns.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/dashboard/campaigns/${c.id}`}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 transition hover:border-brand-200 hover:bg-brand-50/40"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-semibold text-zinc-900">{c.title}</div>
+                      <div className="truncate text-xs text-zinc-500">
+                        {c.order?.orderNumber} · {c._count?.deliverables ?? 0} deliverables
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <CampaignBadge status={c.status} />
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </Card>
 
-        <Card padding="lg" className="min-w-0">
-          <SectionHead title="Recent orders" link="/dashboard/orders" />
-          <div className="mt-4 space-y-3">
-            {DUMMY_ORDERS.map((o) => (
-              <Link
-                key={o.id}
-                href={`/dashboard/orders/${o.id}`}
-                className="block rounded-xl border border-zinc-100 p-3 transition hover:border-brand-200"
-              >
-                <div className="truncate font-mono text-xs font-semibold text-brand-700">
-                  {o.orderNumber}
-                </div>
-                <div className="mt-1 flex items-center justify-between gap-2">
-                  <div className="truncate text-sm font-bold text-zinc-900">
-                    {formatINR(o.total)}
-                  </div>
-                  <div className="flex-shrink-0">
-                    <OrderBadge status={o.status} />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      <Card padding="lg">
-        <SectionHead title="Top creators in your campaigns" />
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {DUMMY_INFLUENCERS.slice(0, 3).map((inf) => (
-            <Link
-              key={inf.id}
-              href={`/influencers/${inf.id}`}
-              className="flex items-center gap-3 rounded-xl border border-zinc-100 p-3 transition hover:border-brand-200"
-            >
-              <Avatar name={inf.user.fullName} size="md" />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-zinc-900">
-                  {inf.user.fullName}
-                </div>
-                <div className="truncate text-xs text-zinc-500">
-                  {formatCount(inf.totalFollowers)} followers · {inf.tier}
-                </div>
-              </div>
-            </Link>
-          ))}
+          <Card padding="lg" className="min-w-0">
+            <SectionHead title="Recent orders" link="/dashboard/orders" />
+            <div className="mt-4 space-y-3">
+              {orders.length === 0 ? (
+                <Empty>No orders yet.</Empty>
+              ) : (
+                orders.map((o) => (
+                  <Link
+                    key={o.id}
+                    href={`/dashboard/orders/${o.id}`}
+                    className="block rounded-xl border border-zinc-100 p-3 transition hover:border-brand-200"
+                  >
+                    <div className="truncate font-mono text-xs font-semibold text-brand-700">
+                      {o.orderNumber}
+                    </div>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <div className="truncate text-sm font-bold text-zinc-900">
+                        {formatINR(o.total)}
+                      </div>
+                      <div className="flex-shrink-0">
+                        <OrderBadge status={o.status} />
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </Card>
         </div>
-      </Card>
+      )}
     </div>
   );
 }
@@ -139,6 +156,25 @@ function BrandOverview({ user }) {
 function CreatorOverview({ user }) {
   const firstName = (user.fullName || '').split(' ')[0];
   const profile = user.influencerProfile ?? {};
+  const { data, loading, error } = useApi(async () => {
+    const [payouts, campaigns, notifs] = await Promise.all([
+      apiClient.get('/api/v1/influencers/me/payouts'),
+      apiClient.get('/api/v1/campaigns', { params: { limit: 5 } }),
+      apiClient.get('/api/v1/notifications', { params: { limit: 3 } }),
+    ]);
+    return {
+      summary: payouts.data.summary ?? {},
+      payouts: payouts.data.payouts ?? [],
+      campaigns: campaigns.data.campaigns ?? [],
+      notifications: notifs.data.notifications ?? [],
+    };
+  });
+
+  const summary = data?.summary ?? {};
+  const campaigns = data?.campaigns ?? [];
+  const payouts = data?.payouts ?? [];
+  const notifications = data?.notifications ?? [];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -155,67 +191,100 @@ function CreatorOverview({ user }) {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Total followers" value={formatCount(profile.totalFollowers ?? 0)} change={6} />
-        <Stat
-          label="Avg engagement"
-          value={`${(profile.avgEngagementRate ?? 0).toFixed(1)}%`}
-          change={4}
-        />
-        <Stat label="Earned this month" value={formatINR(DUMMY_PAYOUT_SUMMARY.paid)} change={12} />
-        <Stat label="Pending payout" value={formatINR(DUMMY_PAYOUT_SUMMARY.pending)} />
+        <Stat label="Total followers" value={formatCount(profile.totalFollowers ?? 0)} />
+        <Stat label="Avg engagement" value={`${(profile.avgEngagementRate ?? 0).toFixed(1)}%`} />
+        <Stat label="Paid out" value={formatINR(summary.paid ?? 0)} />
+        <Stat label="Pending payout" value={formatINR(summary.pending ?? 0)} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card padding="lg" className="min-w-0 lg:col-span-2">
-          <SectionHead title="Active campaigns" link="/dashboard/campaigns" />
-          <div className="mt-4 space-y-3">
-            {DUMMY_CAMPAIGNS_INFLUENCER.map((c) => (
-              <Link
-                key={c.id}
-                href={`/dashboard/campaigns/${c.id}`}
-                className="flex items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 transition hover:border-brand-200 hover:bg-brand-50/40"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-zinc-900">{c.title}</div>
-                  <div className="truncate text-xs text-zinc-500">
-                    {c.order?.brand?.brandProfile?.companyName} ·{' '}
-                    {c.deliverables?.length ?? 0} deliverables
-                  </div>
-                </div>
-                <div className="flex-shrink-0">
-                  <CampaignBadge status={c.status} />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </Card>
-
-        <Card padding="lg" className="min-w-0">
-          <SectionHead title="Recent payouts" link="/dashboard/payouts" />
-          <div className="mt-4 space-y-3">
-            {DUMMY_PAYOUTS.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between gap-2 rounded-xl border border-zinc-100 p-3"
-              >
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-bold text-zinc-900">
-                    {formatINR(p.amount)}
-                  </div>
-                  <div className="truncate text-xs text-zinc-500">
-                    {new Date(p.createdAt).toLocaleDateString('en-IN')}
-                  </div>
-                </div>
-                <div className="flex-shrink-0">
-                  <PayoutBadge status={p.status} />
-                </div>
+      {loading ? (
+        <LoadingCard />
+      ) : error ? (
+        <ErrorCard message={error} />
+      ) : (
+        <>
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Card padding="lg" className="min-w-0 lg:col-span-2">
+              <SectionHead title="Active campaigns" link="/dashboard/campaigns" />
+              <div className="mt-4 space-y-3">
+                {campaigns.length === 0 ? (
+                  <Empty>No campaigns yet.</Empty>
+                ) : (
+                  campaigns.map((c) => (
+                    <Link
+                      key={c.id}
+                      href={`/dashboard/campaigns/${c.id}`}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-zinc-50/50 p-3 transition hover:border-brand-200 hover:bg-brand-50/40"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-semibold text-zinc-900">{c.title}</div>
+                        <div className="truncate text-xs text-zinc-500">
+                          {c.order?.brand?.brandProfile?.companyName ?? c.order?.brand?.fullName} ·{' '}
+                          {c.deliverables?.length ?? 0} deliverables
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <CampaignBadge status={c.status} />
+                      </div>
+                    </Link>
+                  ))
+                )}
               </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+            </Card>
 
-      <NotificationsList />
+            <Card padding="lg" className="min-w-0">
+              <SectionHead title="Recent payouts" link="/dashboard/payouts" />
+              <div className="mt-4 space-y-3">
+                {payouts.length === 0 ? (
+                  <Empty>No payouts yet.</Empty>
+                ) : (
+                  payouts.slice(0, 5).map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between gap-2 rounded-xl border border-zinc-100 p-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-bold text-zinc-900">
+                          {formatINR(p.amount)}
+                        </div>
+                        <div className="truncate text-xs text-zinc-500">
+                          {new Date(p.createdAt).toLocaleDateString('en-IN')}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <PayoutBadge status={p.status} />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+          </div>
+
+          <Card padding="lg">
+            <SectionHead title="Latest activity" link="/dashboard/notifications" />
+            <div className="mt-4 space-y-3">
+              {notifications.length === 0 ? (
+                <Empty>You&apos;re all caught up.</Empty>
+              ) : (
+                notifications.map((n) => (
+                  <Link
+                    key={n.id}
+                    href={n.link ?? '/dashboard/notifications'}
+                    className="flex items-start gap-3 rounded-xl border border-zinc-100 p-3 transition hover:border-brand-200"
+                  >
+                    <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-brand-500" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-semibold text-zinc-900">{n.title}</div>
+                      {n.body && <div className="line-clamp-2 text-xs text-zinc-600">{n.body}</div>}
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
@@ -224,13 +293,24 @@ function CreatorOverview({ user }) {
 // Admin
 // ============================================================================
 
-function AdminOverview({ user }) {
-  const stats = DUMMY_PLATFORM_STATS;
-  const openDisputes = DUMMY_SUPPORT_TICKETS.filter(
-    (t) =>
-      t.category === 'DISPUTE' &&
-      ['OPEN', 'IN_PROGRESS', 'AWAITING_USER'].includes(t.status),
-  ).length;
+function AdminOverview() {
+  const { data, loading, error } = useApi(async () => {
+    const [stats, users, orders] = await Promise.all([
+      apiClient.get('/api/v1/admin/stats'),
+      apiClient.get('/api/v1/admin/users', { params: { limit: 8 } }),
+      apiClient.get('/api/v1/admin/orders', { params: { limit: 5 } }),
+    ]);
+    return {
+      stats: stats.data ?? {},
+      users: users.data.users ?? [],
+      orders: orders.data.orders ?? [],
+    };
+  });
+
+  const stats = data?.stats ?? {};
+  const users = data?.users ?? [];
+  const orders = data?.orders ?? [];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -247,96 +327,115 @@ function AdminOverview({ user }) {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Total users" value={formatCount(stats.totalUsers)} change={8} />
-        <Stat label="Brands" value={formatCount(stats.totalBrands)} change={12} />
-        <Stat label="Creators" value={formatCount(stats.totalCreators)} change={7} />
-        <Stat label="GMV (30d)" value={formatINR(stats.gmv30d)} change={22} />
+        <Stat label="Total users" value={formatCount(stats.totalUsers ?? 0)} />
+        <Stat label="Brands" value={formatCount(stats.totalBrands ?? 0)} />
+        <Stat label="Creators" value={formatCount(stats.totalCreators ?? 0)} />
+        <Stat label="GMV (30d)" value={formatINR(stats.gmv30d ?? 0)} />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <SmallKPI label="Active campaigns" value={stats.activeCampaigns} tone="brand" />
-        <SmallKPI label="Signups this week" value={stats.signupsThisWeek} tone="success" />
-        <SmallKPI label="Pending approvals" value={stats.pendingApprovals} tone="warning" />
-        <SmallKPI label="Payouts queued" value={stats.payoutsQueued} tone="info" />
-        <SmallKPI label="Open disputes" value={openDisputes} tone="warning" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <SmallKPI label="Active campaigns" value={stats.activeCampaigns ?? 0} tone="brand" />
+        <SmallKPI label="Signups this week" value={stats.signupsThisWeek ?? 0} tone="success" />
+        <SmallKPI label="Pending approvals" value={stats.pendingApprovals ?? 0} tone="warning" />
+        <SmallKPI label="Payouts queued" value={stats.payoutsQueued ?? 0} tone="info" />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Card padding="lg" className="min-w-0 xl:col-span-2">
-          <SectionHead title="Recent signups" link="/dashboard/admin/users" />
-          <div className="mt-4 overflow-hidden rounded-xl border border-zinc-100">
-           <ScrollTable hintLabel="Scroll">
-            <table className="min-w-full">
-              <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
-                <tr>
-                  <th className="px-4 py-2.5 text-left font-semibold">User</th>
-                  <th className="px-4 py-2.5 text-left font-semibold">Role</th>
-                  <th className="px-4 py-2.5 text-left font-semibold">Joined</th>
-                  <th className="px-4 py-2.5 text-left font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 text-sm">
-                {DUMMY_ADMIN_USERS_LIST.map((u) => (
-                  <tr key={u.id} className="hover:bg-zinc-50">
-                    <td className="whitespace-nowrap px-4 py-2.5">
-                      <div className="flex items-center gap-2.5">
-                        <Avatar name={u.fullName} size="sm" />
-                        <div className="min-w-0">
-                          <div className="truncate font-medium text-zinc-900">{u.fullName}</div>
-                          <div className="truncate text-xs text-zinc-500">{u.email}</div>
-                        </div>
+      {loading ? (
+        <LoadingCard />
+      ) : error ? (
+        <ErrorCard message={error} />
+      ) : (
+        <div className="grid gap-6 xl:grid-cols-3">
+          <Card padding="lg" className="min-w-0 xl:col-span-2">
+            <SectionHead title="Recent signups" link="/dashboard/admin/users" />
+            <div className="mt-4 overflow-hidden rounded-xl border border-zinc-100">
+              <ScrollTable hintLabel="Scroll">
+                <table className="min-w-full">
+                  <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
+                    <tr>
+                      <th className="px-4 py-2.5 text-left font-semibold">User</th>
+                      <th className="px-4 py-2.5 text-left font-semibold">Role</th>
+                      <th className="px-4 py-2.5 text-left font-semibold">Joined</th>
+                      <th className="px-4 py-2.5 text-left font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 text-sm">
+                    {users.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-6 text-center text-zinc-500">
+                          No users yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      users.map((u) => (
+                        <tr key={u.id} className="hover:bg-zinc-50">
+                          <td className="whitespace-nowrap px-4 py-2.5">
+                            <div className="flex items-center gap-2.5">
+                              <Avatar name={u.fullName} size="sm" />
+                              <div className="min-w-0">
+                                <div className="truncate font-medium text-zinc-900">
+                                  {u.fullName}
+                                </div>
+                                <div className="truncate text-xs text-zinc-500">{u.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-2.5">
+                            <Badge
+                              variant={
+                                u.role === 'BRAND'
+                                  ? 'brand'
+                                  : u.role === 'INFLUENCER'
+                                    ? 'info'
+                                    : 'dark'
+                              }
+                            >
+                              {u.role}
+                            </Badge>
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-2.5 text-zinc-600">
+                            {new Date(u.createdAt).toLocaleDateString('en-IN')}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-2.5">
+                            <Badge variant={u.isActive ? 'success' : 'default'}>
+                              {u.isActive ? 'Active' : 'Suspended'}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </ScrollTable>
+            </div>
+          </Card>
+
+          <Card padding="lg" className="min-w-0">
+            <SectionHead title="Recent orders" link="/dashboard/admin/orders" />
+            <div className="mt-4 space-y-3">
+              {orders.length === 0 ? (
+                <Empty>No orders yet.</Empty>
+              ) : (
+                orders.map((o) => (
+                  <div key={o.id} className="rounded-xl border border-zinc-100 p-3">
+                    <div className="truncate font-mono text-xs font-semibold text-brand-700">
+                      {o.orderNumber}
+                    </div>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <div className="truncate text-sm font-bold text-zinc-900">
+                        {formatINR(o.total)}
                       </div>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2.5">
-                      <Badge
-                        variant={
-                          u.role === 'BRAND'
-                            ? 'brand'
-                            : u.role === 'INFLUENCER'
-                              ? 'info'
-                              : 'dark'
-                        }
-                      >
-                        {u.role}
-                      </Badge>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2.5 text-zinc-600">
-                      {new Date(u.createdAt).toLocaleDateString('en-IN')}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2.5">
-                      <Badge variant={u.isActive ? 'success' : 'default'}>
-                        {u.isActive ? 'Active' : 'Suspended'}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-           </ScrollTable>
-          </div>
-        </Card>
-
-        <Card padding="lg" className="min-w-0">
-          <SectionHead title="Recent orders" link="/dashboard/admin/orders" />
-          <div className="mt-4 space-y-3">
-            {DUMMY_ORDERS.map((o) => (
-              <div key={o.id} className="rounded-xl border border-zinc-100 p-3">
-                <div className="truncate font-mono text-xs font-semibold text-brand-700">
-                  {o.orderNumber}
-                </div>
-                <div className="mt-1 flex items-center justify-between gap-2">
-                  <div className="truncate text-sm font-bold text-zinc-900">
-                    {formatINR(o.total)}
+                      <div className="flex-shrink-0">
+                        <OrderBadge status={o.status} />
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-shrink-0">
-                    <OrderBadge status={o.status} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+                ))
+              )}
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
@@ -356,6 +455,31 @@ function SectionHead({ title, link }) {
       )}
     </div>
   );
+}
+
+function LoadingCard() {
+  return (
+    <Card padding="lg">
+      <div className="grid h-32 place-items-center text-brand-700">
+        <Spinner size="lg" />
+      </div>
+    </Card>
+  );
+}
+
+function ErrorCard({ message }) {
+  return (
+    <Card padding="lg">
+      <div className="py-8 text-center">
+        <p className="text-sm font-semibold text-zinc-900">Couldn&apos;t load your data</p>
+        <p className="mt-1 text-xs text-zinc-600">{message}</p>
+      </div>
+    </Card>
+  );
+}
+
+function Empty({ children }) {
+  return <p className="rounded-xl border border-dashed border-zinc-200 p-4 text-sm text-zinc-500">{children}</p>;
 }
 
 function SmallKPI({ label, value, tone = 'brand' }) {
@@ -410,27 +534,4 @@ function PayoutBadge({ status }) {
   };
   const m = map[status] ?? { variant: 'default', label: status };
   return <Badge variant={m.variant}>{m.label}</Badge>;
-}
-
-function NotificationsList() {
-  return (
-    <Card padding="lg">
-      <SectionHead title="Latest activity" link="/dashboard/notifications" />
-      <div className="mt-4 space-y-3">
-        {DUMMY_NOTIFICATIONS.slice(0, 3).map((n) => (
-          <Link
-            key={n.id}
-            href={n.link ?? '/dashboard/notifications'}
-            className="flex items-start gap-3 rounded-xl border border-zinc-100 p-3 transition hover:border-brand-200"
-          >
-            <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-brand-500" />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold text-zinc-900">{n.title}</div>
-              {n.body && <div className="line-clamp-2 text-xs text-zinc-600">{n.body}</div>}
-            </div>
-          </Link>
-        ))}
-      </div>
-    </Card>
-  );
 }

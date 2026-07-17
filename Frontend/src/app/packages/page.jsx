@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { apiFetchSafe } from '@/lib/api';
 import PackageCard from '@/components/PackageCard';
 import { Breadcrumb } from '@/components/ui';
-import { DUMMY_PACKAGES } from '@/lib/dummyData';
 
 export const metadata = {
   title: 'Packages — Collabhype',
@@ -32,10 +31,8 @@ const TIER_TILES = [
 ];
 
 export default async function PackagesPage() {
-  // Try live API; fall back to dummy when unreachable or empty.
   const data = await apiFetchSafe('/api/v1/packages?tier=NANO', null);
-  const fromApi = data?.packages ?? [];
-  const packages = fromApi.length ? fromApi : DUMMY_PACKAGES;
+  const packages = data?.packages ?? [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -53,11 +50,20 @@ export default async function PackagesPage() {
         </p>
       </header>
 
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {packages.map((p) => (
-          <PackageCard key={p.id} pkg={p} />
-        ))}
-      </div>
+      {packages.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-zinc-200 bg-white px-6 py-16 text-center">
+          <p className="text-base font-semibold text-zinc-900">No packages available yet</p>
+          <p className="mx-auto mt-1 max-w-md text-sm text-zinc-600">
+            Check back soon — new bulk packs are added regularly.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {packages.map((p) => (
+            <PackageCard key={p.id} pkg={p} />
+          ))}
+        </div>
+      )}
 
       <section className="mt-20">
         <div className="mb-8 text-center">

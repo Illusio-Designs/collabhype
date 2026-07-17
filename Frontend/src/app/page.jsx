@@ -12,13 +12,15 @@ import Testimonials from '@/components/home/Testimonials';
 import FAQSection from '@/components/home/FAQSection';
 import Newsletter from '@/components/home/Newsletter';
 import FinalCTA from '@/components/home/FinalCTA';
-import { DUMMY_NICHES, DUMMY_PACKAGES } from '@/lib/dummyData';
+import { apiFetchSafe } from '@/lib/api';
 
-export default function HomePage() {
-  // Dummy data — backend-independent so the marketing UI always renders.
-  // When wiring to live data, swap these for apiFetchSafe calls.
-  const featured = DUMMY_PACKAGES;
-  const niches = DUMMY_NICHES;
+export default async function HomePage() {
+  const [packagesData, nichesData] = await Promise.all([
+    apiFetchSafe('/api/v1/packages?limit=8', null),
+    apiFetchSafe('/api/v1/niches', null),
+  ]);
+  const featured = packagesData?.packages ?? [];
+  const niches = nichesData?.niches ?? [];
 
   return (
     <>

@@ -4,22 +4,13 @@ import { apiFetch } from '@/lib/api';
 import { formatINR, formatCount, TIER_LABEL, DELIVERABLE_LABEL, PLATFORM_LABEL } from '@/lib/format';
 import AddPackageButton from '@/components/cart/AddPackageButton';
 import { Badge, Breadcrumb, Card } from '@/components/ui';
-import { DUMMY_PACKAGES, DUMMY_INFLUENCERS } from '@/lib/dummyData';
 
 async function loadPackage(slug) {
   try {
     const data = await apiFetch(`/api/v1/packages/${slug}`);
     return data.package;
   } catch {
-    // Fall back to dummy data so the design previews without the backend.
-    const dummy = DUMMY_PACKAGES.find((p) => p.slug === slug);
-    if (!dummy) return null;
-    return {
-      ...dummy,
-      influencers: DUMMY_INFLUENCERS.slice(0, Math.min(dummy.influencerCount, 6)).map((inf) => ({
-        influencer: inf,
-      })),
-    };
+    return null;
   }
 }
 
