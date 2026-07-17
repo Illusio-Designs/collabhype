@@ -1,15 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { apiClient, apiError } from '@/lib/apiClient';
-import { Badge, Card, EmptyState, Spinner, useToast } from '@/components/ui';
+import { apiError } from '@/lib/apiClient';
+import { dedupedGet } from '@/lib/apiCache';
+import { Badge, Card, EmptyState, Pagination, Spinner, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR } from '@/lib/format';
+
+const PAGE_SIZE = 20;
 
 const ORDER_BADGE = {
   PENDING: { variant: 'warning', label: 'Pending payment' },
@@ -34,21 +37,32 @@ export default function OrdersPage() {
   const router = useRouter();
   const toast = useToast();
   const [orders, setOrders] = useState([]);
+  const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
+  const [summary, setSummary] = useState(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoading && user && user.role !== 'BRAND') router.replace('/dashboard');
   }, [isLoading, user, router]);
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await dedupedGet(`/api/v1/orders?page=${page}&limit=${PAGE_SIZE}`);
+      setOrders(data.orders ?? []);
+      setMeta(data.meta ?? { total: 0, page, totalPages: 1 });
+      setSummary(data.summary ?? null);
+    } catch (e) {
+      toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
+    } finally {
+      setLoading(false);
+    }
+  }, [page, toast]);
+
   useEffect(() => {
-    if (user?.role !== 'BRAND') return;
-    apiClient
-      .get('/api/v1/orders')
-      .then(({ data }) => setOrders(data.orders ?? []))
-      .catch((e) => toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) }))
-      .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+    if (user?.role === 'BRAND') load();
+  }, [user, load]);
 
   if (loading) {
     return (
@@ -58,16 +72,13 @@ export default function OrdersPage() {
     );
   }
 
-  // KPIs derived from the orders list
-  const totalSpent = orders.reduce((s, o) => s + Number(o.total ?? 0), 0);
-  const completed = orders.filter((o) => o.status === 'COMPLETED').length;
-  const inFlight = orders.filter((o) => o.status === 'PAID' || o.status === 'IN_PROGRESS').length;
-  const avg = orders.length ? totalSpent / orders.length : 0;
+  // KPIs come from the server-side aggregate over every order, not from the
+  // current page — reducing over `orders` would only ever describe 20 rows.
   const kpis = [
-    { label: 'Total orders', value: String(orders.length) },
-    { label: 'Lifetime spend', value: formatINR(totalSpent) },
-    { label: 'Avg order', value: formatINR(avg) },
-    { label: 'In flight', value: String(inFlight) },
+    { label: 'Total orders', value: String(summary?.count ?? 0) },
+    { label: 'Lifetime spend', value: formatINR(summary?.totalSpent ?? 0) },
+    { label: 'Avg order', value: formatINR(summary?.avgOrder ?? 0) },
+    { label: 'In flight', value: String(summary?.inFlight ?? 0) },
   ];
 
   return (
@@ -144,6 +155,10 @@ export default function OrdersPage() {
           </table>
          </ScrollTable>
         </Card>
+      )}
+
+      {meta.totalPages > 1 && (
+        <Pagination page={page} pageCount={meta.totalPages} onChange={setPage} />
       )}
     </div>
   );

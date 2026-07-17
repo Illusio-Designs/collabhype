@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
+import { invalidate } from '@/lib/apiCache';
 import {
   clearAuth,
   getStoredUser,
@@ -42,8 +43,12 @@ export function AuthProvider({ children }) {
     setIsLoading(false);
   }, []);
 
+  // The response cache is keyed by URL alone, so anything left in it belongs to
+  // whoever was signed in a moment ago. Every identity change must wipe it, or
+  // the next account can be served the previous one's rows within the TTL.
   const login = useCallback(async (email, password) => {
     const { data } = await apiClient.post('/api/v1/auth/login', { email, password });
+    invalidate();
     setToken(data.token);
     setStoredUser(data.user);
     setUser(data.user);
@@ -52,6 +57,7 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (payload) => {
     const { data } = await apiClient.post('/api/v1/auth/register', payload);
+    invalidate();
     setToken(data.token);
     setStoredUser(data.user);
     setUser(data.user);
@@ -60,6 +66,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => {
     clearAuth();
+    invalidate();
     setUser(null);
     router.push('/');
   }, [router]);

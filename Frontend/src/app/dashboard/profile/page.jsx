@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { dedupedGet, invalidate } from '@/lib/apiCache';
 import {
   Alert,
   Button,
@@ -41,9 +42,8 @@ function BrandProfileForm() {
   });
 
   useEffect(() => {
-    apiClient
-      .get('/api/v1/brands/me')
-      .then(({ data }) => {
+    dedupedGet('/api/v1/brands/me')
+      .then((data) => {
         const p = data.profile;
         setForm({
           companyName: p.companyName ?? '',
@@ -68,6 +68,7 @@ function BrandProfileForm() {
     setSaving(true);
     try {
       await apiClient.patch('/api/v1/brands/me', form);
+      invalidate('/api/v1/brands/me');
       toast.push({ variant: 'success', title: 'Saved', body: 'Brand profile updated.' });
     } catch (err) {
       toast.push({ variant: 'danger', title: 'Save failed', body: apiError(err) });
@@ -177,11 +178,11 @@ function InfluencerProfileForm() {
 
   useEffect(() => {
     Promise.all([
-      apiClient.get('/api/v1/influencers/me'),
-      apiClient.get('/api/v1/niches'),
+      dedupedGet('/api/v1/influencers/me'),
+      dedupedGet('/api/v1/niches'),
     ])
       .then(([me, n]) => {
-        const p = me.data.profile;
+        const p = me.profile;
         setForm({
           bio: p.bio ?? '',
           city: p.city ?? '',
@@ -195,7 +196,7 @@ function InfluencerProfileForm() {
           isAvailable: p.isAvailable !== false,
         });
         setSelectedNiches(new Set((p.niches ?? []).map((x) => x.niche.slug)));
-        setNiches(n.data.niches ?? []);
+        setNiches(n.niches ?? []);
       })
       .catch((e) => toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) }))
       .finally(() => setLoading(false));
@@ -231,6 +232,7 @@ function InfluencerProfileForm() {
         isAvailable: form.isAvailable,
       };
       await apiClient.patch('/api/v1/influencers/me', payload);
+      invalidate('/api/v1/influencers/me');
       toast.push({ variant: 'success', title: 'Saved', body: 'Profile updated.' });
     } catch (err) {
       toast.push({ variant: 'danger', title: 'Save failed', body: apiError(err) });
@@ -249,6 +251,7 @@ function InfluencerProfileForm() {
       await apiClient.put('/api/v1/influencers/me/niches', {
         nicheSlugs: [...selectedNiches],
       });
+      invalidate('/api/v1/influencers/me');
       toast.push({ variant: 'success', title: 'Niches updated' });
     } catch (err) {
       toast.push({ variant: 'danger', title: 'Save failed', body: apiError(err) });

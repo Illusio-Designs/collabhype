@@ -32,7 +32,7 @@ export default function ContactPage() {
 
   return (
     <div>
-      <section className="bg-gradient-to-b from-brand-50 to-white">
+      <section className="-mt-header bg-gradient-to-b from-brand-50 to-white pt-header">
         <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="mb-6 flex justify-center">
             <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Contact' }]} />

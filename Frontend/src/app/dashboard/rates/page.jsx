@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { dedupedGet, invalidate } from '@/lib/apiCache';
 import {
   Alert,
   Badge,
@@ -43,9 +44,8 @@ export default function RatesPage() {
 
   useEffect(() => {
     if (user?.role !== 'INFLUENCER') return;
-    apiClient
-      .get('/api/v1/influencers/me')
-      .then(({ data }) => {
+    dedupedGet('/api/v1/influencers/me')
+      .then((data) => {
         const next = { ...rates };
         for (const d of DELIVERABLES) next[d] = { active: false, price: '' };
         for (const r of data.profile.rateCards ?? []) {
@@ -77,6 +77,9 @@ export default function RatesPage() {
     setSaving(true);
     try {
       await apiClient.put('/api/v1/influencers/me/rate-cards', { rates: payload });
+      // Rate cards are served as part of the profile payload, which the
+      // profile page reads from the same cache key.
+      invalidate('/api/v1/influencers/me');
       toast.push({ variant: 'success', title: 'Rate card saved' });
     } catch (e) {
       toast.push({ variant: 'danger', title: 'Save failed', body: apiError(e) });

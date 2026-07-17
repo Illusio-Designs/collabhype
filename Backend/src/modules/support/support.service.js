@@ -59,10 +59,26 @@ export async function createTicket(userId, role, input) {
 
 // ---------- list ---------------------------------------------------------
 
+// Ticket counts for the dashboard KPI strip, scoped to whatever `scopeWhere`
+// selects. Ignores the caller's status filter and page window on purpose:
+// these are totals, not a description of the rows on screen.
+async function ticketSummary(scopeWhere) {
+  const [count, open, awaitingUser, resolved] = await prisma.$transaction([
+    prisma.supportTicket.count({ where: scopeWhere }),
+    prisma.supportTicket.count({
+      where: { ...scopeWhere, status: { in: ['OPEN', 'IN_PROGRESS'] } },
+    }),
+    prisma.supportTicket.count({ where: { ...scopeWhere, status: 'AWAITING_USER' } }),
+    prisma.supportTicket.count({ where: { ...scopeWhere, status: 'RESOLVED' } }),
+  ]);
+  return { count, open, awaitingUser, resolved };
+}
+
 export async function listForUser(userId, { status, page, limit }) {
-  const where = { userId };
+  const scopeWhere = { userId };
+  const where = { ...scopeWhere };
   if (status) where.status = status;
-  const [total, items] = await prisma.$transaction([
+  const [total, items, summary] = await Promise.all([
     prisma.supportTicket.count({ where }),
     prisma.supportTicket.findMany({
       where,
@@ -71,8 +87,9 @@ export async function listForUser(userId, { status, page, limit }) {
       skip: (page - 1) * limit,
       take: limit,
     }),
+    ticketSummary(scopeWhere),
   ]);
-  return { items, total };
+  return { items, total, summary };
 }
 
 export async function listAll({ status, category, priority, page, limit }) {

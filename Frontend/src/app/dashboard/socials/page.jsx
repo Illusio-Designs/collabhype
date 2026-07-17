@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { dedupedGet, invalidate } from '@/lib/apiCache';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Alert, Badge, Button, Card, Spinner, useToast } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
@@ -25,17 +26,20 @@ function SocialsInner() {
     }
   }, [isLoading, user, router]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data } = await apiClient.get('/api/v1/influencers/me/socials');
-      setSocials(data.socials ?? []);
-    } catch (e) {
-      toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  const load = useCallback(
+    async ({ force = false } = {}) => {
+      setLoading(true);
+      try {
+        const data = await dedupedGet('/api/v1/influencers/me/socials', { force });
+        setSocials(data.socials ?? []);
+      } catch (e) {
+        toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast],
+  );
 
   useEffect(() => {
     if (user?.role === 'INFLUENCER') load();
@@ -56,7 +60,10 @@ function SocialsInner() {
         body: `@${handle}`,
       });
       router.replace('/dashboard/socials');
-      load();
+      // We just came back from a successful OAuth connect — the cached socials
+      // list predates the new account.
+      invalidate('/api/v1/influencers/me/socials');
+      load({ force: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sp]);
@@ -77,7 +84,8 @@ function SocialsInner() {
     try {
       await apiClient.delete(`/api/v1/influencers/me/socials/${platform}`);
       toast.push({ variant: 'success', title: 'Disconnected' });
-      await load();
+      invalidate('/api/v1/influencers/me/socials');
+      await load({ force: true });
     } catch (e) {
       toast.push({ variant: 'danger', title: 'Disconnect failed', body: apiError(e) });
     } finally {

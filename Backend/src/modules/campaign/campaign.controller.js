@@ -21,7 +21,11 @@ export async function listMine(req, res) {
   if (req.user.role === 'BRAND') result = await svc.listForBrand(req.user.sub, q);
   else if (req.user.role === 'INFLUENCER') result = await svc.listForInfluencer(req.user.sub, q);
   else throw ApiError.forbidden('Only BRAND or INFLUENCER can view campaigns');
-  res.json({ campaigns: result.items, meta: pageMeta(result.total, q.page, q.limit) });
+  res.json({
+    campaigns: result.items,
+    meta: pageMeta(result.total, q.page, q.limit),
+    summary: result.summary,
+  });
 }
 
 export async function getOne(req, res) {

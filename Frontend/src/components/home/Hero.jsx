@@ -10,12 +10,16 @@ const childIn = { opacity: 1, y: 0 };
 const ease = [0.22, 1, 0.36, 1];
 
 export default function Hero() {
+  // The section's pt-4/sm:pt-6 leaves a gap above the panel; it stays smaller
+  // than the header's own top padding so the pill lands inside the gradient.
   return (
-    <section className="bg-zinc-50 pb-12 pt-4 sm:pb-16 sm:pt-6 lg:pb-20">
+    <section className="-mt-header bg-zinc-50 pb-12 pt-4 sm:pb-16 sm:pt-6 lg:pb-20">
       {/* Outer container matches header + footer width (max-w-7xl px-4/6/8) so
           the panel never gets wider than the header. */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-50 via-white to-brand-100/60 sm:rounded-[2.5rem]">
+        {/* pt-header keeps the copy clear of the fixed header while the panel's
+            gradient runs up behind it, becoming the header's backdrop. */}
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-50 via-white to-brand-100/60 pt-header sm:rounded-[2.5rem]">
           {/* Decorative blurred blobs */}
           <motion.div
             aria-hidden
@@ -30,7 +34,7 @@ export default function Hero() {
             className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-gradient-to-tl from-brand-200 to-accent-200 opacity-50 blur-3xl"
           />
 
-          <div className="relative px-5 py-12 sm:px-8 sm:py-16 lg:px-10 lg:py-20">
+          <div className="relative px-5 py-8 sm:px-8 lg:px-10">
             <div className="grid items-center gap-12 lg:grid-cols-2">
             {/* ===== LEFT: copy ===== */}
             <div>

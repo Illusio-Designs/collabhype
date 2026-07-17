@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { dedupedGet, invalidate } from '@/lib/apiCache';
 import {
   Alert,
   Avatar,
@@ -62,17 +63,27 @@ export default function CampaignDetailPage() {
   const [briefOpen, setBriefOpen] = useState(false);
   const [actionDeliv, setActionDeliv] = useState(null); // { id, action: 'draft' | 'posted' | 'revise' }
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data } = await apiClient.get(`/api/v1/campaigns/${id}`);
-      setCampaign(data.campaign);
-    } catch (e) {
-      toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
-    } finally {
-      setLoading(false);
-    }
-  }, [id, toast]);
+  const load = useCallback(
+    async ({ force = false } = {}) => {
+      setLoading(true);
+      try {
+        const data = await dedupedGet(`/api/v1/campaigns/${id}`, { force });
+        setCampaign(data.campaign);
+      } catch (e) {
+        toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [id, toast],
+  );
+
+  // Any deliverable transition can move the campaign's own status, so the
+  // cached detail AND the cached list both go stale.
+  const reload = useCallback(async () => {
+    invalidate('/api/v1/campaigns');
+    await load({ force: true });
+  }, [load]);
 
   useEffect(() => {
     if (user) load();
@@ -82,7 +93,7 @@ export default function CampaignDetailPage() {
     try {
       await apiClient.post(`/api/v1/deliverables/${deliv.id}/approve`);
       toast.push({ variant: 'success', title: 'Approved' });
-      await load();
+      await reload();
     } catch (e) {
       toast.push({ variant: 'danger', title: 'Failed', body: apiError(e) });
     }
@@ -92,7 +103,10 @@ export default function CampaignDetailPage() {
     try {
       await apiClient.post(`/api/v1/deliverables/${deliv.id}/release-payment`);
       toast.push({ variant: 'success', title: 'Payment released', body: 'Payout queued.' });
-      await load();
+      // Releasing payment queues a payout, which the creator's payouts page
+      // reads from its own cache key.
+      invalidate('/api/v1/influencers/me/payouts');
+      await reload();
     } catch (e) {
       toast.push({ variant: 'danger', title: 'Failed', body: apiError(e) });
     }
@@ -187,7 +201,7 @@ export default function CampaignDetailPage() {
         onClose={() => setBriefOpen(false)}
         onSaved={() => {
           setBriefOpen(false);
-          load();
+          reload();
         }}
       />
 
@@ -197,7 +211,7 @@ export default function CampaignDetailPage() {
         onClose={() => setActionDeliv(null)}
         onDone={() => {
           setActionDeliv(null);
-          load();
+          reload();
         }}
       />
     </div>

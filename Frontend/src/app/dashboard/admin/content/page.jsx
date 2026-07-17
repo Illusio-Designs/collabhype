@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { dedupedGet, invalidate } from '@/lib/apiCache';
 import {
   Badge,
   Button,
@@ -19,6 +20,8 @@ import {
 import { ChevronRight } from 'lucide-react';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
+
+const CONTENT_LIST_URL = '/api/v1/admin/content';
 
 export default function AdminContentPage() {
   const { user, isLoading } = useAuth();
@@ -51,17 +54,20 @@ export default function AdminContentPage() {
     if (!isLoading && user && user.role !== 'ADMIN') router.replace('/dashboard');
   }, [isLoading, user, router]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data } = await apiClient.get('/api/v1/admin/content');
-      setItems(data.items ?? []);
-    } catch (e) {
-      toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  const load = useCallback(
+    async ({ force = false } = {}) => {
+      setLoading(true);
+      try {
+        const data = await dedupedGet(CONTENT_LIST_URL, { force });
+        setItems(data.items ?? []);
+      } catch (e) {
+        toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast],
+  );
 
   useEffect(() => {
     if (user?.role === 'ADMIN') load();
@@ -153,7 +159,8 @@ export default function AdminContentPage() {
         onClose={() => setEditing(null)}
         onSaved={() => {
           setEditing(null);
-          load();
+          invalidate('/api/v1/admin/content');
+          load({ force: true });
         }}
       />
     </div>

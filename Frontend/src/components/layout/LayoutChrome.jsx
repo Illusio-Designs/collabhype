@@ -17,7 +17,10 @@ export default function LayoutChrome({ children }) {
   return (
     <>
       <Header />
-      <main className="flex-1">{children}</main>
+      {/* The header is fixed, so it no longer reserves space. Offset content by
+          its height here; pages whose hero should sit behind it pull back up
+          with -mt-header and re-apply pt-header to their own content. */}
+      <main className="flex-1 pt-header">{children}</main>
       <Footer />
     </>
   );

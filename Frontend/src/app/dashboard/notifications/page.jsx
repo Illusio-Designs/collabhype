@@ -3,9 +3,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { dedupedGet, invalidate } from '@/lib/apiCache';
 import { Badge, Button, Card, EmptyState, Spinner, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
+
+// 100 is the backend's max limit — this endpoint has no page param, so this is
+// the whole list, not a window into it.
+const NOTIFICATIONS_URL = '/api/v1/notifications?limit=100';
 
 function timeAgo(d) {
   const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
@@ -40,7 +45,7 @@ export default function NotificationsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await apiClient.get('/api/v1/notifications?limit=100');
+      const data = await dedupedGet(NOTIFICATIONS_URL);
       setItems(data.notifications ?? []);
       setUnread(data.unreadCount ?? 0);
     } catch (e) {
@@ -59,6 +64,9 @@ export default function NotificationsPage() {
       await apiClient.post(`/api/v1/notifications/${id}/read`);
       setItems((arr) => arr.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
       setUnread((u) => Math.max(0, u - 1));
+      // State is updated in place above; drop the cache so navigating away and
+      // back inside the TTL doesn't resurrect the unread badge.
+      invalidate(NOTIFICATIONS_URL);
     } catch (e) {
       toast.push({ variant: 'danger', title: 'Failed', body: apiError(e) });
     }
@@ -70,6 +78,7 @@ export default function NotificationsPage() {
       await apiClient.post('/api/v1/notifications/read-all');
       setItems((arr) => arr.map((n) => ({ ...n, isRead: true })));
       setUnread(0);
+      invalidate(NOTIFICATIONS_URL);
       toast.push({ variant: 'success', title: 'All caught up' });
     } catch (e) {
       toast.push({ variant: 'danger', title: 'Failed', body: apiError(e) });

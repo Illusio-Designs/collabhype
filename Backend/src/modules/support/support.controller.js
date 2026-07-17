@@ -26,8 +26,8 @@ export async function create(req, res) {
 export async function list(req, res) {
   if (!req.user) throw ApiError.unauthorized();
   const q = listQuery.parse(req.query);
-  const { items, total } = await svc.listForUser(req.user.sub, q);
-  res.json({ tickets: items, meta: meta(total, q) });
+  const { items, total, summary } = await svc.listForUser(req.user.sub, q);
+  res.json({ tickets: items, meta: meta(total, q), summary });
 }
 
 export async function adminList(req, res) {

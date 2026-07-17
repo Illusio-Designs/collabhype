@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { apiClient, apiError } from '@/lib/apiClient';
+import { apiError } from '@/lib/apiClient';
+import { dedupedGet } from '@/lib/apiCache';
 import {
   Badge,
   Breadcrumb,
@@ -55,9 +56,8 @@ export default function OrderDetailPage() {
 
   useEffect(() => {
     if (user?.role !== 'BRAND') return;
-    apiClient
-      .get(`/api/v1/orders/${params.id}`)
-      .then(({ data }) => setOrder(data.order))
+    dedupedGet(`/api/v1/orders/${params.id}`)
+      .then((data) => setOrder(data.order))
       .catch((e) => toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) }))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps

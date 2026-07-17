@@ -188,7 +188,9 @@ export interface Order {
   tax: number;
   total: number;
   currency: string;
-  status: 'DRAFT' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  // Mirrors the Prisma `OrderStatus` enum. An order is never DRAFT — it is
+  // created at checkout and starts life as PENDING.
+  status: 'PENDING' | 'PAID' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'REFUNDED';
   paidAt: string | null;
   createdAt: string;
   items: OrderItem[];

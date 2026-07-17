@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { dedupedGet, invalidate } from '@/lib/apiCache';
 import {
   Badge,
   Button,
@@ -11,6 +12,7 @@ import {
   EmptyState,
   FormField,
   Modal,
+  Pagination,
   Select,
   Spinner,
   Textarea,
@@ -19,6 +21,9 @@ import {
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
+
+const PAGE_SIZE = 20;
+const ADMIN_STATS_URL = '/api/v1/support/admin/stats';
 
 const STATUS_META = {
   OPEN:          { variant: 'warning', label: 'Open' },
@@ -58,7 +63,9 @@ export default function AdminSupportPage() {
   const router = useRouter();
   const toast = useToast();
   const [tickets, setTickets] = useState([]);
+  const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
   const [stats, setStats] = useState(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
 
@@ -66,21 +73,25 @@ export default function AdminSupportPage() {
     if (!isLoading && user && user.role !== 'ADMIN') router.replace('/dashboard');
   }, [isLoading, user, router]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [t, s] = await Promise.all([
-        apiClient.get('/api/v1/support/admin/tickets'),
-        apiClient.get('/api/v1/support/admin/stats'),
-      ]);
-      setTickets(t.data.tickets ?? []);
-      setStats(s.data);
-    } catch (e) {
-      toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  const load = useCallback(
+    async ({ force = false } = {}) => {
+      setLoading(true);
+      try {
+        const [t, s] = await Promise.all([
+          dedupedGet(`/api/v1/support/admin/tickets?page=${page}&limit=${PAGE_SIZE}`, { force }),
+          dedupedGet(ADMIN_STATS_URL, { force }),
+        ]);
+        setTickets(t.tickets ?? []);
+        setMeta(t.meta ?? { total: 0, page, totalPages: 1 });
+        setStats(s);
+      } catch (e) {
+        toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [page, toast],
+  );
 
   useEffect(() => {
     if (user?.role === 'ADMIN') load();
@@ -194,12 +205,20 @@ export default function AdminSupportPage() {
         </Card>
       )}
 
+      {meta.totalPages > 1 && (
+        <Pagination page={page} pageCount={meta.totalPages} onChange={setPage} />
+      )}
+
       <AdminTicketModal
         ticket={selected}
         onClose={() => setSelected(null)}
         onChanged={async () => {
           if (selected) await openTicket(selected.id);
-          await load();
+          // An admin edit can change status/priority, which reorders the queue
+          // and moves the stat counters.
+          invalidate('/api/v1/support/admin/tickets');
+          invalidate(ADMIN_STATS_URL);
+          await load({ force: true });
         }}
       />
     </div>

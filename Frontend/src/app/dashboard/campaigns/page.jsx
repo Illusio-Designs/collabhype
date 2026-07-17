@@ -1,13 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { apiClient, apiError } from '@/lib/apiClient';
-import { Badge, Card, EmptyState, Spinner, Tabs, useToast } from '@/components/ui';
+import { apiError } from '@/lib/apiClient';
+import { dedupedGet } from '@/lib/apiCache';
+import { Badge, Card, EmptyState, Pagination, Spinner, Tabs, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import { formatINR } from '@/lib/format';
+
+const PAGE_SIZE = 20;
 
 const STATUS_BADGE = {
   DRAFT: { variant: 'default', label: 'Draft' },
@@ -27,19 +30,39 @@ export default function CampaignsListPage() {
   const { user, isLoading } = useAuth();
   const toast = useToast();
   const [campaigns, setCampaigns] = useState([]);
+  const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
+  const [summary, setSummary] = useState(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const url =
+        `/api/v1/campaigns?page=${page}&limit=${PAGE_SIZE}` +
+        (filter === 'ALL' ? '' : `&status=${filter}`);
+      const data = await dedupedGet(url);
+      setCampaigns(data.campaigns ?? []);
+      setMeta(data.meta ?? { total: 0, page, totalPages: 1 });
+      setSummary(data.summary ?? null);
+    } catch (e) {
+      toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
+    } finally {
+      setLoading(false);
+    }
+  }, [page, filter, toast]);
+
   useEffect(() => {
-    if (!user) return;
-    const status = filter === 'ALL' ? '' : `?status=${filter}`;
-    apiClient
-      .get(`/api/v1/campaigns${status}`)
-      .then(({ data }) => setCampaigns(data.campaigns ?? []))
-      .catch((e) => toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) }))
-      .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, filter]);
+    if (user) load();
+  }, [user, load]);
+
+  // Switching tabs re-scopes the list, so page 3 of the old filter is
+  // meaningless against the new one.
+  function changeFilter(value) {
+    setFilter(value);
+    setPage(1);
+  }
 
   if (isLoading || loading) {
     return (
@@ -56,19 +79,12 @@ export default function CampaignsListPage() {
     { label: 'Completed', value: 'COMPLETED' },
   ];
 
-  // KPIs derived from the current campaign list
-  const totalCampaigns = campaigns.length;
-  const inProgress = campaigns.filter((c) => c.status === 'IN_PROGRESS' || c.status === 'BRIEF_SENT').length;
-  const completed = campaigns.filter((c) => c.status === 'COMPLETED').length;
-  const totalDeliverables = campaigns.reduce(
-    (s, c) => s + (c._count?.deliverables ?? c.deliverables?.length ?? 0),
-    0,
-  );
+  // Server-side aggregate over every campaign, independent of tab + page.
   const kpis = [
-    { label: 'Total campaigns', value: String(totalCampaigns) },
-    { label: 'In progress', value: String(inProgress) },
-    { label: 'Completed', value: String(completed) },
-    { label: 'Deliverables', value: String(totalDeliverables) },
+    { label: 'Total campaigns', value: String(summary?.count ?? 0) },
+    { label: 'In progress', value: String(summary?.active ?? 0) },
+    { label: 'Completed', value: String(summary?.completed ?? 0) },
+    { label: 'Deliverables', value: String(summary?.deliverables ?? 0) },
   ];
 
   return (
@@ -96,9 +112,13 @@ export default function CampaignsListPage() {
             label: t.label,
             content: <CampaignsList campaigns={campaigns} role={user?.role} />,
           }))}
-          onChange={(i) => setFilter(tabs[i].value)}
+          onChange={(i) => changeFilter(tabs[i].value)}
         />
       </div>
+
+      {meta.totalPages > 1 && (
+        <Pagination page={page} pageCount={meta.totalPages} onChange={setPage} />
+      )}
     </div>
   );
 }

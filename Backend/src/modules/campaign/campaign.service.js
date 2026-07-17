@@ -4,10 +4,29 @@ import { recomputeBadgeForInfluencer } from '../influencer/badge.service.js';
 
 // --- listing ---
 
+// Campaigns that are live work: brief is out but not yet signed off.
+const ACTIVE_CAMPAIGN_STATUSES = ['BRIEF_SENT', 'IN_PROGRESS', 'REVIEW'];
+
+// Dashboard KPIs are lifetime figures over every campaign the viewer can see,
+// so the summary deliberately ignores both the `status` filter and the page
+// window — the alternative is a headline number that only describes 20 rows.
+async function campaignSummary(scopeWhere, deliverableWhere) {
+  const [count, active, completed, deliverables] = await prisma.$transaction([
+    prisma.campaign.count({ where: scopeWhere }),
+    prisma.campaign.count({
+      where: { ...scopeWhere, status: { in: ACTIVE_CAMPAIGN_STATUSES } },
+    }),
+    prisma.campaign.count({ where: { ...scopeWhere, status: 'COMPLETED' } }),
+    prisma.campaignDeliverable.count({ where: deliverableWhere }),
+  ]);
+  return { count, active, completed, deliverables };
+}
+
 export async function listForBrand(userId, { status, page, limit }) {
-  const where = { order: { brandUserId: userId } };
+  const scopeWhere = { order: { brandUserId: userId } };
+  const where = { ...scopeWhere };
   if (status) where.status = status;
-  const [total, items] = await prisma.$transaction([
+  const [total, items, summary] = await Promise.all([
     prisma.campaign.count({ where }),
     prisma.campaign.findMany({
       where,
@@ -21,18 +40,20 @@ export async function listForBrand(userId, { status, page, limit }) {
       skip: (page - 1) * limit,
       take: limit,
     }),
+    campaignSummary(scopeWhere, { campaign: scopeWhere }),
   ]);
-  return { items, total };
+  return { items, total, summary };
 }
 
 export async function listForInfluencer(userId, { status, page, limit }) {
   const profile = await prisma.influencerProfile.findUnique({ where: { userId } });
   if (!profile) throw ApiError.notFound('Influencer profile not found');
 
-  const where = { deliverables: { some: { influencerId: profile.id } } };
+  const scopeWhere = { deliverables: { some: { influencerId: profile.id } } };
+  const where = { ...scopeWhere };
   if (status) where.status = status;
 
-  const [total, items] = await prisma.$transaction([
+  const [total, items, summary] = await Promise.all([
     prisma.campaign.count({ where }),
     prisma.campaign.findMany({
       where,
@@ -55,8 +76,11 @@ export async function listForInfluencer(userId, { status, page, limit }) {
       skip: (page - 1) * limit,
       take: limit,
     }),
+    // A creator's "deliverables" count is only their own rows on those
+    // campaigns, never the brand's full slate.
+    campaignSummary(scopeWhere, { influencerId: profile.id }),
   ]);
-  return { items, total };
+  return { items, total, summary };
 }
 
 export async function getForBrand(userId, campaignId) {

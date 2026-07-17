@@ -33,7 +33,7 @@ export default function Header() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-40 pt-3 sm:pt-4">
+    <header className="fixed inset-x-0 top-0 z-40 pt-7 sm:pt-9">
       <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white/90 px-3 shadow-md backdrop-blur-lg sm:h-16 sm:px-6">
           <Link
@@ -131,7 +131,7 @@ export default function Header() {
           />
           <div
             id="mobile-menu"
-            className="fixed inset-x-3 top-20 z-40 rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl"
+            className="fixed inset-x-3 top-header z-40 mt-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl"
           >
             <nav className="flex flex-col gap-1">
               {NAV_LINKS.map((l) => (

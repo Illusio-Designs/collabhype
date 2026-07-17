@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { apiClient, apiError } from '@/lib/apiClient';
+import { apiError } from '@/lib/apiClient';
+import { dedupedGet } from '@/lib/apiCache';
 import { Avatar, Badge, Card, Select, Spinner, Stat, useToast } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
@@ -31,11 +32,11 @@ export default function AdminTrackingPage() {
     setLoading(true);
     try {
       const [s, e] = await Promise.all([
-        apiClient.get(`/api/v1/admin/tracking/summary?days=${days}`),
-        apiClient.get('/api/v1/admin/tracking/events?limit=20'),
+        dedupedGet(`/api/v1/admin/tracking/summary?days=${days}`),
+        dedupedGet('/api/v1/admin/tracking/events?limit=20'),
       ]);
-      setSummary(s.data);
-      setEvents(e.data?.events ?? []);
+      setSummary(s);
+      setEvents(e?.events ?? []);
     } catch (err) {
       toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(err) });
     } finally {

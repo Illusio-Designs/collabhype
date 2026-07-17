@@ -5,10 +5,11 @@ import { ApiError } from '../../utils/ApiError.js';
 export async function list(req, res) {
   if (!req.user) throw ApiError.unauthorized();
   const q = browseOrdersQuery.parse(req.query);
-  const { items, total } = await svc.listForBrand(req.user.sub, q);
+  const { items, total, summary } = await svc.listForBrand(req.user.sub, q);
   res.json({
     orders: items,
     meta: { total, page: q.page, limit: q.limit, totalPages: Math.ceil(total / q.limit) || 1 },
+    summary,
   });
 }
 

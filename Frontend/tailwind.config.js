@@ -3,6 +3,12 @@ export default {
   content: ['./src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
+      spacing: {
+        // Height of the fixed public header, defined in globals.css. Drives
+        // `pt-header` (offset content below it) and `-mt-header` (pull a hero
+        // back up behind it), so the two can never drift apart.
+        header: 'var(--header-h)',
+      },
       fontFamily: {
         // AvantGarde-inspired geometric sans. Jost is the closest open-source
         // analogue and ships well via next/font/google.

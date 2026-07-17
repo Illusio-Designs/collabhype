@@ -3,6 +3,20 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Space the fixed public header occupies: outer pt-7 (28px) + pill h-14 (56px).
+       Exposed to Tailwind as the `header` spacing key, so `pt-header` / `-mt-header`
+       / `top-header` all track this one value. The outer padding is deliberately
+       larger than the home hero's top gap (pt-4/sm:pt-6) so the pill always lands
+       inside the hero panel rather than poking out above it. */
+    --header-h: 5.25rem;
+  }
+  @media (min-width: 640px) {
+    :root {
+      /* sm and up: outer pt-9 (36px) + pill h-16 (64px). */
+      --header-h: 6.25rem;
+    }
+  }
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

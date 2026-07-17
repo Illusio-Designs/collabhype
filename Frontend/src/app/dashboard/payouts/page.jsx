@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { apiClient, apiError } from '@/lib/apiClient';
+import { apiError } from '@/lib/apiClient';
+import { dedupedGet } from '@/lib/apiCache';
 import { Badge, Card, EmptyState, Spinner, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
@@ -43,9 +44,8 @@ export default function PayoutsPage() {
 
   useEffect(() => {
     if (user?.role !== 'INFLUENCER') return;
-    apiClient
-      .get('/api/v1/influencers/me/payouts')
-      .then(({ data }) => setData(data))
+    dedupedGet('/api/v1/influencers/me/payouts')
+      .then((data) => setData(data))
       .catch((e) => toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) }))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps

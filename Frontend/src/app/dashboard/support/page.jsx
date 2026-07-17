@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { dedupedGet, invalidate } from '@/lib/apiCache';
 import {
   Alert,
   Badge,
@@ -13,6 +14,7 @@ import {
   FormField,
   Input,
   Modal,
+  Pagination,
   Select,
   Spinner,
   Textarea,
@@ -20,6 +22,8 @@ import {
 } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
+
+const PAGE_SIZE = 20;
 
 const STATUS_META = {
   OPEN:           { variant: 'warning', label: 'Open' },
@@ -58,23 +62,33 @@ export default function SupportPage() {
   const { user, isLoading } = useAuth();
   const toast = useToast();
   const [tickets, setTickets] = useState([]);
+  const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
+  const [summary, setSummary] = useState(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [showNew, setShowNew] = useState(false);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data } = await apiClient.get('/api/v1/support/tickets');
-      setTickets(data.tickets ?? []);
-    } catch (e) {
-      toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  const load = useCallback(
+    async ({ force = false } = {}) => {
+      setLoading(true);
+      try {
+        const data = await dedupedGet(`/api/v1/support/tickets?page=${page}&limit=${PAGE_SIZE}`, {
+          force,
+        });
+        setTickets(data.tickets ?? []);
+        setMeta(data.meta ?? { total: 0, page, totalPages: 1 });
+        setSummary(data.summary ?? null);
+      } catch (e) {
+        toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [page, toast],
+  );
 
   useEffect(() => {
     if (user) load();
@@ -96,7 +110,10 @@ export default function SupportPage() {
       await apiClient.post(`/api/v1/support/tickets/${selected.id}/messages`, { body: reply.trim() });
       setReply('');
       await openTicket(selected.id);
-      await load();
+      // Replying can flip the ticket's status (AWAITING_USER -> OPEN), so the
+      // cached list + KPI summary are stale.
+      invalidate('/api/v1/support/tickets');
+      await load({ force: true });
     } catch (e) {
       toast.push({ variant: 'danger', title: 'Send failed', body: apiError(e) });
     } finally {
@@ -104,17 +121,16 @@ export default function SupportPage() {
     }
   }
 
-  const kpis = useMemo(() => {
-    const open = tickets.filter((t) => ['OPEN', 'IN_PROGRESS'].includes(t.status)).length;
-    const awaiting = tickets.filter((t) => t.status === 'AWAITING_USER').length;
-    const resolved = tickets.filter((t) => t.status === 'RESOLVED').length;
-    return [
-      { label: 'Total tickets', value: String(tickets.length) },
-      { label: 'Open', value: String(open) },
-      { label: 'Awaiting you', value: String(awaiting) },
-      { label: 'Resolved', value: String(resolved) },
-    ];
-  }, [tickets]);
+  // Server-side aggregate across all of the user's tickets, not just this page.
+  const kpis = useMemo(
+    () => [
+      { label: 'Total tickets', value: String(summary?.count ?? 0) },
+      { label: 'Open', value: String(summary?.open ?? 0) },
+      { label: 'Awaiting you', value: String(summary?.awaitingUser ?? 0) },
+      { label: 'Resolved', value: String(summary?.resolved ?? 0) },
+    ],
+    [summary],
+  );
 
   if (isLoading || loading) {
     return (
@@ -155,12 +171,20 @@ export default function SupportPage() {
         </div>
       )}
 
+      {meta.totalPages > 1 && (
+        <Pagination page={page} pageCount={meta.totalPages} onChange={setPage} />
+      )}
+
       <NewTicketModal
         open={showNew}
         onClose={() => setShowNew(false)}
         onCreated={(ticket) => {
           setShowNew(false);
-          load();
+          invalidate('/api/v1/support/tickets');
+          // A new ticket sorts to the top of page 1; jumping there also
+          // avoids showing a stale page N that no longer lines up.
+          if (page === 1) load({ force: true });
+          else setPage(1);
           openTicket(ticket.id);
         }}
       />
