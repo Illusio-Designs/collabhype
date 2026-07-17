@@ -1,31 +1,55 @@
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Button, Card, Input, Switch } from '@/components/ui';
 import BackHeader from '@/components/BackHeader';
 import { useAuth } from '@/lib/auth';
+import { api, apiError } from '@/lib/api';
 
 export default function ProfileEditScreen() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [busy, setBusy] = useState(false);
 
-  if (!user) return null;
+  const isBrand = user?.role === 'BRAND';
+  const initial = isBrand ? user?.brandProfile ?? {} : user?.influencerProfile ?? {};
 
-  const isBrand = user.role === 'BRAND';
-  const initial = isBrand ? user.brandProfile ?? {} : user.influencerProfile ?? {};
-
-  // Local form state — demo only, doesn't persist.
+  // Brand fields
   const [companyName, setCompanyName] = useState(initial.companyName ?? '');
   const [industry, setIndustry] = useState(initial.industry ?? '');
   const [website, setWebsite] = useState(initial.website ?? '');
   const [gstin, setGstin] = useState(initial.gstin ?? '');
+  const [about, setAbout] = useState(initial.about ?? '');
+  // Creator fields
   const [city, setCity] = useState(initial.city ?? '');
   const [bio, setBio] = useState(initial.bio ?? '');
   const [isAvailable, setIsAvailable] = useState(initial.isAvailable ?? true);
 
-  const save = () => {
+  if (!user) return null;
+
+  const save = async () => {
     setBusy(true);
-    setTimeout(() => setBusy(false), 700);
+    try {
+      if (isBrand) {
+        await api.patch('/brands/me', {
+          companyName: companyName.trim(),
+          industry,
+          website,
+          gstin,
+          about,
+        });
+      } else {
+        await api.patch('/influencers/me', { bio, city, isAvailable });
+      }
+      await refreshUser();
+      Alert.alert('Saved', 'Your profile is updated.', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
+    } catch (e) {
+      Alert.alert("Couldn't save", apiError(e));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -70,6 +94,7 @@ export default function ProfileEditScreen() {
                 onChangeText={setWebsite}
                 placeholder="https://yourbrand.com"
                 keyboardType="url"
+                autoCapitalize="none"
               />
               <Input
                 label="GSTIN"
@@ -79,10 +104,11 @@ export default function ProfileEditScreen() {
                 autoCapitalize="characters"
               />
               <Input
-                label="City"
-                value={city}
-                onChangeText={setCity}
-                autoCapitalize="words"
+                label="About"
+                value={about}
+                onChangeText={setAbout}
+                placeholder="A short pitch creators will see."
+                autoCapitalize="sentences"
               />
             </View>
           </Card>
@@ -100,12 +126,7 @@ export default function ProfileEditScreen() {
             <Card className="mt-3">
               <Text className="text-base font-bold text-zinc-900">Basics</Text>
               <View className="mt-3 gap-3">
-                <Input
-                  label="City"
-                  value={city}
-                  onChangeText={setCity}
-                  autoCapitalize="words"
-                />
+                <Input label="City" value={city} onChangeText={setCity} autoCapitalize="words" />
                 <Input
                   label="Bio"
                   value={bio}

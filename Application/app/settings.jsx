@@ -1,16 +1,77 @@
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Card, Input, PasswordInput, Switch } from '@/components/ui';
+import { Button, Card, PasswordInput, Switch } from '@/components/ui';
 import BackHeader from '@/components/BackHeader';
 import { useAuth } from '@/lib/auth';
+import { api, apiError } from '@/lib/api';
 
 export default function SettingsScreen() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [push, setPush] = useState(true);
   const [emailDigest, setEmailDigest] = useState(true);
   const [marketing, setMarketing] = useState(false);
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [savingPwd, setSavingPwd] = useState(false);
+
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+  const updatePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      Alert.alert('Missing fields', 'Enter your current and new password.');
+      return;
+    }
+    if (newPassword.length < 8) {
+      Alert.alert('Weak password', 'New password must be at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Passwords differ', 'New password and confirmation must match.');
+      return;
+    }
+    setSavingPwd(true);
+    try {
+      await api.post('/auth/change-password', { currentPassword, newPassword });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      Alert.alert('Password updated', 'Use your new password next time you sign in.');
+    } catch (e) {
+      Alert.alert("Couldn't update password", apiError(e));
+    } finally {
+      setSavingPwd(false);
+    }
+  };
+
+  const confirmDelete = () => {
+    if (!deletePassword) {
+      Alert.alert('Confirm with password', 'Enter your password to delete your account.');
+      return;
+    }
+    Alert.alert(
+      'Delete account?',
+      'This deactivates your account and signs you out. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: deleteAccount },
+      ],
+    );
+  };
+
+  const deleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await api.delete('/auth/me', { data: { password: deletePassword } });
+      await logout();
+    } catch (e) {
+      Alert.alert("Couldn't delete account", apiError(e));
+      setDeleting(false);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-50" edges={['top']}>
@@ -35,28 +96,31 @@ export default function SettingsScreen() {
           <View className="mt-4 gap-3">
             <Row label="Email" value={user?.email} />
             <Row label="Full name" value={user?.fullName} />
-            <Row
-              label="Role"
-              value={user?.role === 'BRAND' ? 'Brand' : 'Creator'}
-            />
+            <Row label="Role" value={user?.role === 'BRAND' ? 'Brand' : 'Creator'} />
           </View>
         </Card>
 
         <Card className="mt-3">
           <Text className="text-base font-bold text-zinc-900">Change password</Text>
           <View className="mt-3 gap-3">
-            <PasswordInput label="Current password" />
-            <PasswordInput label="New password" />
-            <PasswordInput label="Confirm new password" />
+            <PasswordInput
+              label="Current password"
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+            />
+            <PasswordInput
+              label="New password"
+              value={newPassword}
+              onChangeText={setNewPassword}
+            />
+            <PasswordInput
+              label="Confirm new password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
           </View>
           <View className="mt-4">
-            <Button
-              loading={savingPwd}
-              onPress={() => {
-                setSavingPwd(true);
-                setTimeout(() => setSavingPwd(false), 600);
-              }}
-            >
+            <Button loading={savingPwd} onPress={updatePassword}>
               Update password
             </Button>
           </View>
@@ -89,10 +153,15 @@ export default function SettingsScreen() {
         <Card className="mt-3 border-red-200">
           <Text className="text-base font-bold text-red-600">Danger zone</Text>
           <Text className="mt-1 text-xs text-zinc-500">
-            Permanently delete your account and all associated data.
+            Permanently deactivate your account. Enter your password to confirm.
           </Text>
-          <View className="mt-3">
-            <Button variant="danger" onPress={() => {}}>
+          <View className="mt-3 gap-3">
+            <PasswordInput
+              label="Password"
+              value={deletePassword}
+              onChangeText={setDeletePassword}
+            />
+            <Button variant="danger" loading={deleting} onPress={confirmDelete}>
               Delete account
             </Button>
           </View>
