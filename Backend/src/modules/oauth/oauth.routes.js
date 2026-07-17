@@ -18,9 +18,16 @@ router.get(
   requireRole('INFLUENCER'),
   asyncHandler(controller.startYoutube),
 );
+router.get(
+  '/tiktok/start',
+  requireAuth,
+  requireRole('INFLUENCER'),
+  asyncHandler(controller.startTiktok),
+);
 
-// Callback: hit by Meta/Google — auth is carried in the signed `state` JWT
+// Callback: hit by Meta/Google/TikTok — auth is carried in the signed `state` JWT
 router.get('/instagram/callback', asyncHandler(controller.callbackInstagram));
 router.get('/youtube/callback', asyncHandler(controller.callbackYoutube));
+router.get('/tiktok/callback', asyncHandler(controller.callbackTiktok));
 
 export default router;
