@@ -104,7 +104,7 @@ export default function RegisterScreen() {
                   label="Password"
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters"
                 />
                 {error && (
                   <View className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">

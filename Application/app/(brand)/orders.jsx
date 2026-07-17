@@ -1,20 +1,24 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Card, EmptyState, KpiStrip } from '@/components/ui';
+import { Button, Card, EmptyState, KpiStrip, Loader } from '@/components/ui';
 import AppHeader from '@/components/AppHeader';
 import ScreenHeader from '@/components/ScreenHeader';
 import StatusBadge from '@/components/StatusBadge';
-import { formatINR } from '@/lib/format';
-import { DUMMY_ORDERS } from '@/lib/dummyData';
+import { api } from '@/lib/api';
+import { useFetch } from '@/lib/useFetch';
+import { formatDate, formatINR } from '@/lib/format';
 
 export default function BrandOrders() {
-  const totalSpend = DUMMY_ORDERS.reduce((s, o) => s + o.total, 0);
-  const completed = DUMMY_ORDERS.filter((o) => o.status === 'COMPLETED').length;
-  const inFlight = DUMMY_ORDERS.filter((o) =>
-    ['PAID', 'IN_PROGRESS'].includes(o.status),
-  ).length;
-  const avg = DUMMY_ORDERS.length ? Math.round(totalSpend / DUMMY_ORDERS.length) : 0;
+  const { data, loading, error, refetch } = useFetch(
+    async () => (await api.get('/orders', { params: { limit: 100 } })).data.orders ?? [],
+    [],
+  );
+  const orders = data ?? [];
+
+  const totalSpend = orders.reduce((s, o) => s + Number(o.total ?? 0), 0);
+  const inFlight = orders.filter((o) => ['PAID', 'IN_PROGRESS'].includes(o.status)).length;
+  const avg = orders.length ? Math.round(totalSpend / orders.length) : 0;
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-50" edges={['top']}>
@@ -22,6 +26,7 @@ export default function BrandOrders() {
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} />}
       >
         <ScreenHeader
           eyebrow="Billing"
@@ -31,7 +36,7 @@ export default function BrandOrders() {
 
         <KpiStrip
           kpis={[
-            { label: 'Total orders', value: String(DUMMY_ORDERS.length) },
+            { label: 'Total orders', value: String(orders.length) },
             { label: 'Lifetime spend', value: formatINR(totalSpend) },
             { label: 'Avg order', value: formatINR(avg) },
             { label: 'In flight', value: String(inFlight) },
@@ -39,18 +44,23 @@ export default function BrandOrders() {
         />
 
         <View className="mt-6">
-          {DUMMY_ORDERS.length === 0 ? (
+          {loading && !data ? (
+            <Loader />
+          ) : error ? (
+            <EmptyState
+              title="Couldn't load orders"
+              description={error}
+              action={<Button onPress={refetch}>Retry</Button>}
+            />
+          ) : orders.length === 0 ? (
             <EmptyState
               title="No orders yet"
               description="Once you check out, orders will appear here."
             />
           ) : (
             <View className="gap-3">
-              {DUMMY_ORDERS.map((o) => (
-                <Pressable
-                  key={o.id}
-                  onPress={() => router.push(`/order/${o.id}`)}
-                >
+              {orders.map((o) => (
+                <Pressable key={o.id} onPress={() => router.push(`/order/${o.id}`)}>
                   <Card>
                     <View className="flex-row items-start justify-between gap-3">
                       <View className="flex-1">
@@ -61,8 +71,8 @@ export default function BrandOrders() {
                           {formatINR(o.total)}
                         </Text>
                         <Text className="mt-1 text-xs text-zinc-500">
-                          {o.itemCount} item{o.itemCount === 1 ? '' : 's'} ·{' '}
-                          {o.placedAt}
+                          {o.items?.length ?? 0} item{(o.items?.length ?? 0) === 1 ? '' : 's'} ·{' '}
+                          {formatDate(o.createdAt)}
                         </Text>
                       </View>
                       <StatusBadge status={o.status} />

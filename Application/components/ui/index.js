@@ -8,6 +8,7 @@ export { default as Input } from './Input';
 export { default as PasswordInput } from './PasswordInput';
 export { default as KpiStrip } from './KpiStrip';
 export { default as ListRow } from './ListRow';
+export { default as Loader } from './Loader';
 export { default as SectionHead } from './SectionHead';
 export { default as Stat } from './Stat';
 export { default as Switch } from './Switch';

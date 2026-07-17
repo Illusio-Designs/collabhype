@@ -1,47 +1,63 @@
-import { ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
-import { Badge, Button, Card, EmptyState } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, Loader } from '@/components/ui';
 import BackHeader from '@/components/BackHeader';
 import StatusBadge from '@/components/StatusBadge';
 import { useAuth } from '@/lib/auth';
-import { formatINR } from '@/lib/format';
-import {
-  DELIVERABLE_LABEL,
-  DELIVERABLE_STATUS_META,
-  DUMMY_CAMPAIGNS_BRAND,
-  DUMMY_CAMPAIGNS_INFLUENCER,
-} from '@/lib/dummyData';
-
-function findCampaign(id, role) {
-  const list = role === 'BRAND' ? DUMMY_CAMPAIGNS_BRAND : DUMMY_CAMPAIGNS_INFLUENCER;
-  return (
-    list.find((c) => c.id === id) ??
-    DUMMY_CAMPAIGNS_BRAND.find((c) => c.id === id) ??
-    DUMMY_CAMPAIGNS_INFLUENCER.find((c) => c.id === id)
-  );
-}
+import { api, apiError } from '@/lib/api';
+import { useFetch } from '@/lib/useFetch';
+import { DELIVERABLE_LABEL, DELIVERABLE_STATUS_META, formatDate, formatINR } from '@/lib/format';
 
 export default function CampaignDetail() {
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
-  const campaign = findCampaign(id, user?.role);
+  const isBrand = user?.role === 'BRAND';
+  const [busyId, setBusyId] = useState(null);
 
-  if (!campaign) {
+  const { data: campaign, loading, error, refetch } = useFetch(
+    async () => (await api.get(`/campaigns/${id}`)).data.campaign,
+    [id],
+  );
+
+  const act = async (delivId, action) => {
+    setBusyId(delivId + action);
+    try {
+      await api.post(`/deliverables/${delivId}/${action}`);
+      await refetch();
+    } catch (e) {
+      Alert.alert('Action failed', apiError(e));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  if (loading && !campaign) {
+    return (
+      <SafeAreaView className="flex-1 bg-zinc-50" edges={['top']}>
+        <BackHeader title="Campaign" />
+        <Loader />
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !campaign) {
     return (
       <SafeAreaView className="flex-1 bg-zinc-50" edges={['top']}>
         <BackHeader title="Campaign" />
         <View className="p-5">
           <EmptyState
             title="Campaign not found"
-            description="It may have been removed."
+            description={error || 'It may have been removed.'}
+            action={<Button onPress={refetch}>Retry</Button>}
           />
         </View>
       </SafeAreaView>
     );
   }
 
-  const isBrand = user?.role === 'BRAND';
+  const deliverables = campaign.deliverables ?? [];
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-50" edges={['top']}>
@@ -50,35 +66,31 @@ export default function CampaignDetail() {
         className="flex-1"
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
       >
-        {/* Title row */}
         <View className="mb-5 flex-row items-start justify-between gap-3">
           <View className="flex-1">
             <Text className="font-mono text-[11px] text-zinc-500">
               {campaign.order?.orderNumber ??
-                campaign.order?.brand?.brandProfile?.companyName}
+                campaign.order?.brand?.brandProfile?.companyName ??
+                campaign.order?.brand?.fullName}
             </Text>
-            <Text className="mt-1 text-2xl font-bold text-zinc-900">
-              {campaign.title}
-            </Text>
+            <Text className="mt-1 text-2xl font-bold text-zinc-900">{campaign.title}</Text>
             <Text className="mt-1 text-xs text-zinc-500">
-              Created {campaign.createdAt}
+              Created {formatDate(campaign.createdAt)}
             </Text>
           </View>
           <StatusBadge status={campaign.status} />
         </View>
 
-        {campaign.brief && (
+        {campaign.brief ? (
           <Card>
             <Text className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
               Brief
             </Text>
-            <Text className="mt-2 text-sm leading-6 text-zinc-700">
-              {campaign.brief}
-            </Text>
+            <Text className="mt-2 text-sm leading-6 text-zinc-700">{campaign.brief}</Text>
           </Card>
-        )}
+        ) : null}
 
-        {campaign.order?.total != null && (
+        {campaign.order?.total != null ? (
           <Card className="mt-3">
             <View className="flex-row items-center justify-between">
               <View>
@@ -92,50 +104,64 @@ export default function CampaignDetail() {
               <Badge variant="brand">Escrow held</Badge>
             </View>
           </Card>
-        )}
+        ) : null}
 
         <Text className="mb-3 mt-6 text-base font-semibold text-zinc-900">
-          Deliverables ({campaign.deliverables.length})
+          Deliverables ({deliverables.length})
         </Text>
 
         <View className="gap-2.5">
-          {campaign.deliverables.map((d) => {
+          {deliverables.map((d) => {
             const meta =
               DELIVERABLE_STATUS_META[d.status] ?? { label: d.status, variant: 'default' };
+            const creatorName = d.influencer?.user?.fullName;
             return (
               <Card key={d.id}>
                 <View className="flex-row items-start justify-between gap-3">
                   <View className="flex-1">
                     <Text className="text-sm font-bold text-zinc-900">
-                      {DELIVERABLE_LABEL[d.type] ?? d.type}
+                      {DELIVERABLE_LABEL[d.deliverable] ?? d.deliverable}
+                      {d.qty > 1 ? ` ×${d.qty}` : ''}
                     </Text>
                     <Text className="mt-0.5 text-xs text-zinc-500">
-                      {d.creator ? `${d.creator} · ` : ''}Due {d.dueAt}
+                      {creatorName ? `${creatorName} · ` : ''}
+                      {d.dueDate ? `Due ${formatDate(d.dueDate)}` : formatINR(d.amountPayable)}
                     </Text>
                   </View>
                   <Badge variant={meta.variant}>{meta.label}</Badge>
                 </View>
+
+                {isBrand && d.status === 'DRAFT_SUBMITTED' ? (
+                  <View className="mt-3">
+                    <Button
+                      size="sm"
+                      loading={busyId === d.id + 'approve'}
+                      onPress={() => act(d.id, 'approve')}
+                    >
+                      Approve draft
+                    </Button>
+                  </View>
+                ) : null}
+
+                {isBrand && d.status === 'POSTED' ? (
+                  <View className="mt-3">
+                    <Button
+                      size="sm"
+                      loading={busyId === d.id + 'release-payment'}
+                      onPress={() => act(d.id, 'release-payment')}
+                    >
+                      Release payment
+                    </Button>
+                  </View>
+                ) : null}
               </Card>
             );
           })}
-        </View>
-
-        <View className="mt-6 gap-2">
-          {isBrand ? (
-            <>
-              <Button onPress={() => {}}>Approve all drafts</Button>
-              <Button variant="outline" onPress={() => {}}>
-                Request a revision
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button onPress={() => {}}>Upload draft</Button>
-              <Button variant="outline" onPress={() => {}}>
-                Message brand
-              </Button>
-            </>
-          )}
+          {deliverables.length === 0 ? (
+            <Text className="text-sm text-zinc-500">
+              Deliverables appear once the campaign brief is dispatched.
+            </Text>
+          ) : null}
         </View>
       </ScrollView>
     </SafeAreaView>

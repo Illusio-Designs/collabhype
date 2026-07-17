@@ -1,17 +1,21 @@
-import { ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card, EmptyState, KpiStrip } from '@/components/ui';
+import { Button, Card, EmptyState, KpiStrip, Loader } from '@/components/ui';
 import AppHeader from '@/components/AppHeader';
 import ScreenHeader from '@/components/ScreenHeader';
 import StatusBadge from '@/components/StatusBadge';
-import { formatINR } from '@/lib/format';
-import { DUMMY_PAYOUTS, DUMMY_PAYOUT_SUMMARY } from '@/lib/dummyData';
+import { api } from '@/lib/api';
+import { useFetch } from '@/lib/useFetch';
+import { formatDate, formatINR } from '@/lib/format';
 
 export default function CreatorPayouts() {
-  const failed = DUMMY_PAYOUTS.filter((p) => p.status === 'FAILED').reduce(
-    (s, p) => s + p.amount,
-    0,
+  const { data, loading, error, refetch } = useFetch(
+    async () => (await api.get('/influencers/me/payouts')).data,
+    [],
   );
+
+  const payouts = data?.payouts ?? [];
+  const summary = data?.summary ?? {};
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-50" edges={['top']}>
@@ -19,6 +23,7 @@ export default function CreatorPayouts() {
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} />}
       >
         <ScreenHeader
           eyebrow="Earnings"
@@ -28,26 +33,32 @@ export default function CreatorPayouts() {
 
         <KpiStrip
           kpis={[
-            { label: 'Total earned', value: formatINR(DUMMY_PAYOUT_SUMMARY.total) },
-            { label: 'Paid out', value: formatINR(DUMMY_PAYOUT_SUMMARY.paid) },
-            { label: 'Pending', value: formatINR(DUMMY_PAYOUT_SUMMARY.pending) },
-            { label: 'Failed', value: formatINR(failed) },
+            { label: 'Total earned', value: formatINR(summary.total ?? 0) },
+            { label: 'Paid out', value: formatINR(summary.paid ?? 0) },
+            { label: 'Pending', value: formatINR(summary.pending ?? 0) },
+            { label: 'Failed', value: formatINR(summary.failed ?? 0) },
           ]}
         />
 
         <View className="mt-6">
-          {DUMMY_PAYOUTS.length === 0 ? (
+          {loading && !data ? (
+            <Loader />
+          ) : error ? (
+            <EmptyState
+              title="Couldn't load payouts"
+              description={error}
+              action={<Button onPress={refetch}>Retry</Button>}
+            />
+          ) : payouts.length === 0 ? (
             <EmptyState
               title="No payouts yet"
               description="Earnings show up here once a brand approves a post."
             />
           ) : (
             <>
-              <Text className="mb-3 text-base font-semibold text-zinc-900">
-                History
-              </Text>
+              <Text className="mb-3 text-base font-semibold text-zinc-900">History</Text>
               <View className="gap-2.5">
-                {DUMMY_PAYOUTS.map((p) => (
+                {payouts.map((p) => (
                   <Card key={p.id}>
                     <View className="flex-row items-center justify-between">
                       <View className="flex-1">
@@ -55,13 +66,13 @@ export default function CreatorPayouts() {
                           {formatINR(p.amount)}
                         </Text>
                         <Text className="mt-0.5 text-[11px] text-zinc-500">
-                          {p.method} · {p.createdAt}
+                          {formatDate(p.paidAt ?? p.createdAt)}
                         </Text>
-                        {p.utr && (
+                        {p.razorpayPayoutId ? (
                           <Text className="mt-0.5 font-mono text-[10px] text-zinc-400">
-                            {p.utr}
+                            {p.razorpayPayoutId}
                           </Text>
-                        )}
+                        ) : null}
                       </View>
                       <StatusBadge status={p.status} />
                     </View>

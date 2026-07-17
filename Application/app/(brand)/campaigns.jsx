@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Card, EmptyState, KpiStrip, Tabs } from '@/components/ui';
+import { Button, Card, EmptyState, KpiStrip, Loader, Tabs } from '@/components/ui';
 import AppHeader from '@/components/AppHeader';
 import ScreenHeader from '@/components/ScreenHeader';
 import StatusBadge from '@/components/StatusBadge';
-import { DUMMY_CAMPAIGNS_BRAND } from '@/lib/dummyData';
+import { api } from '@/lib/api';
+import { useFetch } from '@/lib/useFetch';
+import { formatDate } from '@/lib/format';
 
 const FILTERS = [
   { label: 'All',         value: 'ALL' },
@@ -18,16 +20,22 @@ const FILTERS = [
 export default function BrandCampaigns() {
   const [filter, setFilter] = useState('ALL');
 
+  const { data, loading, error, refetch } = useFetch(
+    async () => (await api.get('/campaigns', { params: { limit: 100 } })).data.campaigns ?? [],
+    [],
+  );
+  const campaigns = useMemo(() => data ?? [], [data]);
+
   const visible = useMemo(() => {
-    if (filter === 'ALL') return DUMMY_CAMPAIGNS_BRAND;
-    return DUMMY_CAMPAIGNS_BRAND.filter((c) => c.status === filter);
-  }, [filter]);
+    if (filter === 'ALL') return campaigns;
+    return campaigns.filter((c) => c.status === filter);
+  }, [filter, campaigns]);
 
   const kpis = [
-    { label: 'Total',       value: String(DUMMY_CAMPAIGNS_BRAND.length) },
-    { label: 'In progress', value: String(DUMMY_CAMPAIGNS_BRAND.filter((c) => c.status === 'IN_PROGRESS').length) },
-    { label: 'Completed',   value: String(DUMMY_CAMPAIGNS_BRAND.filter((c) => c.status === 'COMPLETED').length) },
-    { label: 'Deliverables', value: String(DUMMY_CAMPAIGNS_BRAND.reduce((s, c) => s + c.deliverables.length, 0)) },
+    { label: 'Total',        value: String(campaigns.length) },
+    { label: 'In progress',  value: String(campaigns.filter((c) => c.status === 'IN_PROGRESS').length) },
+    { label: 'Completed',    value: String(campaigns.filter((c) => c.status === 'COMPLETED').length) },
+    { label: 'Deliverables', value: String(campaigns.reduce((s, c) => s + (c._count?.deliverables ?? 0), 0)) },
   ];
 
   return (
@@ -36,6 +44,7 @@ export default function BrandCampaigns() {
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} />}
       >
         <ScreenHeader
           eyebrow="Your campaigns"
@@ -49,7 +58,15 @@ export default function BrandCampaigns() {
           <Tabs tabs={FILTERS} value={filter} onChange={setFilter} />
         </View>
 
-        {visible.length === 0 ? (
+        {loading && !data ? (
+          <Loader />
+        ) : error ? (
+          <EmptyState
+            title="Couldn't load campaigns"
+            description={error}
+            action={<Button onPress={refetch}>Retry</Button>}
+          />
+        ) : visible.length === 0 ? (
           <EmptyState
             title="No campaigns here"
             description="Try a different filter or start a new campaign."
@@ -57,10 +74,7 @@ export default function BrandCampaigns() {
         ) : (
           <View className="gap-3">
             {visible.map((c) => (
-              <Pressable
-                key={c.id}
-                onPress={() => router.push(`/campaign/${c.id}`)}
-              >
+              <Pressable key={c.id} onPress={() => router.push(`/campaign/${c.id}`)}>
                 <Card>
                   <View className="flex-row items-start justify-between gap-3">
                     <View className="flex-1">
@@ -71,7 +85,7 @@ export default function BrandCampaigns() {
                         {c.title}
                       </Text>
                       <Text className="mt-1 text-xs text-zinc-500">
-                        {c.deliverables.length} deliverables · {c.createdAt}
+                        {c._count?.deliverables ?? 0} deliverables · {formatDate(c.createdAt)}
                       </Text>
                     </View>
                     <StatusBadge status={c.status} />

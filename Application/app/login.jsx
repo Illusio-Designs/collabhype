@@ -14,11 +14,10 @@ import BrandWatermark from '@/components/BrandWatermark';
 import { useAuth } from '@/lib/auth';
 
 export default function LoginScreen() {
-  const { login, loginDemo } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
-  const [demoBusy, setDemoBusy] = useState(null);
   const [error, setError] = useState(null);
 
   const onSubmit = async () => {
@@ -27,11 +26,6 @@ export default function LoginScreen() {
     const res = await login({ email, password });
     if (!res.ok) setError(res.error);
     setBusy(false);
-  };
-
-  const pickDemo = async (role) => {
-    setDemoBusy(role);
-    await loginDemo(role);
   };
 
   return (
@@ -98,35 +92,6 @@ export default function LoginScreen() {
                 </View>
                 <Button onPress={onSubmit} loading={busy} fullWidth size="lg">
                   Sign in
-                </Button>
-              </View>
-
-              <View className="my-5 flex-row items-center gap-3">
-                <View className="h-px flex-1 bg-zinc-200" />
-                <Text className="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                  Or try the demo
-                </Text>
-                <View className="h-px flex-1 bg-zinc-200" />
-              </View>
-
-              <View className="flex-row gap-2">
-                <Button
-                  variant="outline"
-                  fullWidth
-                  loading={demoBusy === 'BRAND'}
-                  onPress={() => pickDemo('BRAND')}
-                  className="flex-1"
-                >
-                  Brand demo
-                </Button>
-                <Button
-                  variant="outline"
-                  fullWidth
-                  loading={demoBusy === 'INFLUENCER'}
-                  onPress={() => pickDemo('INFLUENCER')}
-                  className="flex-1"
-                >
-                  Creator demo
                 </Button>
               </View>
             </View>

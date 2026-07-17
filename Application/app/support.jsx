@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus } from 'lucide-react-native';
-import { Badge, Button, Card, EmptyState, Input } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, Input, Loader } from '@/components/ui';
 import BackHeader from '@/components/BackHeader';
-import StatusBadge from '@/components/StatusBadge';
-import { DUMMY_TICKETS } from '@/lib/dummyData';
+import { api, apiError } from '@/lib/api';
+import { useFetch } from '@/lib/useFetch';
+import { formatDate } from '@/lib/format';
 
 const STATUS_VARIANT = {
   OPEN: 'warning',
@@ -16,31 +17,42 @@ const STATUS_VARIANT = {
 };
 
 export default function SupportScreen() {
-  const [tickets, setTickets] = useState(DUMMY_TICKETS);
+  const { data, loading, error, refetch } = useFetch(
+    async () => (await api.get('/support/tickets', { params: { limit: 100 } })).data.tickets ?? [],
+    [],
+  );
+  const tickets = data ?? [];
+
   const [showNew, setShowNew] = useState(false);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const submit = () => {
-    if (!subject.trim()) return;
+  const submit = async () => {
+    if (subject.trim().length < 3) {
+      Alert.alert('Add a subject', 'Give your ticket a short subject (at least 3 characters).');
+      return;
+    }
+    if (message.trim().length < 10) {
+      Alert.alert('Add details', 'Describe the issue in at least 10 characters.');
+      return;
+    }
     setSubmitting(true);
-    setTimeout(() => {
-      setTickets((t) => [
-        {
-          id: `t_${Date.now()}`,
-          subject,
-          status: 'OPEN',
-          category: 'GENERAL',
-          createdAt: new Date().toISOString().slice(0, 10),
-        },
-        ...t,
-      ]);
+    try {
+      await api.post('/support/tickets', {
+        subject: subject.trim(),
+        body: message.trim(),
+        category: 'OTHER',
+      });
       setSubject('');
       setMessage('');
       setShowNew(false);
+      await refetch();
+    } catch (e) {
+      Alert.alert("Couldn't open ticket", apiError(e));
+    } finally {
       setSubmitting(false);
-    }, 500);
+    }
   };
 
   return (
@@ -87,11 +99,7 @@ export default function SupportScreen() {
               />
             </View>
             <View className="mt-4 flex-row gap-2">
-              <Button
-                variant="outline"
-                onPress={() => setShowNew(false)}
-                className="flex-1"
-              >
+              <Button variant="outline" onPress={() => setShowNew(false)} className="flex-1">
                 Cancel
               </Button>
               <Button onPress={submit} loading={submitting} className="flex-1">
@@ -102,29 +110,33 @@ export default function SupportScreen() {
         )}
 
         <View className="mt-6 gap-3">
-          {tickets.length === 0 ? (
+          {loading && !data ? (
+            <Loader />
+          ) : error ? (
+            <EmptyState
+              title="Couldn't load tickets"
+              description={error}
+              action={<Button onPress={refetch}>Retry</Button>}
+            />
+          ) : tickets.length === 0 ? (
             <EmptyState
               icon={<Plus size={20} color="#0a2472" />}
               title="No tickets yet"
               description="Open a ticket when a creator or campaign needs help."
-              action={
-                <Button onPress={() => setShowNew(true)}>Open a ticket</Button>
-              }
+              action={<Button onPress={() => setShowNew(true)}>Open a ticket</Button>}
             />
           ) : (
             tickets.map((t) => (
               <Card key={t.id}>
                 <View className="flex-row items-start justify-between gap-3">
                   <View className="flex-1">
-                    <Text className="text-sm font-bold text-zinc-900">
-                      {t.subject}
-                    </Text>
+                    <Text className="text-sm font-bold text-zinc-900">{t.subject}</Text>
                     <Text className="mt-0.5 text-xs text-zinc-500">
-                      {t.category} · {t.createdAt}
+                      {t.category} · {formatDate(t.createdAt)}
                     </Text>
                   </View>
                   <Badge variant={STATUS_VARIANT[t.status] ?? 'default'}>
-                    {t.status.replace(/_/g, ' ')}
+                    {String(t.status).replace(/_/g, ' ')}
                   </Badge>
                 </View>
               </Card>
