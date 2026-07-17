@@ -11,14 +11,13 @@ import {
 import AddInfluencerForm from '@/components/cart/AddInfluencerForm';
 import CreatorBadge from '@/components/CreatorBadge';
 import { Badge, Breadcrumb } from '@/components/ui';
-import { DUMMY_INFLUENCERS } from '@/lib/dummyData';
 
 async function loadInfluencer(id) {
   try {
     const data = await apiFetch(`/api/v1/influencers/${id}`);
     return data.profile;
   } catch {
-    return DUMMY_INFLUENCERS.find((i) => i.id === id) ?? null;
+    return null;
   }
 }
 

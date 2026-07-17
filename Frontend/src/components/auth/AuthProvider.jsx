@@ -7,12 +7,9 @@ import {
   clearAuth,
   getStoredUser,
   getToken,
-  isDemoMode,
-  setDemoMode,
   setStoredUser,
   setToken,
 } from '@/lib/auth';
-import { DUMMY_ADMIN_USER, DUMMY_BRAND_USER, DUMMY_INFLUENCER_USER } from '@/lib/dummyData';
 
 const AuthContext = createContext(null);
 
@@ -27,8 +24,8 @@ export function AuthProvider({ children }) {
     const token = getToken();
     if (stored && token) {
       setUser(stored);
-      // In demo mode the apiClient short-circuits to dummy data — keep the user
-      // refreshed but never clear auth on a failure.
+      // Refresh from the API in the background; drop the session if the token
+      // is no longer valid.
       apiClient
         .get('/api/v1/auth/me')
         .then(({ data }) => {
@@ -38,10 +35,8 @@ export function AuthProvider({ children }) {
           }
         })
         .catch(() => {
-          if (!isDemoMode()) {
-            clearAuth();
-            setUser(null);
-          }
+          clearAuth();
+          setUser(null);
         });
     }
     setIsLoading(false);
@@ -63,22 +58,6 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
-  // Skip the API entirely and sign in as a demo brand or creator.
-  // The apiClient interceptor will return dummy data for every dashboard fetch.
-  const demoLogin = useCallback((role = 'BRAND') => {
-    const demoUser =
-      role === 'ADMIN'
-        ? DUMMY_ADMIN_USER
-        : role === 'INFLUENCER'
-          ? DUMMY_INFLUENCER_USER
-          : DUMMY_BRAND_USER;
-    setToken(`demo-${role.toLowerCase()}-token`);
-    setStoredUser(demoUser);
-    setDemoMode(true, role);
-    setUser(demoUser);
-    return demoUser;
-  }, []);
-
   const logout = useCallback(() => {
     clearAuth();
     setUser(null);
@@ -86,7 +65,7 @@ export function AuthProvider({ children }) {
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, demoLogin, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

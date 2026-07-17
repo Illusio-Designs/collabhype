@@ -19,7 +19,7 @@ function LoginForm() {
   const router = useRouter();
   const sp = useSearchParams();
   const next = sp.get('next') || '/dashboard';
-  const { login, demoLogin } = useAuth();
+  const { login } = useAuth();
   const [serverError, setServerError] = useState(null);
   const {
     register,
@@ -35,11 +35,6 @@ function LoginForm() {
     } catch (err) {
       setServerError(apiError(err));
     }
-  }
-
-  function tryDemo(role) {
-    demoLogin(role);
-    router.push('/dashboard');
   }
 
   return (
@@ -88,27 +83,6 @@ function LoginForm() {
           Create an account
         </Link>
       </p>
-
-      {/* Demo mode — bypasses the backend so you can preview the dashboard. */}
-      <div className="mt-8 rounded-2xl border border-dashed border-brand-300 bg-brand-50/50 p-4">
-        <div className="text-xs font-semibold uppercase tracking-wider text-brand-700">
-          Try a demo
-        </div>
-        <p className="mt-1 text-xs text-zinc-600">
-          Skip sign-up and explore the dashboard with dummy data.
-        </p>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          <Button variant="outline" size="sm" onClick={() => tryDemo('BRAND')}>
-            Brand
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => tryDemo('INFLUENCER')}>
-            Creator
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => tryDemo('ADMIN')}>
-            Admin
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
