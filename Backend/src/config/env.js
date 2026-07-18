@@ -23,13 +23,6 @@ const schema = z.object({
   META_APP_SECRET: z.string().optional(),
   META_REDIRECT_URI: z.string().optional(),
 
-  // Instagram API with Instagram Login (Business/Creator, no Facebook Page).
-  // These come from the Meta app's Instagram product → "API setup with
-  // Instagram login" (Instagram App ID + Secret — distinct from META_*).
-  INSTAGRAM_APP_ID: z.string().optional(),
-  INSTAGRAM_APP_SECRET: z.string().optional(),
-  INSTAGRAM_REDIRECT_URI: z.string().optional(),
-
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_REDIRECT_URI: z.string().optional(),
