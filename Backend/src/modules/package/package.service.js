@@ -29,7 +29,8 @@ export async function browse(params) {
         niche: true,
         _count: { select: { influencers: true } },
       },
-      orderBy: SORT[sort] ?? SORT.newest,
+      // Default: cheapest → most expensive (Starter → Viral Pro).
+      orderBy: SORT[sort] ?? SORT.price_asc,
       skip: (page - 1) * limit,
       take: limit,
     }),

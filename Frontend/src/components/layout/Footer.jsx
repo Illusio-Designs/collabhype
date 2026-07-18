@@ -74,8 +74,6 @@ export default function Footer() {
                 links={[
                   { href: '/register/creator', label: 'Join' },
                   { href: '/login', label: 'Sign in' },
-                  { href: '/dashboard/payouts', label: 'Payouts' },
-                  { href: '/dashboard/rates', label: 'Rate card' },
                 ]}
               />
               <FooterColumn
