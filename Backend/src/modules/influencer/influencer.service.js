@@ -139,10 +139,16 @@ export async function browseInfluencers(params) {
     limit,
   } = params;
 
+  // Nano creators (< 10K followers) are sold only in bulk packages and are
+  // auto-assigned on purchase — they are never hand-pickable, so they never
+  // appear in browse. An explicit NANO filter therefore returns nothing.
+  if (tier === 'NANO') return { items: [], total: 0 };
+
   // Only list available creators whose account is still active (a soft-deleted
   // account sets user.isActive = false and must not appear in browse).
   const where = { isAvailable: true, user: { isActive: true } };
-  if (tier) where.tier = tier;
+  // Restrict to a specific hand-pickable tier, or exclude Nano by default.
+  where.tier = tier ? tier : { not: 'NANO' };
   if (city) where.city = { contains: city };
   if (minFollowers != null || maxFollowers != null) {
     where.totalFollowers = {};
