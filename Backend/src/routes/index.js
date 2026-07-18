@@ -17,6 +17,7 @@ import healthRoutes from '../modules/health/health.routes.js';
 import influencerRoutes from '../modules/influencer/influencer.routes.js';
 import nicheRoutes from '../modules/niche/niche.routes.js';
 import notificationRoutes from '../modules/notification/notification.routes.js';
+import chatRoutes from '../modules/chat/chat.routes.js';
 import oauthRoutes from '../modules/oauth/oauth.routes.js';
 import orderRoutes from '../modules/order/order.routes.js';
 import packageRoutes from '../modules/package/package.routes.js';
@@ -48,6 +49,7 @@ router.use('/orders', orderRoutes);
 router.use('/campaigns', campaignRoutes);
 router.use('/deliverables', deliverableRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/chat', chatRoutes);
 router.use('/support', supportRoutes);
 
 // Public content (SEO + page bodies)

@@ -10,7 +10,10 @@ import {
 } from '@/lib/format';
 import AddInfluencerForm from '@/components/cart/AddInfluencerForm';
 import CreatorBadge from '@/components/CreatorBadge';
+import NegotiateButton from '@/components/chat/NegotiateButton';
 import { Badge, Breadcrumb } from '@/components/ui';
+
+const NEGOTIABLE_TIERS = ['MICRO', 'MACRO', 'MEGA'];
 
 // Inline brand marks — this lucide-react build doesn't ship Instagram/Youtube.
 function InstagramIcon({ className }) {
@@ -228,6 +231,14 @@ export default async function InfluencerDetailPage({ params }) {
                 influencerName={name}
                 rateCards={rateCards}
               />
+              {NEGOTIABLE_TIERS.includes(profile.tier) && (
+                <div className="mt-3">
+                  <NegotiateButton influencerId={profile.id} className="w-full !justify-center" />
+                  <p className="mt-2 text-center text-xs text-zinc-500">
+                    Prefer a custom rate? Negotiate directly.
+                  </p>
+                </div>
+              )}
               <p className="mt-3 text-center text-xs text-zinc-500">
                 Funds held in escrow until {name} delivers.
               </p>

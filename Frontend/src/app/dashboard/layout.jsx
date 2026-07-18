@@ -21,6 +21,7 @@ import {
   Link as LinkIconLucide,
   LogOut,
   Menu,
+  MessagesSquare,
   Package,
   Receipt,
   Search,
@@ -48,6 +49,7 @@ const NAV = {
       items: [
         { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
         { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList },
+        { href: '/dashboard/messages', label: 'Messages', icon: MessagesSquare },
         { href: '/dashboard/orders', label: 'Orders', icon: Receipt },
         { href: '/cart', label: 'Cart', icon: ShoppingCart },
       ],
@@ -68,6 +70,7 @@ const NAV = {
       items: [
         { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
         { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList },
+        { href: '/dashboard/messages', label: 'Messages', icon: MessagesSquare },
         { href: '/dashboard/payouts', label: 'Payouts', icon: Wallet },
       ],
     },
