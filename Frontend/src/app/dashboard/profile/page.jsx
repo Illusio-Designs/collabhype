@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError, uploadImage } from '@/lib/apiClient';
 import { dedupedGet, invalidate } from '@/lib/apiCache';
@@ -24,7 +25,14 @@ import { COUNTRIES, INDIAN_STATES, INDUSTRIES, LANGUAGES, citiesForState } from 
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  if (!user) return null;
+  const router = useRouter();
+
+  // Admins have no personal profile form — bounce them to the overview.
+  useEffect(() => {
+    if (user && user.role === 'ADMIN') router.replace('/dashboard');
+  }, [user, router]);
+
+  if (!user || user.role === 'ADMIN') return null;
   return user.role === 'BRAND' ? <BrandProfileForm /> : <InfluencerProfileForm />;
 }
 
