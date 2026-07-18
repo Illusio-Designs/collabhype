@@ -8,7 +8,6 @@ import {
   Alert,
   Button,
   Card,
-  Checkbox,
   FormField,
   Input,
   Select,
@@ -18,6 +17,8 @@ import {
   useToast,
 } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
+import NicheSelect from '@/components/NicheSelect';
+import { COUNTRIES, INDIAN_STATES, citiesForState } from '@/lib/geo';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -140,14 +141,6 @@ function BrandProfileForm() {
 // =======================================================================
 // INFLUENCER
 // =======================================================================
-const COUNTRIES = [
-  { value: 'IN', label: 'India' },
-  { value: 'US', label: 'United States' },
-  { value: 'GB', label: 'United Kingdom' },
-  { value: 'AE', label: 'UAE' },
-  { value: 'SG', label: 'Singapore' },
-];
-
 const GENDERS = [
   { value: '', label: 'Prefer not to say' },
   { value: 'female', label: 'Female' },
@@ -205,14 +198,6 @@ function InfluencerProfileForm() {
 
   function set(k, v) {
     setForm((f) => ({ ...f, [k]: v }));
-  }
-
-  function toggleNiche(slug) {
-    setSelectedNiches((prev) => {
-      const next = new Set(prev);
-      next.has(slug) ? next.delete(slug) : next.add(slug);
-      return next;
-    });
   }
 
   async function onSubmit(e) {
@@ -306,18 +291,37 @@ function InfluencerProfileForm() {
             >
               <Textarea rows={4} value={form.bio} onChange={(e) => set('bio', e.target.value)} />
             </FormField>
-            <FormField label="City">
-              <Input value={form.city} onChange={(e) => set('city', e.target.value)} placeholder="Mumbai" />
-            </FormField>
-            <FormField label="State">
-              <Input value={form.state} onChange={(e) => set('state', e.target.value)} placeholder="Maharashtra" />
-            </FormField>
             <FormField label="Country">
               <Select
                 value={form.country}
-                onChange={(v) => set('country', v)}
+                onChange={(v) => setForm((f) => ({ ...f, country: v, state: '', city: '' }))}
                 options={COUNTRIES}
               />
+            </FormField>
+            <FormField label="State">
+              {form.country === 'IN' ? (
+                <Select
+                  value={form.state}
+                  onChange={(v) => setForm((f) => ({ ...f, state: v, city: '' }))}
+                  options={INDIAN_STATES}
+                  placeholder="Select a state…"
+                />
+              ) : (
+                <Input value={form.state} onChange={(e) => set('state', e.target.value)} placeholder="State / region" />
+              )}
+            </FormField>
+            <FormField label="City">
+              {form.country === 'IN' ? (
+                <Select
+                  value={form.city}
+                  onChange={(v) => set('city', v)}
+                  options={citiesForState(form.state)}
+                  placeholder={form.state ? 'Select a city…' : 'Select a state first'}
+                  disabled={!form.state}
+                />
+              ) : (
+                <Input value={form.city} onChange={(e) => set('city', e.target.value)} placeholder="City" />
+              )}
             </FormField>
             <FormField label="Languages" hint="Comma-separated, e.g. en, hi, ta">
               <Input value={form.languages} onChange={(e) => set('languages', e.target.value)} />
@@ -366,15 +370,12 @@ function InfluencerProfileForm() {
             No niches loaded. Make sure the backend is running and seeded.
           </Alert>
         ) : (
-          <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {niches.map((n) => (
-              <Checkbox
-                key={n.slug}
-                label={n.name}
-                checked={selectedNiches.has(n.slug)}
-                onChange={() => toggleNiche(n.slug)}
-              />
-            ))}
+          <div className="mt-5">
+            <NicheSelect
+              options={niches}
+              value={[...selectedNiches]}
+              onChange={(slugs) => setSelectedNiches(new Set(slugs))}
+            />
           </div>
         )}
         <div className="mt-6 flex justify-end">
