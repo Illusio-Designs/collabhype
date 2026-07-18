@@ -440,6 +440,16 @@ model Campaign {
   productLink     String?
   referenceImages Json?                       // array of image URLs
   briefSentAt     DateTime?                    // set when the brand sends the brief
+  // Nano package recruiting: matching creators are invited and claim a slot
+  // until slotsTarget is filled. taskDeliverables/amounts are copied from the
+  // package so a claim can materialize the creator's deliverables.
+  isRecruiting      Boolean  @default(false)
+  slotsTarget       Int?
+  slotsFilled       Int      @default(0)
+  taskNicheId       String?
+  taskDeliverables  Json?
+  taskAmountPerUnit Decimal? @db.Decimal(10, 2)
+  taskPayoutPerUnit Decimal? @db.Decimal(10, 2)
   startDate DateTime?
   endDate   DateTime?
   status    CampaignStatus @default(DRAFT)

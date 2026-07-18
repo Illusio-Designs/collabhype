@@ -69,6 +69,7 @@ const NAV = {
       label: 'Main',
       items: [
         { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+        { href: '/dashboard/tasks', label: 'Tasks', icon: ClipboardList },
         { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList },
         { href: '/dashboard/messages', label: 'Messages', icon: MessagesSquare },
         { href: '/dashboard/payouts', label: 'Payouts', icon: Wallet },
@@ -151,16 +152,22 @@ export default function DashboardLayout({ children }) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Real unread-notification count drives the bell/sidebar dot — no dot when 0.
-  // Re-fetches on navigation so opening the notifications page clears it.
+  // Re-fetches on navigation and whenever the notifications page marks items
+  // read (via the 'ch:notifications-updated' event), so the badge updates live.
   useEffect(() => {
     if (!user) return;
     let active = true;
-    apiClient
-      .get('/api/v1/notifications', { params: { limit: 1 } })
-      .then((res) => active && setUnreadCount(res.data.unreadCount ?? 0))
-      .catch(() => active && setUnreadCount(0));
+    const refetch = () => {
+      apiClient
+        .get('/api/v1/notifications', { params: { limit: 1 } })
+        .then((res) => active && setUnreadCount(res.data.unreadCount ?? 0))
+        .catch(() => active && setUnreadCount(0));
+    };
+    refetch();
+    window.addEventListener('ch:notifications-updated', refetch);
     return () => {
       active = false;
+      window.removeEventListener('ch:notifications-updated', refetch);
     };
   }, [user, pathname]);
 

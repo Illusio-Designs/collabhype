@@ -67,6 +67,8 @@ export default function NotificationsPage() {
       // State is updated in place above; drop the cache so navigating away and
       // back inside the TTL doesn't resurrect the unread badge.
       invalidate(NOTIFICATIONS_URL);
+      // Refresh the sidebar/topbar badge immediately.
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('ch:notifications-updated'));
     } catch (e) {
       toast.push({ variant: 'danger', title: 'Failed', body: apiError(e) });
     }
@@ -79,6 +81,7 @@ export default function NotificationsPage() {
       setItems((arr) => arr.map((n) => ({ ...n, isRead: true })));
       setUnread(0);
       invalidate(NOTIFICATIONS_URL);
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('ch:notifications-updated'));
       toast.push({ variant: 'success', title: 'All caught up' });
     } catch (e) {
       toast.push({ variant: 'danger', title: 'Failed', body: apiError(e) });

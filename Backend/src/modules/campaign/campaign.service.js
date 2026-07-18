@@ -168,10 +168,12 @@ export async function updateBrief(userId, campaignId, data) {
 }
 
 // Brand "sends" the brief — requires a written brief, then reveals each
-// assigned creator's delivery address so products can be shipped.
+// assigned creator's delivery address so products can be shipped. Each assigned
+// creator is notified with the brief message.
 export async function sendBrief(userId, campaignId) {
   const campaign = await prisma.campaign.findFirst({
     where: { id: campaignId, order: { brandUserId: userId } },
+    include: { deliverables: { select: { influencerId: true } } },
   });
   if (!campaign) throw ApiError.notFound('Campaign not found');
   if (['COMPLETED', 'CANCELLED'].includes(campaign.status)) {
@@ -180,12 +182,145 @@ export async function sendBrief(userId, campaignId) {
   if (!campaign.brief || !campaign.brief.trim()) {
     throw ApiError.badRequest('Add a brief before sending it');
   }
-  return prisma.campaign.update({
+
+  const updated = await prisma.campaign.update({
     where: { id: campaignId },
     data: {
       briefSentAt: campaign.briefSentAt ?? new Date(),
       status: campaign.status === 'DRAFT' ? 'BRIEF_SENT' : campaign.status,
     },
+  });
+
+  // Notify each assigned creator with the brief message.
+  const influencerIds = [...new Set(campaign.deliverables.map((d) => d.influencerId))];
+  if (influencerIds.length) {
+    const profiles = await prisma.influencerProfile.findMany({
+      where: { id: { in: influencerIds } },
+      select: { userId: true },
+    });
+    const snippet = campaign.brief.trim().slice(0, 160);
+    await prisma.notification.createMany({
+      data: profiles.map((p) => ({
+        userId: p.userId,
+        type: 'campaign.brief',
+        title: `Brief for "${campaign.title}"`,
+        body: snippet,
+        link: `/dashboard/campaigns/${campaignId}`,
+      })),
+    });
+  }
+  return updated;
+}
+
+// --- Nano package tasks (recruiting) ---
+
+// Open package tasks a Nano creator can accept: recruiting, still has slots,
+// niche matches (or unspecified), and the creator hasn't already claimed it.
+export async function listOpenTasks(userId) {
+  const profile = await prisma.influencerProfile.findUnique({
+    where: { userId },
+    include: { niches: { select: { nicheId: true } } },
+  });
+  if (!profile) throw ApiError.notFound('Profile not found');
+  if (profile.tier !== 'NANO') return { tasks: [] };
+
+  const nicheIds = profile.niches.map((n) => n.nicheId);
+  const campaigns = await prisma.campaign.findMany({
+    where: {
+      isRecruiting: true,
+      OR: [{ taskNicheId: null }, { taskNicheId: { in: nicheIds.length ? nicheIds : ['__none__'] } }],
+      deliverables: { none: { influencerId: profile.id } },
+    },
+    select: {
+      id: true,
+      title: true,
+      slotsTarget: true,
+      slotsFilled: true,
+      taskDeliverables: true,
+      taskPayoutPerUnit: true,
+      createdAt: true,
+      order: {
+        select: { brand: { select: { fullName: true, brandProfile: { select: { companyName: true } } } } },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  });
+  return { tasks: campaigns };
+}
+
+// A Nano creator accepts a task → their deliverables are created and a slot is
+// filled. When the target is met the campaign stops recruiting.
+export async function claimTask(userId, campaignId) {
+  const profile = await prisma.influencerProfile.findUnique({ where: { userId } });
+  if (!profile) throw ApiError.notFound('Profile not found');
+  if (profile.tier !== 'NANO') throw ApiError.badRequest('Only Nano creators can accept package tasks');
+  if (!profile.isAvailable) throw ApiError.badRequest('Turn on availability to accept tasks');
+
+  return prisma.$transaction(async (tx) => {
+    const campaign = await tx.campaign.findUnique({ where: { id: campaignId } });
+    if (!campaign || !campaign.isRecruiting) throw ApiError.badRequest('This task is no longer open');
+    if ((campaign.slotsFilled ?? 0) >= (campaign.slotsTarget ?? 0)) {
+      throw ApiError.badRequest('This task is already full');
+    }
+    const already = await tx.campaignDeliverable.findFirst({
+      where: { campaignId, influencerId: profile.id },
+      select: { id: true },
+    });
+    if (already) throw ApiError.badRequest('You already accepted this task');
+    if (campaign.taskNicheId) {
+      const has = await tx.influencerNiche.findFirst({
+        where: { influencerId: profile.id, nicheId: campaign.taskNicheId },
+        select: { nicheId: true },
+      });
+      if (!has) throw ApiError.badRequest('This task needs a different niche');
+    }
+
+    const dels = Array.isArray(campaign.taskDeliverables) ? campaign.taskDeliverables : [];
+    const amount = Number(campaign.taskAmountPerUnit ?? 0);
+    const payout = Number(campaign.taskPayoutPerUnit ?? 0);
+    const rows = [];
+    for (const d of dels) {
+      for (let i = 0; i < (d.qty ?? 1); i++) {
+        rows.push({
+          campaignId,
+          influencerId: profile.id,
+          deliverable: d.type,
+          qty: 1,
+          amountPayable: amount,
+          creatorPayout: payout,
+          platformFee: amount - payout,
+        });
+      }
+    }
+    if (rows.length) await tx.campaignDeliverable.createMany({ data: rows });
+
+    const filled = (campaign.slotsFilled ?? 0) + 1;
+    await tx.campaign.update({
+      where: { id: campaignId },
+      data: {
+        slotsFilled: filled,
+        isRecruiting: filled < (campaign.slotsTarget ?? 0),
+        status: campaign.status === 'DRAFT' ? 'BRIEF_SENT' : campaign.status,
+      },
+    });
+
+    const order = await tx.order.findUnique({
+      where: { id: campaign.orderId },
+      select: { brandUserId: true },
+    });
+    if (order) {
+      await tx.notification.create({
+        data: {
+          userId: order.brandUserId,
+          type: 'task.claimed',
+          title: 'A creator joined your campaign',
+          body: `${filled}/${campaign.slotsTarget} creators have accepted.`,
+          link: `/dashboard/campaigns/${campaignId}`,
+        },
+      });
+    }
+    return { ok: true, filled, target: campaign.slotsTarget };
   });
 }
 

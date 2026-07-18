@@ -159,6 +159,16 @@ export async function sendMessage(user, conversationId, body) {
     where: { id: convo.id },
     data: { lastMessageAt: new Date() },
   });
+  const recipientId = user.sub === convo.brandUserId ? convo.creatorUserId : convo.brandUserId;
+  await prisma.notification.create({
+    data: {
+      userId: recipientId,
+      type: 'chat.message',
+      title: 'New message',
+      body: text.slice(0, 120),
+      link: `/dashboard/messages?c=${convo.id}`,
+    },
+  });
   return message;
 }
 
@@ -182,6 +192,15 @@ export async function sendOffer(user, conversationId, { deliverable, price }) {
     },
   });
   await prisma.conversation.update({ where: { id: convo.id }, data: { lastMessageAt: new Date() } });
+  await prisma.notification.create({
+    data: {
+      userId: convo.brandUserId,
+      type: 'chat.offer',
+      title: 'New rate offer',
+      body: `${deliverable} — ₹${amount}`,
+      link: `/dashboard/messages?c=${convo.id}`,
+    },
+  });
   return message;
 }
 
@@ -213,6 +232,15 @@ export async function acceptOffer(user, conversationId, messageId) {
     },
   });
   await prisma.conversation.update({ where: { id: convo.id }, data: { lastMessageAt: new Date() } });
+  await prisma.notification.create({
+    data: {
+      userId: convo.creatorUserId,
+      type: 'chat.offer_accepted',
+      title: 'Rate offer accepted',
+      body: 'The brand accepted your rate and added it to their cart.',
+      link: `/dashboard/messages?c=${convo.id}`,
+    },
+  });
   return updated;
 }
 

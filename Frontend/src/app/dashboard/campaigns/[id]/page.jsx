@@ -275,6 +275,28 @@ function OverviewTab({ campaign, isBrand, onEdit, onSendBrief }) {
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-4">
+        {campaign.slotsTarget != null && (
+          <Card padding="lg">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-zinc-900">Creator recruiting</h2>
+              <Badge variant={campaign.isRecruiting ? 'warning' : 'success'}>
+                {campaign.isRecruiting ? 'Recruiting' : 'Filled'}
+              </Badge>
+            </div>
+            <p className="mt-1 text-sm text-zinc-500">
+              {campaign.slotsFilled ?? 0} of {campaign.slotsTarget} creators have accepted this
+              package. Matching creators are notified automatically.
+            </p>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-zinc-100">
+              <div
+                className="h-full rounded-full bg-brand-600"
+                style={{
+                  width: `${campaign.slotsTarget ? Math.round(((campaign.slotsFilled ?? 0) / campaign.slotsTarget) * 100) : 0}%`,
+                }}
+              />
+            </div>
+          </Card>
+        )}
         {roster.creatorCount > 0 && (
           <Card padding="lg">
             <div className="flex items-center justify-between">
