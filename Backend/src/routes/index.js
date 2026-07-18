@@ -9,6 +9,10 @@ import {
   publicRouter as contentPublicRoutes,
   adminRouter as contentAdminRoutes,
 } from '../modules/content/content.routes.js';
+import {
+  publicRouter as blogPublicRoutes,
+  adminRouter as blogAdminRoutes,
+} from '../modules/blog/blog.routes.js';
 import healthRoutes from '../modules/health/health.routes.js';
 import influencerRoutes from '../modules/influencer/influencer.routes.js';
 import nicheRoutes from '../modules/niche/niche.routes.js';
@@ -44,11 +48,15 @@ router.use('/support', supportRoutes);
 // Public content (SEO + page bodies)
 router.use('/content', contentPublicRoutes);
 
+// Public blog
+router.use('/blog', blogPublicRoutes);
+
 // Tracking — public ingest endpoint, accepts events from frontend
 router.use('/track', trackingPublicRoutes);
 
 // Admin namespaces
 router.use('/admin/content', contentAdminRoutes);
+router.use('/admin/blog', blogAdminRoutes);
 router.use('/admin/tracking', trackingAdminRoutes);
 router.use('/admin/settings', settingsRoutes);
 
