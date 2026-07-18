@@ -84,12 +84,15 @@ export async function deleteAccount(userId, password) {
   if (!user) throw ApiError.notFound('User not found');
   const ok = await verifyPassword(password, user.passwordHash);
   if (!ok) throw ApiError.badRequest('Password is incorrect');
-  // Soft delete — preserves orders/campaigns/payouts for accounting + audit
+  // Soft delete — deactivate and start the 30-day recovery window. Email/PII are
+  // kept intact during the window so the account can be restored; they're only
+  // scrubbed at purge time (see prisma/purge-accounts.js). Orders/campaigns/
+  // payouts are always preserved for accounting + audit.
   await prisma.user.update({
     where: { id: userId },
-    data: { isActive: false, email: `deleted-${userId}@collabhype.invalid` },
+    data: { isActive: false, deletedAt: new Date() },
   });
-  return { ok: true };
+  return { ok: true, deletedAt: new Date().toISOString() };
 }
 
 export async function forgotPassword(email) {

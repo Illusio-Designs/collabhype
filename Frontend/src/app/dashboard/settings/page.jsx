@@ -178,8 +178,9 @@ function DangerZone({ user, onDeleted }) {
     <Card padding="lg" className="border-red-200">
       <h2 className="text-lg font-semibold text-red-900">Danger zone</h2>
       <p className="mt-1 text-sm text-zinc-600">
-        Deleting your account disables sign-in and removes you from search results. Active
-        campaigns and past payouts remain on record for accounting.
+        Deleting your account disables sign-in and removes you from search results. It's
+        <strong> recoverable for 30 days</strong> — after that it's permanently removed. Your
+        name, payment records, and work history are always retained for accounting.
       </p>
       <div className="mt-5">
         <Button variant="danger" onClick={() => setOpen(true)}>
@@ -212,8 +213,10 @@ function DangerZone({ user, onDeleted }) {
         }
       >
         <div className="space-y-4">
-          <Alert variant="warning" title="This action can't be reversed online">
-            Reach out to support within 14 days if you want to restore access.
+          <Alert variant="warning" title="Recoverable for 30 days">
+            Your account is deactivated now and can be restored within 30 days — contact support
+            to reactivate. After 30 days it's permanently removed and personal details are erased,
+            though your name, payment records, and work history are kept for accounting.
           </Alert>
           <FormField label="Type your password to confirm" required>
             <PasswordInput

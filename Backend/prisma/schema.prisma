@@ -145,6 +145,11 @@ model User {
   phoneVerified Boolean  @default(false)
   isActive      Boolean  @default(true)
   lastLoginAt   DateTime?
+  // Soft-delete lifecycle: deletedAt starts the 30-day recovery window; purgedAt
+  // is set once the account has been anonymized (PII scrubbed, name + payment +
+  // work records kept).
+  deletedAt     DateTime?
+  purgedAt      DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -159,6 +164,7 @@ model User {
   supportMessages   SupportMessage[]   @relation("MessageAuthor")
 
   @@index([role])
+  @@index([deletedAt])
 }
 
 model InfluencerProfile {
