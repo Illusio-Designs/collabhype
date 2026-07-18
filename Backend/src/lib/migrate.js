@@ -26,7 +26,14 @@ function isAlreadyExists(e) {
   return (
     msg.includes('already exists') ||
     msg.includes('duplicate column name') ||
-    msg.includes('duplicate key name')
+    msg.includes('duplicate key name') ||
+    msg.includes('duplicate foreign key') || // re-adding an existing FK constraint
+    msg.includes('multiple primary key') ||
+    msg.includes("can't drop") ||
+    msg.includes('check that column') ||
+    // MySQL errnos: 1050 table exists, 1060 dup column, 1061 dup key,
+    // 1022 dup key, 1826 dup FK, 1091 can't drop (doesn't exist).
+    /\b(1050|1060|1061|1022|1826|1091)\b/.test(msg)
   );
 }
 
@@ -59,24 +66,27 @@ export async function runPendingMigrations(prisma) {
     for (const dir of dirs) {
       if (applied.has(dir)) continue;
       const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, dir, 'migration.sql'), 'utf8');
-      try {
-        for (const stmt of splitSql(sql)) {
-          try {
-            await prisma.$executeRawUnsafe(stmt);
-          } catch (e) {
-            if (!isAlreadyExists(e)) throw e;
-          }
+      let ok = true;
+      for (const stmt of splitSql(sql)) {
+        try {
+          await prisma.$executeRawUnsafe(stmt);
+        } catch (e) {
+          if (isAlreadyExists(e)) continue; // benign: object already there
+          console.error(`[migrate] ${dir}: statement failed:`, e.message);
+          ok = false;
+          break;
         }
+      }
+      if (ok) {
         await prisma.$executeRawUnsafe(
           'INSERT IGNORE INTO `_ch_migrations` (`name`) VALUES (?)',
           dir,
         );
         console.log(`[migrate] applied ${dir}`);
-      } catch (e) {
-        // Stop on a real failure so we don't apply later migrations on top of a
-        // broken state; surfaced in logs for the operator.
-        console.error(`[migrate] ${dir} failed, stopping:`, e.message);
-        break;
+      } else {
+        // Don't mark applied — retry next boot. Continue to later migrations so
+        // one failure doesn't block independent tables the app needs.
+        console.warn(`[migrate] ${dir} not fully applied; will retry next boot`);
       }
     }
   } catch (e) {

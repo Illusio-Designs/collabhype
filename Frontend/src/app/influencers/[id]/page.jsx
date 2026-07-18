@@ -232,12 +232,7 @@ export default async function InfluencerDetailPage({ params }) {
                 rateCards={rateCards}
               />
               {NEGOTIABLE_TIERS.includes(profile.tier) && (
-                <div className="mt-3">
-                  <NegotiateButton influencerId={profile.id} className="w-full !justify-center" />
-                  <p className="mt-2 text-center text-xs text-zinc-500">
-                    Prefer a custom rate? Negotiate directly.
-                  </p>
-                </div>
+                <NegotiateButton influencerId={profile.id} className="w-full !justify-center" />
               )}
               <p className="mt-3 text-center text-xs text-zinc-500">
                 Funds held in escrow until {name} delivers.
