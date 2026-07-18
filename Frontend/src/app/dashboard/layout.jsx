@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  FileText,
   SlidersHorizontal,
   HelpCircle,
   LayoutDashboard,
@@ -102,6 +103,7 @@ const NAV = {
     {
       label: 'Marketing',
       items: [
+        { href: '/dashboard/admin/blog', label: 'Blog', icon: FileText },
         { href: '/dashboard/admin/content', label: 'SEO & content', icon: ClipboardList },
         { href: '/dashboard/admin/tracking', label: 'Tracking', icon: LineChart },
       ],

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: '/join/creator', label: 'Join as Creator' },
   { href: '/join/brand', label: 'Join as Brand' },
   { href: '/how-it-works', label: 'How it works' },
+  { href: '/blog', label: 'Blog' },
 ];
 
 export default function Header() {

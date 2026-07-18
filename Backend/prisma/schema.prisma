@@ -590,6 +590,28 @@ model SiteContent {
   @@index([isPublished])
 }
 
+// ---------- Blog ----------
+
+model BlogPost {
+  id             String    @id @default(cuid())
+  slug           String    @unique
+  title          String
+  excerpt        String?   @db.Text
+  content        String?   @db.LongText   // rich HTML from the editor
+  coverImageUrl  String?
+  tags           String?                  // comma separated
+  status         String    @default("DRAFT") // DRAFT | PUBLISHED
+  authorName     String?
+  seoTitle       String?
+  seoDescription String?   @db.Text
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([slug])
+}
+
 // ---------- Platform Settings ----------
 
 model PlatformSettings {
