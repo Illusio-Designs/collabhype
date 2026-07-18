@@ -17,10 +17,20 @@ name: Backend CI/CD
 # cPanel's Node runtime (Phusion Passenger) recycles the process on the next
 # request once that file's mtime changes.
 #
-# NOTE: FTP can't run commands on the server, so it does NOT run
-# `npm install` / `prisma generate` / `prisma migrate deploy`. If a deploy
-# changes package.json deps or the Prisma schema, run those on the server
-# once (cPanel Node app terminal), then future code-only deploys are automatic.
+# Database & node process — what this workflow does and does NOT do:
+#   • It NEVER runs DB setup (no `prisma migrate deploy` / `db seed`) on a
+#     deploy. A normal code push just syncs files and restarts.
+#   • It does NOT start a second node process. Touching tmp/restart.txt tells
+#     Phusion Passenger to gracefully recycle THE SAME app — the old process is
+#     replaced, not stacked alongside a new one.
+#   • DB work only when required: the "Detect DB / dependency changes" step
+#     below inspects the push. Only if it touched Backend/prisma/** (schema or
+#     migrations) or Backend/package.json does it print a prominent ⚠️ notice
+#     with the exact commands to run once on the server (cPanel Node terminal).
+#     A code-only deploy prints "no DB action needed" and you do nothing.
+#
+# FTP can't run commands on the server, so migrations/`npm install` can't be run
+# remotely — the notice tells you when (and only when) to run them by hand.
 
 on:
   push:
@@ -43,6 +53,36 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Need the previous commit to diff against (default is a shallow
+          # single-commit fetch).
+          fetch-depth: 2
+
+      # Decide whether this push actually requires any database / dependency
+      # work. Pure code deploys need none — Passenger just restarts.
+      - name: Detect DB / dependency changes
+        id: changes
+        run: |
+          set -e
+          BEFORE="${{ github.event.before }}"
+          # Fall back to HEAD~1 for manual runs or a new-branch first push.
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            BEFORE="$(git rev-parse HEAD~1 2>/dev/null || echo '')"
+          fi
+          if [ -z "$BEFORE" ]; then
+            CHANGED="$(git show --name-only --pretty=format: HEAD)"
+          else
+            CHANGED="$(git diff --name-only "$BEFORE" "${{ github.sha }}")"
+          fi
+          echo "Changed files:"; echo "$CHANGED"
+
+          DB=false
+          DEPS=false
+          echo "$CHANGED" | grep -qE '^Backend/prisma/(schema\.prisma|migrations/)' && DB=true || true
+          echo "$CHANGED" | grep -qE '^Backend/package\.json$' && DEPS=true || true
+
+          echo "db=$DB"   >> "$GITHUB_OUTPUT"
+          echo "deps=$DEPS" >> "$GITHUB_OUTPUT"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -186,4 +226,32 @@ jobs:
         run: |
           echo "✅ Backend deployed to ${{ secrets.FTP_REMOTE_DIR }}"
           echo "   FTP server: ${{ secrets.FTP_SERVER }}"
-          echo "   Incremental sync + Passenger restart complete"
+          echo "   Incremental sync + Passenger restart complete (old process replaced, not stacked)"
+
+      # DB action ONLY when required — a code-only deploy prints nothing to do.
+      - name: Database migration reminder
+        if: steps.changes.outputs.db == 'true' || steps.changes.outputs.deps == 'true'
+        run: |
+          {
+            echo "## ⚠️ Manual database step required"
+            echo ""
+            if [ "${{ steps.changes.outputs.deps }}" = "true" ]; then
+              echo "\`Backend/package.json\` changed — install deps on the server:"
+              echo '```'
+              echo "npm install --omit=dev"
+              echo '```'
+            fi
+            if [ "${{ steps.changes.outputs.db }}" = "true" ]; then
+              echo "\`Backend/prisma/**\` changed — apply migrations on the server:"
+              echo '```'
+              echo "npx prisma migrate deploy && npx prisma generate"
+              echo '```'
+            fi
+            echo ""
+            echo "Run these once in the cPanel Node app terminal, then restart the app."
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "::warning::Backend deploy needs a manual DB/deps step — see the job summary."
+
+      - name: No database action needed
+        if: steps.changes.outputs.db != 'true' && steps.changes.outputs.deps != 'true'
+        run: echo "✅ Code-only deploy — no database or dependency changes, nothing to run on the server."
