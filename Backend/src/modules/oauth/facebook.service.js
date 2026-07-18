@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import axios from 'axios';
 import { env } from '../../config/env.js';
 import { prisma } from '../../lib/prisma.js';
@@ -44,10 +45,9 @@ export function buildAuthUrl(state) {
   return `${FB_AUTH_URL}?${params.toString()}`;
 }
 
-export async function exchangeCodeAndSync(userId, code) {
+// --- step 1: code → long-lived token ---
+export async function exchangeCode(code) {
   ensureConfigured();
-
-  // 1. code → short-lived user token
   const tokenRes = await axios.get(`${FB_GRAPH}/oauth/access_token`, {
     params: {
       client_id: env.META_APP_ID,
@@ -58,7 +58,6 @@ export async function exchangeCodeAndSync(userId, code) {
   });
   const shortToken = tokenRes.data.access_token;
 
-  // 2. short → long-lived (~60 days)
   const llRes = await axios.get(`${FB_GRAPH}/oauth/access_token`, {
     params: {
       grant_type: 'fb_exchange_token',
@@ -67,26 +66,34 @@ export async function exchangeCodeAndSync(userId, code) {
       fb_exchange_token: shortToken,
     },
   });
-  const longToken = llRes.data.access_token;
-  const expiresIn = llRes.data.expires_in ?? 60 * 24 * 3600;
+  return {
+    longToken: llRes.data.access_token,
+    expiresIn: llRes.data.expires_in ?? 60 * 24 * 3600,
+  };
+}
 
-  // 3. user's FB pages — find one linked to an IG Business/Creator account
+// --- step 2: list Instagram Business accounts linked to the user's Pages ---
+export async function listCandidates(longToken) {
   const pagesRes = await axios.get(`${FB_GRAPH}/me/accounts`, {
     params: {
       access_token: longToken,
-      fields: 'id,name,instagram_business_account',
+      fields: 'name,instagram_business_account{id,username,followers_count,profile_picture_url}',
     },
   });
   const pages = pagesRes.data?.data ?? [];
-  const pageWithIG = pages.find((p) => p.instagram_business_account?.id);
-  if (!pageWithIG) {
-    throw ApiError.badRequest(
-      'No Instagram Business/Creator account is linked to your Facebook Pages',
-    );
-  }
-  const igUserId = pageWithIG.instagram_business_account.id;
+  return pages
+    .filter((p) => p.instagram_business_account?.id)
+    .map((p) => ({
+      igUserId: p.instagram_business_account.id,
+      username: p.instagram_business_account.username ?? '',
+      followers: p.instagram_business_account.followers_count ?? 0,
+      avatarUrl: p.instagram_business_account.profile_picture_url ?? null,
+      pageName: p.name ?? '',
+    }));
+}
 
-  // 4. IG profile
+// --- step 3: sync a chosen Instagram account into the creator's profile ---
+export async function syncInstagram(userId, longToken, igUserId, expiresIn = 60 * 24 * 3600) {
   const profileRes = await axios.get(`${FB_GRAPH}/${igUserId}`, {
     params: {
       fields: 'username,followers_count,follows_count,media_count,profile_picture_url',
@@ -95,13 +102,8 @@ export async function exchangeCodeAndSync(userId, code) {
   });
   const ig = profileRes.data;
 
-  // 5. Recent media → engagement
   const mediaRes = await axios.get(`${FB_GRAPH}/${igUserId}/media`, {
-    params: {
-      fields: 'like_count,comments_count',
-      limit: 12,
-      access_token: longToken,
-    },
+    params: { fields: 'like_count,comments_count', limit: 12, access_token: longToken },
   });
   const media = mediaRes.data?.data ?? [];
   const avgLikes = media.length
@@ -114,13 +116,12 @@ export async function exchangeCodeAndSync(userId, code) {
     ? ((avgLikes + avgComments) / ig.followers_count) * 100
     : 0;
 
-  // 6. Persist
   const profile = await prisma.influencerProfile.findUnique({ where: { userId } });
   if (!profile) throw ApiError.notFound('Influencer profile not found');
 
   const data = {
     handle: ig.username,
-    externalId: igUserId,
+    externalId: String(igUserId),
     profileUrl: `https://instagram.com/${ig.username}`,
     followers: ig.followers_count ?? 0,
     following: ig.follows_count ?? 0,
@@ -142,4 +143,32 @@ export async function exchangeCodeAndSync(userId, code) {
 
   await recomputeTier(profile.id);
   return account;
+}
+
+// --- pending selections (creator has 2+ IG accounts to pick from) ---
+// In-memory, short-lived. The selection completes within seconds of the OAuth
+// redirect, so a process-local store with a TTL is sufficient.
+const pendingSelections = new Map();
+const SELECTION_TTL_MS = 10 * 60 * 1000;
+
+export function putSelection(userId, longToken, expiresIn, candidates) {
+  const id = crypto.randomBytes(16).toString('hex');
+  pendingSelections.set(id, {
+    userId,
+    longToken,
+    expiresIn,
+    candidates,
+    expiresAt: Date.now() + SELECTION_TTL_MS,
+  });
+  return id;
+}
+
+export function getSelection(id, userId) {
+  const s = pendingSelections.get(id);
+  if (!s || s.expiresAt < Date.now() || s.userId !== userId) return null;
+  return s;
+}
+
+export function clearSelection(id) {
+  pendingSelections.delete(id);
 }

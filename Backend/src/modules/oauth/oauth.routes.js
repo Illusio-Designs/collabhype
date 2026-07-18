@@ -31,6 +31,21 @@ router.get(
   asyncHandler(controller.startFacebook),
 );
 
+// Instagram account picker (creator has 2+ linked accounts). Authenticated —
+// called by the app after the Facebook callback redirects with ?select=…
+router.get(
+  '/facebook/candidates',
+  requireAuth,
+  requireRole('INFLUENCER'),
+  asyncHandler(controller.facebookCandidates),
+);
+router.post(
+  '/facebook/select',
+  requireAuth,
+  requireRole('INFLUENCER'),
+  asyncHandler(controller.facebookSelect),
+);
+
 // Callback: hit by Meta/Google/TikTok — auth is carried in the signed `state` JWT
 router.get('/instagram/callback', asyncHandler(controller.callbackInstagram));
 router.get('/youtube/callback', asyncHandler(controller.callbackYoutube));

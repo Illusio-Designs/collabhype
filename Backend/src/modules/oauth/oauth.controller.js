@@ -22,6 +22,22 @@ function verifyState(state, expectedProvider) {
   return payload.sub;
 }
 
+// Short-lived token handed to the frontend when a creator has 2+ Instagram
+// accounts to choose from. Carries the selection id + user id.
+function signSelection(selectionId, userId) {
+  return jwt.sign({ sel: selectionId, sub: userId, kind: 'oauth-select' }, env.JWT_SECRET, {
+    expiresIn: '10m',
+  });
+}
+
+function verifySelection(token, userId) {
+  const payload = jwt.verify(token, env.JWT_SECRET);
+  if (payload.kind !== 'oauth-select' || payload.sub !== userId) {
+    throw ApiError.badRequest('Invalid selection token');
+  }
+  return payload.sel;
+}
+
 function buildSocialsUrl(params) {
   const url = new URL('/dashboard/socials', env.FRONTEND_BASE_URL);
   Object.entries(params).forEach(([k, v]) => {
@@ -92,17 +108,76 @@ export async function callbackFacebook(req, res) {
   }
   try {
     const userId = verifyState(String(state), 'facebook');
-    const account = await facebook.exchangeCodeAndSync(userId, String(code));
-    return res.redirect(
-      buildSocialsUrl({
-        platform: 'instagram',
-        handle: account.handle,
-        followers: account.followers,
-      }),
-    );
+    const { longToken, expiresIn } = await facebook.exchangeCode(String(code));
+    const candidates = await facebook.listCandidates(longToken);
+
+    if (candidates.length === 0) {
+      return res.redirect(
+        buildSocialsUrl({
+          error: 'No Instagram Business/Creator account is linked to your Facebook Pages.',
+        }),
+      );
+    }
+
+    // Single account → connect it straight away.
+    if (candidates.length === 1) {
+      const account = await facebook.syncInstagram(
+        userId,
+        longToken,
+        candidates[0].igUserId,
+        expiresIn,
+      );
+      return res.redirect(
+        buildSocialsUrl({
+          platform: 'instagram',
+          handle: account.handle,
+          followers: account.followers,
+        }),
+      );
+    }
+
+    // Multiple accounts → let the creator pick on the socials page.
+    const selectionId = facebook.putSelection(userId, longToken, expiresIn, candidates);
+    return res.redirect(buildSocialsUrl({ select: signSelection(selectionId, userId) }));
   } catch (err) {
     return res.redirect(buildSocialsUrl({ error: providerError(err, 'Facebook') }));
   }
+}
+
+// Return the pending Instagram accounts for the creator to choose from.
+export async function facebookCandidates(req, res) {
+  if (!req.user) throw ApiError.unauthorized();
+  const selectionId = verifySelection(String(req.query.token || ''), req.user.sub);
+  const selection = facebook.getSelection(selectionId, req.user.sub);
+  if (!selection) throw ApiError.badRequest('Selection expired — please reconnect.');
+  const candidates = selection.candidates.map(({ igUserId, username, followers, avatarUrl, pageName }) => ({
+    igUserId,
+    username,
+    followers,
+    avatarUrl,
+    pageName,
+  }));
+  res.json({ candidates });
+}
+
+// Finalize the connection with the account the creator picked.
+export async function facebookSelect(req, res) {
+  if (!req.user) throw ApiError.unauthorized();
+  const { token, igUserId } = req.body ?? {};
+  const selectionId = verifySelection(String(token || ''), req.user.sub);
+  const selection = facebook.getSelection(selectionId, req.user.sub);
+  if (!selection) throw ApiError.badRequest('Selection expired — please reconnect.');
+  const chosen = selection.candidates.find((c) => c.igUserId === String(igUserId));
+  if (!chosen) throw ApiError.badRequest('That account is no longer available to select.');
+
+  const account = await facebook.syncInstagram(
+    req.user.sub,
+    selection.longToken,
+    chosen.igUserId,
+    selection.expiresIn,
+  );
+  facebook.clearSelection(selectionId);
+  res.json({ account: { handle: account.handle, followers: account.followers } });
 }
 
 export async function startYoutube(req, res) {
