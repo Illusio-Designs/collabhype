@@ -16,6 +16,10 @@ export const registerSchema = z.object({
     fullName: z.string().min(2),
     phone: phoneSchema,
     role: z.enum(['BRAND', 'INFLUENCER']),
+    // Privacy Policy / Terms consent — required to create an account.
+    acceptPrivacy: z
+      .boolean()
+      .refine((v) => v === true, 'You must accept the Privacy Policy to continue'),
     // optional profile bootstrap
     companyName: z.string().optional(), // brand
     city: z.string().optional(),        // influencer

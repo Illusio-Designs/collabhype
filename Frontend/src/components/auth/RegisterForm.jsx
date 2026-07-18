@@ -18,6 +18,9 @@ const schema = z
     phone: z.string().optional(),
     companyName: z.string().optional(),
     city: z.string().optional(),
+    acceptPrivacy: z.literal(true, {
+      errorMap: () => ({ message: 'Please accept the Privacy Policy to continue' }),
+    }),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: 'Passwords do not match',
@@ -136,6 +139,40 @@ export default function RegisterForm({ role }) {
               {...register('confirmPassword')}
             />
           </FormField>
+
+          <div>
+            <label className="flex cursor-pointer items-start gap-2.5">
+              <input
+                type="checkbox"
+                {...register('acceptPrivacy')}
+                className="mt-0.5 h-5 w-5 flex-shrink-0 cursor-pointer rounded-md border-zinc-300 text-brand-700 focus:ring-brand-500"
+              />
+              <span className="text-sm text-zinc-600">
+                I agree to the{' '}
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-semibold text-brand-700 hover:underline"
+                >
+                  Privacy Policy
+                </Link>{' '}
+                and{' '}
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-semibold text-brand-700 hover:underline"
+                >
+                  Terms
+                </Link>
+                .
+              </span>
+            </label>
+            {errors.acceptPrivacy && (
+              <p className="mt-1 text-xs text-red-600">{errors.acceptPrivacy.message}</p>
+            )}
+          </div>
 
           {serverError && <Alert variant="danger">{serverError}</Alert>}
 

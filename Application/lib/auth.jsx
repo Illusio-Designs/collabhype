@@ -110,6 +110,9 @@ export function AuthProvider({ children }) {
         email: email.trim().toLowerCase(),
         password,
         role,
+        // The register screen shows the Terms/Privacy consent notice, so
+        // continuing records acceptance.
+        acceptPrivacy: true,
         ...(role === 'BRAND' ? { companyName: fullName.trim() } : {}),
       });
       await persist(data.token, data.user);
