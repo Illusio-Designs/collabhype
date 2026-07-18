@@ -116,13 +116,25 @@ function SocialsInner() {
       />
 
       <div className="mt-8 space-y-4">
-        <InstagramCard
+        <ConnectCard
+          brand="instagram"
+          title="Instagram"
+          desc="Connect your Instagram Business or Creator account directly — no Facebook Page needed."
           account={byPlatform('INSTAGRAM')}
-          onConnectInstagram={() => connect('instagram')}
-          onConnectFacebook={() => connect('facebook')}
+          onConnect={() => connect('instagram')}
           onDisconnect={() => disconnect('INSTAGRAM')}
           busy={busy}
         />
+        {!byPlatform('INSTAGRAM') && (
+          <ConnectCard
+            brand="facebook"
+            title="Facebook"
+            desc="Prefer Facebook? Connect your Instagram through a linked Facebook Page."
+            account={null}
+            onConnect={() => connect('facebook')}
+            busy={busy}
+          />
+        )}
       </div>
 
       <Alert variant="info" title="Privacy" className="mt-8">
@@ -152,17 +164,38 @@ function FacebookIcon({ className }) {
   );
 }
 
-function InstagramCard({ account, onConnectInstagram, onConnectFacebook, onDisconnect, busy }) {
+const BRANDS = {
+  instagram: {
+    Icon: InstagramIcon,
+    iconBox: 'bg-gradient-to-br from-[#f09433] via-[#dc2743] to-[#bc1888]',
+    button:
+      'bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] hover:opacity-95',
+    key: 'instagram',
+    cta: 'Connect with Instagram',
+  },
+  facebook: {
+    Icon: FacebookIcon,
+    iconBox: 'bg-[#1877F2]',
+    button: 'bg-[#1877F2] hover:bg-[#1466d6]',
+    key: 'facebook',
+    cta: 'Connect with Facebook',
+  },
+};
+
+function ConnectCard({ brand, title, desc, account, onConnect, onDisconnect, busy }) {
+  const b = BRANDS[brand];
   const connected = !!account;
   return (
     <Card padding="lg">
       <div className="flex flex-wrap items-start gap-4">
-        <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#f09433] via-[#dc2743] to-[#bc1888] text-white shadow-md">
-          <InstagramIcon className="h-6 w-6" />
+        <div
+          className={`grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl text-white shadow-md ${b.iconBox}`}
+        >
+          <b.Icon className="h-6 w-6" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold text-zinc-900">Instagram</h3>
+            <h3 className="text-lg font-semibold text-zinc-900">{title}</h3>
             {connected ? (
               <Badge variant="success" dot>
                 Connected
@@ -189,39 +222,30 @@ function InstagramCard({ account, onConnectInstagram, onConnectFacebook, onDisco
               </div>
             </div>
           ) : (
-            <p className="mt-1 text-sm text-zinc-600">
-              Connect with Instagram directly, or via Facebook if your account is linked to a Page.
-              Business or Creator account required.
-            </p>
+            <p className="mt-1 text-sm text-zinc-600">{desc}</p>
           )}
         </div>
 
-        <div className="flex w-full flex-shrink-0 flex-col gap-2 sm:w-auto">
+        <div className="flex w-full flex-shrink-0 sm:w-auto">
           {connected ? (
-            <Button variant="outline" onClick={onDisconnect} loading={busy === 'INSTAGRAM'} fullWidth>
+            <Button
+              variant="outline"
+              onClick={onDisconnect}
+              loading={busy === 'INSTAGRAM'}
+              fullWidth
+            >
               Disconnect
             </Button>
           ) : (
-            <>
-              <button
-                type="button"
-                onClick={onConnectInstagram}
-                disabled={!!busy}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:opacity-60"
-              >
-                <InstagramIcon className="h-4 w-4" />
-                {busy === 'instagram' ? 'Connecting…' : 'Instagram'}
-              </button>
-              <button
-                type="button"
-                onClick={onConnectFacebook}
-                disabled={!!busy}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1877F2] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1466d6] disabled:opacity-60"
-              >
-                <FacebookIcon className="h-4 w-4" />
-                {busy === 'facebook' ? 'Connecting…' : 'Facebook'}
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={onConnect}
+              disabled={!!busy}
+              className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition disabled:opacity-60 sm:w-auto ${b.button}`}
+            >
+              <b.Icon className="h-4 w-4" />
+              {busy === b.key ? 'Connecting…' : b.cta}
+            </button>
           )}
         </div>
       </div>
