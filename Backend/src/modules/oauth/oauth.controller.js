@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env.js';
 import * as instagram from './instagram.service.js';
+import * as facebook from './facebook.service.js';
 import * as youtube from './youtube.service.js';
 import * as tiktok from './tiktok.service.js';
 import { ApiError } from '../../utils/ApiError.js';
@@ -70,6 +71,37 @@ export async function callbackInstagram(req, res) {
     );
   } catch (err) {
     return res.redirect(buildSocialsUrl({ error: providerError(err, 'Instagram') }));
+  }
+}
+
+// Facebook Login → connect Instagram via the linked Facebook Page. Saves an
+// INSTAGRAM social account, same as the direct-Instagram flow.
+export async function startFacebook(req, res) {
+  if (!req.user) throw ApiError.unauthorized();
+  const state = signState(req.user.sub, 'facebook');
+  res.json({ authUrl: facebook.buildAuthUrl(state) });
+}
+
+export async function callbackFacebook(req, res) {
+  const { code, state, error, error_description } = req.query;
+  if (error) {
+    return res.redirect(buildSocialsUrl({ error: error_description || error }));
+  }
+  if (!code || !state) {
+    return res.redirect(buildSocialsUrl({ error: 'Missing code or state' }));
+  }
+  try {
+    const userId = verifyState(String(state), 'facebook');
+    const account = await facebook.exchangeCodeAndSync(userId, String(code));
+    return res.redirect(
+      buildSocialsUrl({
+        platform: 'instagram',
+        handle: account.handle,
+        followers: account.followers,
+      }),
+    );
+  } catch (err) {
+    return res.redirect(buildSocialsUrl({ error: providerError(err, 'Facebook') }));
   }
 }
 

@@ -116,15 +116,12 @@ function SocialsInner() {
       />
 
       <div className="mt-8 space-y-4">
-        <PlatformCard
-          platform="instagram"
-          name="Instagram"
-          desc="Requires a Business or Creator account linked to a Facebook Page."
-          gradient="from-accent-500 via-brand-500 to-brand-800"
+        <InstagramCard
           account={byPlatform('INSTAGRAM')}
-          onConnect={() => connect('instagram')}
+          onConnectInstagram={() => connect('instagram')}
+          onConnectFacebook={() => connect('facebook')}
           onDisconnect={() => disconnect('INSTAGRAM')}
-          busy={busy === 'instagram' || busy === 'INSTAGRAM'}
+          busy={busy}
         />
       </div>
 
@@ -136,22 +133,37 @@ function SocialsInner() {
   );
 }
 
-function PlatformCard({ name, desc, gradient, account, onConnect, onDisconnect, busy, disabled }) {
+// Official-style brand marks (inline SVG — CSP-safe, no external favicons).
+function InstagramIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="12" cy="12" r="4.2" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="17.3" cy="6.7" r="1.25" fill="currentColor" />
+    </svg>
+  );
+}
+
+function FacebookIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.14 8.44 9.94v-7.03H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.9 3.78-3.9 1.1 0 2.24.2 2.24.2v2.46H15.2c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.44 2.9h-2.34V22C18.34 21.2 22 17.06 22 12.06Z" />
+    </svg>
+  );
+}
+
+function InstagramCard({ account, onConnectInstagram, onConnectFacebook, onDisconnect, busy }) {
   const connected = !!account;
   return (
     <Card padding="lg">
       <div className="flex flex-wrap items-start gap-4">
-        <div
-          className={`grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl bg-gradient-to-br ${gradient} text-white shadow-md`}
-        >
-          {name[0]}
+        <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#f09433] via-[#dc2743] to-[#bc1888] text-white shadow-md">
+          <InstagramIcon className="h-6 w-6" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold text-zinc-900">{name}</h3>
-            {disabled ? (
-              <Badge variant="warning">Coming soon</Badge>
-            ) : connected ? (
+            <h3 className="text-lg font-semibold text-zinc-900">Instagram</h3>
+            {connected ? (
               <Badge variant="success" dot>
                 Connected
               </Badge>
@@ -177,22 +189,39 @@ function PlatformCard({ name, desc, gradient, account, onConnect, onDisconnect, 
               </div>
             </div>
           ) : (
-            <p className="mt-1 text-sm text-zinc-600">{desc}</p>
+            <p className="mt-1 text-sm text-zinc-600">
+              Connect with Instagram directly, or via Facebook if your account is linked to a Page.
+              Business or Creator account required.
+            </p>
           )}
         </div>
-        <div className="flex w-full flex-shrink-0 gap-2 sm:w-auto">
-          {disabled ? (
-            <Button variant="outline" disabled fullWidth>
-              Coming soon
-            </Button>
-          ) : connected ? (
-            <Button variant="outline" onClick={onDisconnect} loading={busy} fullWidth>
+
+        <div className="flex w-full flex-shrink-0 flex-col gap-2 sm:w-auto">
+          {connected ? (
+            <Button variant="outline" onClick={onDisconnect} loading={busy === 'INSTAGRAM'} fullWidth>
               Disconnect
             </Button>
           ) : (
-            <Button onClick={onConnect} loading={busy} fullWidth>
-              Connect
-            </Button>
+            <>
+              <button
+                type="button"
+                onClick={onConnectInstagram}
+                disabled={!!busy}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:opacity-60"
+              >
+                <InstagramIcon className="h-4 w-4" />
+                {busy === 'instagram' ? 'Connecting…' : 'Instagram'}
+              </button>
+              <button
+                type="button"
+                onClick={onConnectFacebook}
+                disabled={!!busy}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1877F2] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1466d6] disabled:opacity-60"
+              >
+                <FacebookIcon className="h-4 w-4" />
+                {busy === 'facebook' ? 'Connecting…' : 'Facebook'}
+              </button>
+            </>
           )}
         </div>
       </div>
