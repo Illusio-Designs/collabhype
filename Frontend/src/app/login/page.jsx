@@ -19,6 +19,7 @@ function LoginForm() {
   const router = useRouter();
   const sp = useSearchParams();
   const next = sp.get('next') || '/dashboard';
+  const justRegistered = sp.get('registered') === '1';
   const { login } = useAuth();
   const [serverError, setServerError] = useState(null);
   const {
@@ -43,6 +44,11 @@ function LoginForm() {
       <p className="mt-2 text-zinc-600">Welcome back to Collabhype.</p>
 
       <Card padding="lg" className="mt-8">
+        {justRegistered && (
+          <Alert variant="success" className="mb-4">
+            Account created — please sign in.
+          </Alert>
+        )}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FormField label="Email" error={errors.email?.message} required>
             <Input

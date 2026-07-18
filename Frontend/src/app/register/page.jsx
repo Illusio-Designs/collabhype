@@ -7,18 +7,23 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import clsx from 'clsx';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { apiError } from '@/lib/apiClient';
+import { apiClient, apiError } from '@/lib/apiClient';
 import { Alert, Button, Card, FormField, Input, PasswordInput, PhoneInput, Spinner } from '@/components/ui';
 
-const schema = z.object({
-  fullName: z.string().min(2, 'At least 2 characters'),
-  email: z.string().email('Enter a valid email'),
-  password: z.string().min(8, 'At least 8 characters'),
-  phone: z.string().optional(),
-  companyName: z.string().optional(),
-  city: z.string().optional(),
-});
+const schema = z
+  .object({
+    fullName: z.string().min(2, 'At least 2 characters'),
+    email: z.string().email('Enter a valid email'),
+    password: z.string().min(8, 'At least 8 characters'),
+    confirmPassword: z.string().min(1, 'Please re-type your password'),
+    phone: z.string().optional(),
+    companyName: z.string().optional(),
+    city: z.string().optional(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 function RegisterForm() {
   const router = useRouter();
@@ -26,7 +31,6 @@ function RegisterForm() {
   const initialRole = sp.get('role')?.toUpperCase() === 'INFLUENCER' ? 'INFLUENCER' : 'BRAND';
   const [role, setRole] = useState(initialRole);
   const [serverError, setServerError] = useState(null);
-  const { register: authRegister } = useAuth();
   const {
     register,
     handleSubmit,
@@ -37,12 +41,14 @@ function RegisterForm() {
   async function onSubmit(values) {
     setServerError(null);
     const payload = { ...values, role };
+    delete payload.confirmPassword;
     if (!payload.phone) delete payload.phone;
     if (role !== 'BRAND' || !payload.companyName) delete payload.companyName;
     if (role !== 'INFLUENCER' || !payload.city) delete payload.city;
     try {
-      await authRegister(payload);
-      router.push('/dashboard');
+      // Create the account, then send the user to sign in (no auto-login).
+      await apiClient.post('/api/v1/auth/register', payload);
+      router.push('/login?registered=1');
     } catch (err) {
       setServerError(apiError(err));
     }
@@ -129,6 +135,18 @@ function RegisterForm() {
               autoComplete="new-password"
               error={!!errors.password}
               {...register('password')}
+            />
+          </FormField>
+
+          <FormField
+            label="Re-type password"
+            error={errors.confirmPassword?.message}
+            required
+          >
+            <PasswordInput
+              autoComplete="new-password"
+              error={!!errors.confirmPassword}
+              {...register('confirmPassword')}
             />
           </FormField>
 
