@@ -5,17 +5,18 @@ import { encrypt } from '../../utils/crypto.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { recomputeTier } from '../influencer/influencer.service.js';
 
-// Instagram API with Instagram Login (Business/Creator accounts, no Facebook
-// Page required). Docs: https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login
-const IG_AUTH_URL = 'https://www.instagram.com/oauth/authorize';
-const IG_TOKEN_URL = 'https://api.instagram.com/oauth/access_token';
-const IG_GRAPH = 'https://graph.instagram.com';
+const FB_AUTH_URL = 'https://www.facebook.com/v21.0/dialog/oauth';
+const FB_GRAPH = 'https://graph.facebook.com/v21.0';
 
-// Business scopes: basic profile (username, followers, media) + insights.
-const REQUIRED_SCOPES = ['instagram_business_basic', 'instagram_business_manage_insights'];
+const REQUIRED_SCOPES = [
+  'instagram_basic',
+  'pages_show_list',
+  'business_management',
+  'instagram_manage_insights',
+];
 
 function ensureConfigured() {
-  if (!env.INSTAGRAM_APP_ID || !env.INSTAGRAM_APP_SECRET || !env.INSTAGRAM_REDIRECT_URI) {
+  if (!env.META_APP_ID || !env.META_APP_SECRET || !env.META_REDIRECT_URI) {
     throw ApiError.badRequest('Instagram OAuth is not configured on the server');
   }
 }
@@ -23,83 +24,94 @@ function ensureConfigured() {
 export function buildAuthUrl(state) {
   ensureConfigured();
   const params = new URLSearchParams({
-    client_id: env.INSTAGRAM_APP_ID,
-    redirect_uri: env.INSTAGRAM_REDIRECT_URI,
-    response_type: 'code',
+    client_id: env.META_APP_ID,
+    redirect_uri: env.META_REDIRECT_URI,
     scope: REQUIRED_SCOPES.join(','),
+    response_type: 'code',
     state,
   });
-  return `${IG_AUTH_URL}?${params.toString()}`;
+  return `${FB_AUTH_URL}?${params.toString()}`;
 }
 
 export async function exchangeCodeAndSync(userId, code) {
   ensureConfigured();
 
-  // 1. code → short-lived token (form-encoded). Returns { access_token, user_id }.
-  const tokenRes = await axios.post(
-    IG_TOKEN_URL,
-    new URLSearchParams({
-      client_id: env.INSTAGRAM_APP_ID,
-      client_secret: env.INSTAGRAM_APP_SECRET,
-      grant_type: 'authorization_code',
-      redirect_uri: env.INSTAGRAM_REDIRECT_URI,
-      code,
-    }).toString(),
-    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
-  );
-  // Some API versions nest the result under `data: [ ... ]`.
-  const tokenData = Array.isArray(tokenRes.data?.data) ? tokenRes.data.data[0] : tokenRes.data;
-  const shortToken = tokenData?.access_token;
-  if (!shortToken) throw ApiError.badRequest('Instagram token exchange failed');
-
-  // 2. short → long-lived (~60 days)
-  const llRes = await axios.get(`${IG_GRAPH}/access_token`, {
+  // 1. code → short-lived user token
+  const tokenRes = await axios.get(`${FB_GRAPH}/oauth/access_token`, {
     params: {
-      grant_type: 'ig_exchange_token',
-      client_secret: env.INSTAGRAM_APP_SECRET,
-      access_token: shortToken,
+      client_id: env.META_APP_ID,
+      client_secret: env.META_APP_SECRET,
+      redirect_uri: env.META_REDIRECT_URI,
+      code,
     },
   });
-  const longToken = llRes.data?.access_token ?? shortToken;
-  const expiresIn = llRes.data?.expires_in ?? 60 * 24 * 3600;
+  const shortToken = tokenRes.data.access_token;
 
-  // 3. Profile — followers/follows/media come with instagram_business_basic.
-  const meRes = await axios.get(`${IG_GRAPH}/me`, {
+  // 2. short → long-lived (~60 days)
+  const llRes = await axios.get(`${FB_GRAPH}/oauth/access_token`, {
     params: {
-      fields: 'user_id,username,account_type,followers_count,follows_count,media_count',
+      grant_type: 'fb_exchange_token',
+      client_id: env.META_APP_ID,
+      client_secret: env.META_APP_SECRET,
+      fb_exchange_token: shortToken,
+    },
+  });
+  const longToken = llRes.data.access_token;
+  const expiresIn = llRes.data.expires_in ?? 60 * 24 * 3600;
+
+  // 3. user's FB pages — find one linked to an IG Business/Creator account
+  const pagesRes = await axios.get(`${FB_GRAPH}/me/accounts`, {
+    params: {
+      access_token: longToken,
+      fields: 'id,name,instagram_business_account',
+    },
+  });
+  const pages = pagesRes.data?.data ?? [];
+  const pageWithIG = pages.find((p) => p.instagram_business_account?.id);
+  if (!pageWithIG) {
+    throw ApiError.badRequest(
+      'No Instagram Business/Creator account is linked to your Facebook Pages',
+    );
+  }
+  const igUserId = pageWithIG.instagram_business_account.id;
+
+  // 4. IG profile
+  const profileRes = await axios.get(`${FB_GRAPH}/${igUserId}`, {
+    params: {
+      fields: 'username,followers_count,follows_count,media_count,profile_picture_url',
       access_token: longToken,
     },
   });
-  const ig = meRes.data;
-  if (!ig?.username) throw ApiError.badRequest('Could not read Instagram profile');
+  const ig = profileRes.data;
 
-  // 4. Recent media → engagement
-  let avgLikes = 0;
-  let avgComments = 0;
-  try {
-    const mediaRes = await axios.get(`${IG_GRAPH}/me/media`, {
-      params: { fields: 'like_count,comments_count', limit: 12, access_token: longToken },
-    });
-    const media = mediaRes.data?.data ?? [];
-    if (media.length) {
-      avgLikes = Math.round(media.reduce((s, m) => s + (m.like_count || 0), 0) / media.length);
-      avgComments = Math.round(media.reduce((s, m) => s + (m.comments_count || 0), 0) / media.length);
-    }
-  } catch {
-    // Media insights are best-effort; keep the connection even if this fails.
-  }
-  const followers = ig.followers_count ?? 0;
-  const engagementRate = followers ? ((avgLikes + avgComments) / followers) * 100 : 0;
+  // 5. Recent media → engagement
+  const mediaRes = await axios.get(`${FB_GRAPH}/${igUserId}/media`, {
+    params: {
+      fields: 'like_count,comments_count',
+      limit: 12,
+      access_token: longToken,
+    },
+  });
+  const media = mediaRes.data?.data ?? [];
+  const avgLikes = media.length
+    ? Math.round(media.reduce((s, m) => s + (m.like_count || 0), 0) / media.length)
+    : 0;
+  const avgComments = media.length
+    ? Math.round(media.reduce((s, m) => s + (m.comments_count || 0), 0) / media.length)
+    : 0;
+  const engagementRate = ig.followers_count
+    ? ((avgLikes + avgComments) / ig.followers_count) * 100
+    : 0;
 
-  // 5. Persist
+  // 6. Persist
   const profile = await prisma.influencerProfile.findUnique({ where: { userId } });
   if (!profile) throw ApiError.notFound('Influencer profile not found');
 
   const data = {
     handle: ig.username,
-    externalId: String(ig.user_id ?? ig.id ?? ''),
+    externalId: igUserId,
     profileUrl: `https://instagram.com/${ig.username}`,
-    followers,
+    followers: ig.followers_count ?? 0,
     following: ig.follows_count ?? 0,
     posts: ig.media_count ?? 0,
     avgLikes,
