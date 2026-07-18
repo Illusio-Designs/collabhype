@@ -1,6 +1,21 @@
 import { prisma } from '../../lib/prisma.js';
 import { ApiError } from '../../utils/ApiError.js';
-import { computeTier } from '../../utils/tier.js';
+import { computeTier, DEFAULT_TIER_THRESHOLDS } from '../../utils/tier.js';
+import { platformSettings } from '../../services/platformSettings.js';
+
+// Read the admin-configurable tier boundaries, falling back to defaults.
+export async function getTierThresholds() {
+  const [nanoMax, microMax, macroMax] = await Promise.all([
+    platformSettings.getSetting('tier_nano_max'),
+    platformSettings.getSetting('tier_micro_max'),
+    platformSettings.getSetting('tier_macro_max'),
+  ]);
+  return {
+    nanoMax: Number(nanoMax) || DEFAULT_TIER_THRESHOLDS.nanoMax,
+    microMax: Number(microMax) || DEFAULT_TIER_THRESHOLDS.microMax,
+    macroMax: Number(macroMax) || DEFAULT_TIER_THRESHOLDS.macroMax,
+  };
+}
 
 export async function getMyProfile(userId) {
   const profile = await prisma.influencerProfile.findUnique({
@@ -203,10 +218,11 @@ export async function browseInfluencers(params) {
 
 // Recompute totalFollowers, tier, and avg engagement from connected socials.
 // Called after any OAuth sync or disconnect.
-export async function recomputeTier(influencerId) {
+export async function recomputeTier(influencerId, thresholds) {
+  const t = thresholds ?? (await getTierThresholds());
   const accounts = await prisma.socialAccount.findMany({ where: { influencerId } });
   const totalFollowers = accounts.reduce((sum, a) => sum + a.followers, 0);
-  const tier = computeTier(totalFollowers);
+  const tier = computeTier(totalFollowers, t);
   const avgEngagementRate = accounts.length
     ? accounts.reduce((s, a) => s + a.engagementRate, 0) / accounts.length
     : 0;
@@ -214,4 +230,15 @@ export async function recomputeTier(influencerId) {
     where: { id: influencerId },
     data: { totalFollowers, tier, avgEngagementRate },
   });
+}
+
+// Re-tier every creator using the current thresholds. Run after an admin
+// changes the tier boundaries so existing profiles reflect the new cutoffs.
+export async function recomputeAllTiers() {
+  const t = await getTierThresholds();
+  const profiles = await prisma.influencerProfile.findMany({ select: { id: true } });
+  for (const p of profiles) {
+    await recomputeTier(p.id, t);
+  }
+  return { recomputed: profiles.length, thresholds: t };
 }

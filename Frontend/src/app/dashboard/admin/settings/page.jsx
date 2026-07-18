@@ -93,6 +93,14 @@ export default function AdminSettingsPage() {
         action={<Button onClick={() => setEditing('new')}>+ New setting</Button>}
       />
 
+      <TierThresholdsCard
+        settings={Object.fromEntries(entries.map((e) => [e.key, e.value]))}
+        onSaved={() => {
+          invalidate(SETTINGS_URL);
+          load({ force: true });
+        }}
+      />
+
       <Card padding="none" className="overflow-hidden">
         <ScrollTable hintLabel="Scroll">
           <table className="min-w-full">
@@ -150,6 +158,109 @@ export default function AdminSettingsPage() {
         }}
       />
     </div>
+  );
+}
+
+// Dedicated editor for the creator tier boundaries (stored as number settings).
+// Nano = followers below the Nano cutoff; that's the pool auto-assigned to
+// packages and hidden from hand-pick browse.
+const TIER_DEFAULTS = { tier_nano_max: 1000, tier_micro_max: 100000, tier_macro_max: 1000000 };
+
+function TierThresholdsCard({ settings, onSaved }) {
+  const toast = useToast();
+  const [form, setForm] = useState(TIER_DEFAULTS);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setForm({
+      tier_nano_max: Number(settings.tier_nano_max ?? TIER_DEFAULTS.tier_nano_max),
+      tier_micro_max: Number(settings.tier_micro_max ?? TIER_DEFAULTS.tier_micro_max),
+      tier_macro_max: Number(settings.tier_macro_max ?? TIER_DEFAULTS.tier_macro_max),
+    });
+  }, [settings.tier_nano_max, settings.tier_micro_max, settings.tier_macro_max]);
+
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  async function save({ retier }) {
+    const nano = Number(form.tier_nano_max);
+    const micro = Number(form.tier_micro_max);
+    const macro = Number(form.tier_macro_max);
+    if (!(nano > 0 && micro > nano && macro > micro)) {
+      toast.push({
+        variant: 'danger',
+        title: 'Check the thresholds',
+        body: 'Each cutoff must be larger than the previous (Nano < Micro < Macro).',
+      });
+      return;
+    }
+    setSaving(true);
+    try {
+      await Promise.all(
+        Object.entries({ tier_nano_max: nano, tier_micro_max: micro, tier_macro_max: macro }).map(
+          ([key, value]) =>
+            apiClient.put(`${SETTINGS_URL}/${key}`, { value, type: 'number' }),
+        ),
+      );
+      if (retier) {
+        const { data } = await apiClient.post('/api/v1/admin/tiers/recompute');
+        toast.push({
+          variant: 'success',
+          title: 'Saved & re-tiered',
+          body: `${data.recomputed ?? 0} creators re-tiered.`,
+        });
+      } else {
+        toast.push({ variant: 'success', title: 'Tier thresholds saved' });
+      }
+      onSaved?.();
+    } catch (e) {
+      toast.push({ variant: 'danger', title: 'Save failed', body: apiError(e) });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card padding="lg">
+      <h2 className="text-lg font-semibold text-zinc-900">Creator tiers</h2>
+      <p className="mt-1 text-sm text-zinc-500">
+        Follower cutoffs that classify creators. Nano creators (below the Nano cutoff) are sold
+        only in packages and never appear in hand-pick browse.
+      </p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <FormField label="Nano below (followers)" hint="e.g. 1000 → Nano is < 1,000">
+          <Input
+            type="number"
+            min="1"
+            value={form.tier_nano_max}
+            onChange={(e) => set('tier_nano_max', e.target.value)}
+          />
+        </FormField>
+        <FormField label="Micro below" hint="Micro spans Nano cutoff → this">
+          <Input
+            type="number"
+            min="1"
+            value={form.tier_micro_max}
+            onChange={(e) => set('tier_micro_max', e.target.value)}
+          />
+        </FormField>
+        <FormField label="Macro below" hint="Mega is everything at/above this">
+          <Input
+            type="number"
+            min="1"
+            value={form.tier_macro_max}
+            onChange={(e) => set('tier_macro_max', e.target.value)}
+          />
+        </FormField>
+      </div>
+      <div className="mt-4 flex flex-wrap justify-end gap-2">
+        <Button variant="outline" onClick={() => save({ retier: false })} loading={saving}>
+          Save
+        </Button>
+        <Button onClick={() => save({ retier: true })} loading={saving}>
+          Save & re-tier all creators
+        </Button>
+      </div>
+    </Card>
   );
 }
 

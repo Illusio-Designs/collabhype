@@ -20,6 +20,9 @@ router.get('/users', asyncHandler(ctrl.listUsers));
 router.patch('/users/:id', asyncHandler(ctrl.updateUser));
 router.delete('/users/:id', asyncHandler(ctrl.deleteUser));
 
+// Re-tier all creators after changing the tier thresholds.
+router.post('/tiers/recompute', asyncHandler(ctrl.recomputeTiers));
+
 // Payouts (platform-wide)
 router.get('/payouts', asyncHandler(ctrl.listPayouts));
 router.patch('/payouts/:id', asyncHandler(ctrl.updatePayout));
