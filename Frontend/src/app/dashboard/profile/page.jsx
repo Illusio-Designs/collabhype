@@ -17,8 +17,8 @@ import {
   useToast,
 } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
-import NicheSelect from '@/components/NicheSelect';
-import { COUNTRIES, INDIAN_STATES, citiesForState } from '@/lib/geo';
+import MultiSelect from '@/components/MultiSelect';
+import { COUNTRIES, INDIAN_STATES, LANGUAGES, citiesForState } from '@/lib/geo';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -323,8 +323,14 @@ function InfluencerProfileForm() {
                 <Input value={form.city} onChange={(e) => set('city', e.target.value)} placeholder="City" />
               )}
             </FormField>
-            <FormField label="Languages" hint="Comma-separated, e.g. en, hi, ta">
-              <Input value={form.languages} onChange={(e) => set('languages', e.target.value)} />
+            <FormField label="Languages" hint="Pick all you create in." className="sm:col-span-2">
+              <MultiSelect
+                options={LANGUAGES}
+                value={form.languages ? form.languages.split(',').map((s) => s.trim()).filter(Boolean) : []}
+                onChange={(arr) => set('languages', arr.join(','))}
+                placeholder="Add a language…"
+                allSelectedLabel="All languages added"
+              />
             </FormField>
             <FormField label="Gender">
               <Select value={form.gender} onChange={(v) => set('gender', v)} options={GENDERS} />
@@ -371,10 +377,12 @@ function InfluencerProfileForm() {
           </Alert>
         ) : (
           <div className="mt-5">
-            <NicheSelect
-              options={niches}
+            <MultiSelect
+              options={niches.map((n) => ({ value: n.slug, label: n.name }))}
               value={[...selectedNiches]}
               onChange={(slugs) => setSelectedNiches(new Set(slugs))}
+              placeholder="Add a niche…"
+              allSelectedLabel="All niches added"
             />
           </div>
         )}

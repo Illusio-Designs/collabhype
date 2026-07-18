@@ -95,3 +95,35 @@ export const INDIAN_CITIES_BY_STATE = {
 export function citiesForState(state) {
   return (INDIAN_CITIES_BY_STATE[state] ?? []).map((c) => ({ value: c, label: c }));
 }
+
+// Languages — the 22 scheduled Indian languages plus common global ones.
+// Stored as a comma-separated string on the profile (e.g. "Hindi,English").
+export const LANGUAGES = [
+  'Assamese',
+  'Bengali',
+  'Bodo',
+  'Dogri',
+  'English',
+  'Gujarati',
+  'Hindi',
+  'Kannada',
+  'Kashmiri',
+  'Konkani',
+  'Maithili',
+  'Malayalam',
+  'Manipuri',
+  'Marathi',
+  'Nepali',
+  'Odia',
+  'Punjabi',
+  'Sanskrit',
+  'Santali',
+  'Sindhi',
+  'Tamil',
+  'Telugu',
+  'Urdu',
+  'Arabic',
+  'French',
+  'Mandarin',
+  'Spanish',
+].map((l) => ({ value: l, label: l }));
