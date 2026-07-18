@@ -140,7 +140,7 @@ export default function HowItWorksPage() {
                 ))}
               </ul>
               <Link
-                href="/register?role=brand"
+                href="/register/brand"
                 className="mt-7 inline-flex rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-brand-800 hover:bg-brand-50"
               >
                 Get started as a brand →
@@ -162,7 +162,7 @@ export default function HowItWorksPage() {
                 ))}
               </ul>
               <Link
-                href="/register?role=influencer"
+                href="/register/creator"
                 className="btn-primary mt-7 inline-flex !px-5 !py-2.5"
               >
                 Join as a creator →
