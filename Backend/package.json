@@ -13,6 +13,7 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "node prisma/seed.js",
     "prisma:seed:reference": "node prisma/seed.reference.js",
+    "seed:admin": "node prisma/seed-admin.js",
     "purge:accounts": "node prisma/purge-accounts.js"
   },
   "dependencies": {

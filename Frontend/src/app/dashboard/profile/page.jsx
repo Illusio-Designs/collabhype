@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { apiClient, apiError } from '@/lib/apiClient';
+import { apiClient, apiError, uploadImage } from '@/lib/apiClient';
 import { dedupedGet, invalidate } from '@/lib/apiCache';
 import {
   Alert,
@@ -18,8 +18,9 @@ import {
 } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import MultiSelect from '@/components/MultiSelect';
+import LogoUpload from '@/components/dashboard/LogoUpload';
 import OnboardingWizard from '@/components/dashboard/OnboardingWizard';
-import { COUNTRIES, INDIAN_STATES, LANGUAGES, citiesForState } from '@/lib/geo';
+import { COUNTRIES, INDIAN_STATES, INDUSTRIES, LANGUAGES, citiesForState } from '@/lib/geo';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -107,7 +108,12 @@ function BrandProfileForm() {
               <Input value={form.companyName} onChange={(e) => set('companyName', e.target.value)} required />
             </FormField>
             <FormField label="Industry">
-              <Input value={form.industry} onChange={(e) => set('industry', e.target.value)} placeholder="Beauty, Food, Tech…" />
+              <Select
+                value={form.industry}
+                onChange={(v) => set('industry', v)}
+                options={INDUSTRIES}
+                placeholder="Select an industry…"
+              />
             </FormField>
             <FormField label="Website">
               <Input type="url" value={form.website} onChange={(e) => set('website', e.target.value)} placeholder="https://yourbrand.com" />
@@ -115,8 +121,11 @@ function BrandProfileForm() {
             <FormField label="GSTIN">
               <Input value={form.gstin} onChange={(e) => set('gstin', e.target.value)} placeholder="22AAAAA0000A1Z5" />
             </FormField>
-            <FormField label="Logo URL" className="sm:col-span-2">
-              <Input type="url" value={form.logoUrl} onChange={(e) => set('logoUrl', e.target.value)} placeholder="https://…/logo.png" />
+            <FormField label="Logo" className="sm:col-span-2">
+              <LogoUpload
+                value={form.logoUrl}
+                onChange={(url) => set('logoUrl', url)}
+              />
             </FormField>
             <FormField label="About" className="sm:col-span-2">
               <Textarea

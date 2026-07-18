@@ -31,19 +31,22 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { apiClient } from '@/lib/apiClient';
 import { Avatar, Spinner, Tooltip } from '@/components/ui';
 
 // ============================================================================
 // Role-aware sidebar configurations
 // ============================================================================
 
+// Nav is static config; live counters (unread notifications) are layered on at
+// render time from real API data — never hardcoded here.
 const NAV = {
   BRAND: [
     {
       label: 'Main',
       items: [
         { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
-        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList, badge: '12' },
+        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList },
         { href: '/dashboard/orders', label: 'Orders', icon: Receipt },
         { href: '/cart', label: 'Cart', icon: ShoppingCart },
       ],
@@ -52,7 +55,7 @@ const NAV = {
       label: 'Account',
       items: [
         { href: '/dashboard/profile', label: 'Brand profile', icon: Building2 },
-        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell, dot: true },
+        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
         { href: '/dashboard/support', label: 'Help & disputes', icon: LifeBuoy },
         { href: '/dashboard/settings', label: 'Settings', icon: Settings },
       ],
@@ -63,7 +66,7 @@ const NAV = {
       label: 'Main',
       items: [
         { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
-        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList, badge: '3' },
+        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList },
         { href: '/dashboard/payouts', label: 'Payouts', icon: Wallet },
       ],
     },
@@ -78,7 +81,7 @@ const NAV = {
     {
       label: 'Account',
       items: [
-        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell, dot: true },
+        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
         { href: '/dashboard/support', label: 'Help & disputes', icon: LifeBuoy },
         { href: '/dashboard/settings', label: 'Settings', icon: Settings },
       ],
@@ -89,7 +92,7 @@ const NAV = {
       label: 'Platform',
       items: [
         { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
-        { href: '/dashboard/admin/users', label: 'Users', icon: Users, badge: '1.2K' },
+        { href: '/dashboard/admin/users', label: 'Users', icon: Users },
         { href: '/dashboard/admin/creators', label: 'Creators & badges', icon: Award },
         { href: '/dashboard/admin/packages', label: 'Packages', icon: Package },
         { href: '/dashboard/admin/orders', label: 'All orders', icon: Receipt },
@@ -112,18 +115,21 @@ const NAV = {
     {
       label: 'Support',
       items: [
-        { href: '/dashboard/admin/support', label: 'Support queue', icon: LifeBuoy, dot: true },
+        { href: '/dashboard/admin/support', label: 'Support queue', icon: LifeBuoy },
       ],
     },
     {
       label: 'Account',
       items: [
-        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell, dot: true },
+        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
         { href: '/dashboard/settings', label: 'Settings', icon: Settings },
       ],
     },
   ],
 };
+
+// The one live counter the sidebar/topbar surface: unread notifications.
+const NOTIFICATIONS_HREF = '/dashboard/notifications';
 
 // ============================================================================
 // Layout
@@ -137,6 +143,21 @@ export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Real unread-notification count drives the bell/sidebar dot — no dot when 0.
+  // Re-fetches on navigation so opening the notifications page clears it.
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    apiClient
+      .get('/api/v1/notifications', { params: { limit: 1 } })
+      .then((res) => active && setUnreadCount(res.data.unreadCount ?? 0))
+      .catch(() => active && setUnreadCount(0));
+    return () => {
+      active = false;
+    };
+  }, [user, pathname]);
 
   // Hydrate the collapsed flag from localStorage so the layout doesn't
   // visually jump on every reload.
@@ -187,12 +208,14 @@ export default function DashboardLayout({ children }) {
         onMobileClose={() => setMobileOpen(false)}
         collapsed={collapsed}
         onToggleCollapsed={toggleCollapsed}
+        unreadCount={unreadCount}
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar
           user={user}
           roleLabel={roleLabel}
           onMobileMenu={() => setMobileOpen(true)}
+          unreadCount={unreadCount}
         />
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
@@ -214,6 +237,7 @@ function Sidebar({
   onMobileClose,
   collapsed,
   onToggleCollapsed,
+  unreadCount = 0,
 }) {
   // `collapsed` only applies to the desktop sticky sidebar. The mobile drawer
   // always renders fully expanded since screen space is already constrained.
@@ -304,6 +328,9 @@ function Sidebar({
                   ? pathname === item.href
                   : pathname.startsWith(item.href);
                 const Icon = item.icon;
+                // Only the notifications item shows a dot, and only when there
+                // are genuinely unread notifications.
+                const showDot = item.href === NOTIFICATIONS_HREF && unreadCount > 0;
                 return (
                   <Link
                     key={item.href}
@@ -329,21 +356,13 @@ function Sidebar({
                       />
                       {!isCollapsed && item.label}
                     </span>
-                    {!isCollapsed && item.badge && (
-                      <span
-                        className={clsx(
-                          'rounded-full px-2 py-0.5 text-[10px] font-semibold',
-                          isActive ? 'bg-brand-100 text-brand-800' : 'bg-white/70 text-brand-800',
-                        )}
-                      >
-                        {item.badge}
+                    {!isCollapsed && showDot && (
+                      <span className="inline-flex min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                        {unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     )}
-                    {!isCollapsed && item.dot && !item.badge && (
-                      <span className="h-2 w-2 rounded-full bg-red-500" />
-                    )}
-                    {/* Dot indicator when collapsed but the item has a notification */}
-                    {isCollapsed && item.dot && (
+                    {/* Dot indicator when collapsed but there are unread items */}
+                    {isCollapsed && showDot && (
                       <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
                     )}
                   </Link>
@@ -412,7 +431,7 @@ function Sidebar({
 // Top bar
 // ============================================================================
 
-function TopBar({ user, onMobileMenu }) {
+function TopBar({ user, onMobileMenu, unreadCount = 0 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/90 backdrop-blur-lg">
       <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4">
@@ -459,7 +478,11 @@ function TopBar({ user, onMobileMenu }) {
             aria-label="Notifications"
           >
             <Bell className="h-4 w-4" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </Link>
         </div>
       </div>
