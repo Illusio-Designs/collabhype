@@ -141,6 +141,15 @@ export async function syncInstagram(userId, longToken, igUserId, expiresIn = 60 
     create: { influencerId: profile.id, platform: 'INSTAGRAM', ...data },
   });
 
+  // Use the Instagram profile photo as the creator's avatar so their public
+  // profile shows a real picture. (Refreshed on every reconnect.)
+  if (ig.profile_picture_url) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl: ig.profile_picture_url },
+    });
+  }
+
   await recomputeTier(profile.id);
   return account;
 }
