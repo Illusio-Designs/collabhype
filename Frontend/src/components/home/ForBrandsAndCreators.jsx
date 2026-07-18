@@ -69,7 +69,7 @@ export default function ForBrandsAndCreators() {
               ))}
             </ul>
             <Link
-              href="/register?role=brand"
+              href="/register/brand"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-brand-800 transition hover:bg-brand-50"
             >
               Create brand account →
@@ -103,7 +103,7 @@ export default function ForBrandsAndCreators() {
               ))}
             </ul>
             <Link
-              href="/register?role=influencer"
+              href="/register/creator"
               className="btn-primary mt-8 inline-flex items-center gap-2 !px-5 !py-3"
             >
               Join as creator →

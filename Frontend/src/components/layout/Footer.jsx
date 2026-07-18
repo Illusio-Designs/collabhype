@@ -66,13 +66,13 @@ export default function Footer() {
                   { href: '/packages', label: 'Packages' },
                   { href: '/influencers', label: 'Creators' },
                   { href: '/how-it-works', label: 'How it works' },
-                  { href: '/register?role=brand', label: 'Sign up' },
+                  { href: '/register/brand', label: 'Sign up' },
                 ]}
               />
               <FooterColumn
                 title="For Creators"
                 links={[
-                  { href: '/register?role=influencer', label: 'Join' },
+                  { href: '/register/creator', label: 'Join' },
                   { href: '/login', label: 'Sign in' },
                   { href: '/dashboard/payouts', label: 'Payouts' },
                   { href: '/dashboard/rates', label: 'Rate card' },

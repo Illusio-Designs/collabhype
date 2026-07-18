@@ -1,183 +1,66 @@
-'use client';
-
-import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import clsx from 'clsx';
-import { apiClient, apiError } from '@/lib/apiClient';
-import { Alert, Button, Card, FormField, Input, PasswordInput, PhoneInput, Spinner } from '@/components/ui';
+import { redirect } from 'next/navigation';
+import { Building2, Sparkles } from 'lucide-react';
 
-const schema = z
-  .object({
-    fullName: z.string().min(2, 'At least 2 characters'),
-    email: z.string().email('Enter a valid email'),
-    password: z.string().min(8, 'At least 8 characters'),
-    confirmPassword: z.string().min(1, 'Please re-type your password'),
-    phone: z.string().optional(),
-    companyName: z.string().optional(),
-    city: z.string().optional(),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
+export const metadata = {
+  title: 'Create your account — Collabhype',
+  description: 'Join Collabhype as a brand or as a creator.',
+};
 
-function RegisterForm() {
-  const router = useRouter();
-  const sp = useSearchParams();
-  const initialRole = sp.get('role')?.toUpperCase() === 'INFLUENCER' ? 'INFLUENCER' : 'BRAND';
-  const [role, setRole] = useState(initialRole);
-  const [serverError, setServerError] = useState(null);
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(schema), defaultValues: { phone: '' } });
+// Role chooser. Old links like /register?role=brand still work — they redirect
+// straight to the dedicated page.
+export default function RegisterPage({ searchParams }) {
+  const role = searchParams?.role?.toString().toLowerCase();
+  if (role === 'brand') redirect('/register/brand');
+  if (role === 'influencer' || role === 'creator') redirect('/register/creator');
 
-  async function onSubmit(values) {
-    setServerError(null);
-    const payload = { ...values, role };
-    delete payload.confirmPassword;
-    if (!payload.phone) delete payload.phone;
-    if (role !== 'BRAND' || !payload.companyName) delete payload.companyName;
-    if (role !== 'INFLUENCER' || !payload.city) delete payload.city;
-    try {
-      // Create the account, then send the user to sign in (no auto-login).
-      await apiClient.post('/api/v1/auth/register', payload);
-      router.push('/login?registered=1');
-    } catch (err) {
-      setServerError(apiError(err));
-    }
-  }
+  const CHOICES = [
+    {
+      href: '/register/brand',
+      icon: Building2,
+      title: "I'm a brand",
+      body: 'Run campaigns, buy creator packages, and hand-pick influencers.',
+    },
+    {
+      href: '/register/creator',
+      icon: Sparkles,
+      title: "I'm a creator",
+      body: 'Set your rates, get booked by brands, and get paid via UPI.',
+    },
+  ];
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Create your account</h1>
-      <p className="mt-2 text-zinc-600">Get set up in two minutes.</p>
+    <div className="mx-auto max-w-2xl px-4 py-20 sm:px-6 lg:px-8">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Create your account</h1>
+        <p className="mt-2 text-zinc-600">First, tell us who you are.</p>
+      </div>
 
-      <div className="mt-6 grid grid-cols-2 rounded-lg border border-zinc-200 p-1">
-        {[
-          { v: 'BRAND', label: "I'm a brand" },
-          { v: 'INFLUENCER', label: "I'm a creator" },
-        ].map((opt) => (
-          <button
-            key={opt.v}
-            type="button"
-            onClick={() => setRole(opt.v)}
-            className={clsx(
-              'rounded-md py-2 text-sm font-semibold transition',
-              role === opt.v
-                ? 'bg-brand-700 text-white shadow'
-                : 'text-zinc-700 hover:bg-zinc-50',
-            )}
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        {CHOICES.map((c) => (
+          <Link
+            key={c.href}
+            href={c.href}
+            className="group flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 text-left shadow-sm transition hover:border-brand-300 hover:shadow-md"
           >
-            {opt.label}
-          </button>
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-brand-50 text-brand-700">
+              <c.icon className="h-6 w-6" />
+            </div>
+            <h2 className="mt-4 text-lg font-semibold text-zinc-900">{c.title}</h2>
+            <p className="mt-1 flex-1 text-sm leading-6 text-zinc-600">{c.body}</p>
+            <span className="mt-4 text-sm font-semibold text-brand-700 group-hover:underline">
+              Continue →
+            </span>
+          </Link>
         ))}
       </div>
 
-      <Card padding="lg" className="mt-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            label={role === 'BRAND' ? 'Your name' : 'Full name'}
-            error={errors.fullName?.message}
-            required
-          >
-            <Input autoComplete="name" error={!!errors.fullName} {...register('fullName')} />
-          </FormField>
-
-          {role === 'BRAND' && (
-            <FormField label="Company name" error={errors.companyName?.message}>
-              <Input {...register('companyName')} />
-            </FormField>
-          )}
-
-          {role === 'INFLUENCER' && (
-            <FormField label="City" error={errors.city?.message}>
-              <Input placeholder="e.g. Mumbai" {...register('city')} />
-            </FormField>
-          )}
-
-          <FormField label="Email" error={errors.email?.message} required>
-            <Input
-              type="email"
-              autoComplete="email"
-              error={!!errors.email}
-              {...register('email')}
-            />
-          </FormField>
-
-          <FormField label="Phone (optional)" error={errors.phone?.message}>
-            <Controller
-              name="phone"
-              control={control}
-              render={({ field }) => (
-                <PhoneInput
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  error={!!errors.phone}
-                />
-              )}
-            />
-          </FormField>
-
-          <FormField
-            label="Password"
-            hint="At least 8 characters"
-            error={errors.password?.message}
-            required
-          >
-            <PasswordInput
-              autoComplete="new-password"
-              error={!!errors.password}
-              {...register('password')}
-            />
-          </FormField>
-
-          <FormField
-            label="Re-type password"
-            error={errors.confirmPassword?.message}
-            required
-          >
-            <PasswordInput
-              autoComplete="new-password"
-              error={!!errors.confirmPassword}
-              {...register('confirmPassword')}
-            />
-          </FormField>
-
-          {serverError && <Alert variant="danger">{serverError}</Alert>}
-
-          <Button type="submit" fullWidth loading={isSubmitting}>
-            Create account
-          </Button>
-        </form>
-      </Card>
-
-      <p className="mt-6 text-center text-sm text-zinc-600">
+      <p className="mt-8 text-center text-sm text-zinc-600">
         Already have an account?{' '}
         <Link href="/login" className="font-semibold text-brand-700 hover:underline">
           Sign in
         </Link>
       </p>
     </div>
-  );
-}
-
-export default function RegisterPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="grid h-[40vh] place-items-center text-brand-700">
-          <Spinner size="lg" />
-        </div>
-      }
-    >
-      <RegisterForm />
-    </Suspense>
   );
 }

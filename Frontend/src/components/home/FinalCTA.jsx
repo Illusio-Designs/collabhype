@@ -87,13 +87,13 @@ export default function FinalCTA() {
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Link
-                href="/register?role=brand"
+                href="/register/brand"
                 className="rounded-full bg-white px-7 py-3.5 text-base font-semibold text-brand-800 shadow-lg transition hover:bg-brand-50 hover:shadow-xl"
               >
                 Make a campaign →
               </Link>
               <Link
-                href="/register?role=influencer"
+                href="/register/creator"
                 className="rounded-full border border-white/40 bg-white/5 px-7 py-3.5 text-base font-semibold text-white backdrop-blur transition hover:bg-white/15"
               >
                 I'm a creator
