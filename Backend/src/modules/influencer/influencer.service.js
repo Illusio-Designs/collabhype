@@ -94,8 +94,10 @@ export async function setMyRateCards(userId, rates) {
 }
 
 export async function getPublicInfluencer(id) {
-  const profile = await prisma.influencerProfile.findUnique({
-    where: { id },
+  // findFirst (not findUnique) so we can also require an active account —
+  // a soft-deleted creator must 404, not render a public profile.
+  const profile = await prisma.influencerProfile.findFirst({
+    where: { id, user: { isActive: true } },
     include: {
       user: { select: { id: true, fullName: true, avatarUrl: true } },
       socialAccounts: {
@@ -137,7 +139,9 @@ export async function browseInfluencers(params) {
     limit,
   } = params;
 
-  const where = { isAvailable: true };
+  // Only list available creators whose account is still active (a soft-deleted
+  // account sets user.isActive = false and must not appear in browse).
+  const where = { isAvailable: true, user: { isActive: true } };
   if (tier) where.tier = tier;
   if (city) where.city = { contains: city };
   if (minFollowers != null || maxFollowers != null) {
