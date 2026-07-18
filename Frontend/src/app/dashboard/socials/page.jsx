@@ -116,20 +116,19 @@ function SocialsInner() {
       />
 
       <div className="mt-8 space-y-4">
-        <ConnectCard
-          brand="instagram"
-          title="Instagram"
-          desc="Connect your Instagram Business or Creator account directly — no Facebook Page needed."
-          account={byPlatform('INSTAGRAM')}
-          onConnect={() => connect('instagram')}
-          onDisconnect={() => disconnect('INSTAGRAM')}
-          busy={busy}
-        />
-        {!byPlatform('INSTAGRAM') && (
+        {byPlatform('INSTAGRAM') ? (
+          <ConnectCard
+            brand="instagram"
+            title="Instagram"
+            account={byPlatform('INSTAGRAM')}
+            onDisconnect={() => disconnect('INSTAGRAM')}
+            busy={busy}
+          />
+        ) : (
           <ConnectCard
             brand="facebook"
-            title="Facebook"
-            desc="Prefer Facebook? Connect your Instagram through a linked Facebook Page."
+            title="Connect Instagram"
+            desc="Sign in with Facebook to link your Instagram Business or Creator account (via its connected Facebook Page)."
             account={null}
             onConnect={() => connect('facebook')}
             busy={busy}
