@@ -8,9 +8,18 @@ import {
   DELIVERABLE_LABEL,
   PLATFORM_LABEL,
 } from '@/lib/format';
+import { Instagram, Youtube } from 'lucide-react';
 import AddInfluencerForm from '@/components/cart/AddInfluencerForm';
 import CreatorBadge from '@/components/CreatorBadge';
 import { Badge, Breadcrumb } from '@/components/ui';
+
+const PLATFORM_STYLE = {
+  INSTAGRAM: {
+    Icon: Instagram,
+    bg: 'bg-gradient-to-br from-[#f09433] via-[#dc2743] to-[#bc1888]',
+  },
+  YOUTUBE: { Icon: Youtube, bg: 'bg-red-600' },
+};
 
 async function loadInfluencer(id) {
   try {
@@ -141,30 +150,56 @@ export default async function InfluencerDetailPage({ params }) {
               {/* Socials */}
               {socials.length > 0 && (
                 <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                  {socials.map((s) => (
-                    <a
-                      key={s.platform}
-                      href={s.profileUrl ?? '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="card flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="text-xs uppercase tracking-wider text-zinc-500">
-                          {PLATFORM_LABEL[s.platform] ?? s.platform}
+                  {socials.map((s) => {
+                    const style = PLATFORM_STYLE[s.platform] ?? PLATFORM_STYLE.INSTAGRAM;
+                    const Icon = style.Icon;
+                    return (
+                      <a
+                        key={s.platform}
+                        href={s.profileUrl ?? '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex items-center gap-4 rounded-2xl border border-zinc-200 bg-white p-4 transition hover:border-brand-300 hover:shadow-sm"
+                      >
+                        <div
+                          className={`grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl text-white ${style.bg}`}
+                        >
+                          <Icon className="h-5 w-5" />
                         </div>
-                        <div className="mt-1 font-semibold text-zinc-900">@{s.handle}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-zinc-900">
-                          {formatCount(s.followers)}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="truncate font-semibold text-zinc-900">
+                              @{s.handle}
+                            </span>
+                            {s.isVerified && (
+                              <span className="text-[11px] font-medium text-brand-700">Verified</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-zinc-500">
+                            {PLATFORM_LABEL[s.platform] ?? s.platform}
+                          </div>
                         </div>
-                        <div className="text-xs text-zinc-500">
-                          {Number(s.engagementRate).toFixed(1)}% engage
+                        <div className="flex flex-shrink-0 gap-5 text-right">
+                          <div>
+                            <div className="text-base font-bold text-zinc-900">
+                              {formatCount(s.followers)}
+                            </div>
+                            <div className="text-[10px] uppercase tracking-wider text-zinc-400">
+                              Followers
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-base font-bold text-zinc-900">
+                              {Number(s.engagementRate).toFixed(1)}%
+                            </div>
+                            <div className="text-[10px] uppercase tracking-wider text-zinc-400">
+                              Engage
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </a>
-                  ))}
+                      </a>
+                    );
+                  })}
                 </div>
               )}
             </div>
