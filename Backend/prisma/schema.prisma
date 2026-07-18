@@ -192,6 +192,11 @@ model InfluencerProfile {
   baseRate              Decimal?  @db.Decimal(10, 2)
   upiId                 String?
   bankAccountJson       Json?
+  // Delivery address — brands ship products here for reels/UGC (revealed only
+  // after the brand sends the campaign brief).
+  shippingAddress       String?   @db.Text
+  pincode               String?
+
   razorpayContactId     String?
   razorpayFundAccountId String?
 
@@ -431,6 +436,10 @@ model Campaign {
   hashtags  String?
   doList    String?        @db.Text
   dontList  String?        @db.Text
+  // Brief attachments the creator needs to make the content.
+  productLink     String?
+  referenceImages Json?                       // array of image URLs
+  briefSentAt     DateTime?                    // set when the brand sends the brief
   startDate DateTime?
   endDate   DateTime?
   status    CampaignStatus @default(DRAFT)

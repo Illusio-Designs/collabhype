@@ -45,6 +45,12 @@ export async function updateBrief(req, res) {
   res.json({ campaign });
 }
 
+export async function sendBrief(req, res) {
+  if (!req.user) throw ApiError.unauthorized();
+  const campaign = await svc.sendBrief(req.user.sub, req.params.id);
+  res.json({ campaign });
+}
+
 // --- deliverable transitions ---
 
 export async function submitDraft(req, res) {
