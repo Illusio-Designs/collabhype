@@ -127,3 +127,30 @@ export const LANGUAGES = [
   'Mandarin',
   'Spanish',
 ].map((l) => ({ value: l, label: l }));
+
+// Brand industries — used in the brand profile dropdown. Stored as a plain
+// string on the profile.
+export const INDUSTRIES = [
+  'Beauty & Skincare',
+  'Fashion & Apparel',
+  'Food & Beverage',
+  'Health & Wellness',
+  'Fitness & Sports',
+  'Technology & Software',
+  'Consumer Electronics',
+  'Ecommerce & Retail',
+  'Travel & Hospitality',
+  'Education & EdTech',
+  'Finance & Fintech',
+  'Gaming & Esports',
+  'Entertainment & Media',
+  'Automotive',
+  'Home & Living',
+  'Baby, Kids & Parenting',
+  'Jewellery & Accessories',
+  'Real Estate',
+  'Healthcare & Pharma',
+  'Non-profit & NGO',
+  'Agriculture',
+  'Other',
+].map((i) => ({ value: i, label: i }));
