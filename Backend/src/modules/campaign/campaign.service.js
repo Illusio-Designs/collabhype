@@ -168,10 +168,12 @@ export async function updateBrief(userId, campaignId, data) {
 }
 
 // Brand "sends" the brief — requires a written brief, then reveals each
-// assigned creator's delivery address so products can be shipped.
+// assigned creator's delivery address so products can be shipped. Each assigned
+// creator is notified with the brief message.
 export async function sendBrief(userId, campaignId) {
   const campaign = await prisma.campaign.findFirst({
     where: { id: campaignId, order: { brandUserId: userId } },
+    include: { deliverables: { select: { influencerId: true } } },
   });
   if (!campaign) throw ApiError.notFound('Campaign not found');
   if (['COMPLETED', 'CANCELLED'].includes(campaign.status)) {
@@ -180,13 +182,34 @@ export async function sendBrief(userId, campaignId) {
   if (!campaign.brief || !campaign.brief.trim()) {
     throw ApiError.badRequest('Add a brief before sending it');
   }
-  return prisma.campaign.update({
+
+  const updated = await prisma.campaign.update({
     where: { id: campaignId },
     data: {
       briefSentAt: campaign.briefSentAt ?? new Date(),
       status: campaign.status === 'DRAFT' ? 'BRIEF_SENT' : campaign.status,
     },
   });
+
+  // Notify each assigned creator with the brief message.
+  const influencerIds = [...new Set(campaign.deliverables.map((d) => d.influencerId))];
+  if (influencerIds.length) {
+    const profiles = await prisma.influencerProfile.findMany({
+      where: { id: { in: influencerIds } },
+      select: { userId: true },
+    });
+    const snippet = campaign.brief.trim().slice(0, 160);
+    await prisma.notification.createMany({
+      data: profiles.map((p) => ({
+        userId: p.userId,
+        type: 'campaign.brief',
+        title: `Brief for "${campaign.title}"`,
+        body: snippet,
+        link: `/dashboard/campaigns/${campaignId}`,
+      })),
+    });
+  }
+  return updated;
 }
 
 // --- deliverable lookups (ownership-checked) ---
