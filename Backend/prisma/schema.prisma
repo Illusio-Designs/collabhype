@@ -152,6 +152,10 @@ model User {
   // work records kept).
   deletedAt     DateTime?
   purgedAt      DateTime?
+  // Negotiation chat: consent to the no-contact-sharing rules, and a running
+  // count of contact-sharing violations (auto-suspend past the threshold).
+  chatConsentAt DateTime?
+  chatStrikes   Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -164,6 +168,7 @@ model User {
   supportTickets    SupportTicket[]    @relation("UserTickets")
   assignedTickets   SupportTicket[]    @relation("AssignedTickets")
   supportMessages   SupportMessage[]   @relation("MessageAuthor")
+  brandConversations Conversation[]    @relation("BrandConversations")
 
   @@index([role])
   @@index([deletedAt])
@@ -211,6 +216,7 @@ model InfluencerProfile {
   packageInfluencers PackageInfluencer[]
   deliverables       CampaignDeliverable[]
   payouts            Payout[]
+  conversations      Conversation[]
 
   @@index([tier])
   @@index([city])
@@ -590,6 +596,47 @@ model SiteContent {
   createdAt   DateTime @default(now())
 
   @@index([isPublished])
+}
+
+// ---------- Negotiation chat ----------
+//
+// A 1:1 thread between a brand and a Micro/Macro/Mega creator to negotiate
+// rates. Creators send rate offers the brand can add straight to cart. Sharing
+// personal contact details is forbidden and enforced (see contactGuard).
+
+model Conversation {
+  id            String   @id @default(cuid())
+  brandUserId   String
+  brand         User     @relation("BrandConversations", fields: [brandUserId], references: [id], onDelete: Cascade)
+  influencerId  String                                  // InfluencerProfile id
+  influencer    InfluencerProfile @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  creatorUserId String                                  // denormalised for quick auth/filtering
+  status        String   @default("ACTIVE")             // ACTIVE | CLOSED
+  lastMessageAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  messages      ChatMessage[]
+
+  @@unique([brandUserId, influencerId])
+  @@index([brandUserId])
+  @@index([creatorUserId])
+}
+
+model ChatMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderUserId   String
+  type           String   @default("TEXT")   // TEXT | RATE_OFFER | SYSTEM
+  body           String?  @db.Text
+  // Rate offer payload (type = RATE_OFFER)
+  deliverable    String?
+  price          Decimal? @db.Decimal(10, 2)
+  offerStatus    String?                      // PENDING | ACCEPTED | DECLINED
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId, createdAt])
 }
 
 // ---------- Blog ----------
