@@ -14,7 +14,14 @@ export async function getPublic(slug) {
 }
 
 export async function listAll() {
-  return prisma.siteContent.findMany({ orderBy: { slug: 'asc' } });
+  try {
+    return await prisma.siteContent.findMany({ orderBy: { slug: 'asc' } });
+  } catch (e) {
+    // P2021: table doesn't exist yet (migration not applied). Degrade to an
+    // empty list so the admin page renders instead of 500-ing.
+    if (e?.code === 'P2021') return [];
+    throw e;
+  }
 }
 
 export async function getOne(slug) {
