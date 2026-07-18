@@ -12,5 +12,6 @@ router.get('/:id', asyncHandler(controller.getOne));
 
 // Brand-only — edit brief
 router.patch('/:id', requireRole('BRAND'), asyncHandler(controller.updateBrief));
+router.post('/:id/send-brief', requireRole('BRAND'), asyncHandler(controller.sendBrief));
 
 export default router;

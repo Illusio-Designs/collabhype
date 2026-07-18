@@ -186,6 +186,8 @@ function InfluencerProfileForm() {
     baseRate: '',
     upiId: '',
     isAvailable: true,
+    shippingAddress: '',
+    pincode: '',
   });
 
   const load = useCallback(
@@ -208,6 +210,8 @@ function InfluencerProfileForm() {
             baseRate: p.baseRate != null ? String(p.baseRate) : '',
             upiId: p.upiId ?? '',
             isAvailable: p.isAvailable !== false,
+            shippingAddress: p.shippingAddress ?? '',
+            pincode: p.pincode ?? '',
           });
           const slugs = (p.niches ?? []).map((x) => x.niche.slug);
           setSelectedNiches(new Set(slugs));
@@ -255,6 +259,8 @@ function InfluencerProfileForm() {
         baseRate: form.baseRate ? Number(form.baseRate) : undefined,
         upiId: form.upiId || undefined,
         isAvailable: form.isAvailable,
+        shippingAddress: form.shippingAddress || undefined,
+        pincode: form.pincode || undefined,
       };
       await apiClient.patch('/api/v1/influencers/me', payload);
       invalidate('/api/v1/influencers/me');
@@ -377,6 +383,31 @@ function InfluencerProfileForm() {
             </FormField>
             <FormField label="Date of birth">
               <Input type="date" value={form.dob} onChange={(e) => set('dob', e.target.value)} />
+            </FormField>
+          </div>
+        </Card>
+
+        <Card padding="lg">
+          <h2 className="text-lg font-semibold text-zinc-900">Delivery address</h2>
+          <p className="mt-1 text-sm text-zinc-600">
+            Where brands ship products for reels/UGC. Shared with a brand only after they send you a
+            campaign brief.
+          </p>
+          <div className="mt-5 grid gap-5 sm:grid-cols-3">
+            <FormField label="Full address" className="sm:col-span-2">
+              <Textarea
+                rows={3}
+                value={form.shippingAddress}
+                onChange={(e) => set('shippingAddress', e.target.value)}
+                placeholder="Flat / street / area / landmark, city"
+              />
+            </FormField>
+            <FormField label="Pincode">
+              <Input
+                value={form.pincode}
+                onChange={(e) => set('pincode', e.target.value)}
+                placeholder="400001"
+              />
             </FormField>
           </div>
         </Card>

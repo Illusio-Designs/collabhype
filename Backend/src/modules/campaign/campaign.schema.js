@@ -22,6 +22,8 @@ export const updateCampaignSchema = z.object({
     hashtags: z.string().max(500).optional(),
     doList: z.string().max(2000).optional(),
     dontList: z.string().max(2000).optional(),
+    productLink: z.string().url().max(500).optional().or(z.literal('')),
+    referenceImages: z.array(z.string().url()).max(8).optional(),
     startDate: z.string().datetime().optional(),
     endDate: z.string().datetime().optional(),
   }),

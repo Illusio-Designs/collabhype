@@ -31,6 +31,8 @@ export const updateProfileSchema = z.object({
     baseRate: z.number().nonnegative().optional(),
     upiId: z.string().max(100).optional(),
     isAvailable: z.boolean().optional(),
+    shippingAddress: z.string().max(500).optional(),
+    pincode: z.string().max(12).optional(),
   }),
 });
 

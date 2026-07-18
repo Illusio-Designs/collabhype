@@ -91,7 +91,14 @@ export async function getForBrand(userId, campaignId) {
       deliverables: {
         include: {
           influencer: {
-            include: {
+            select: {
+              id: true,
+              tier: true,
+              city: true,
+              state: true,
+              country: true,
+              shippingAddress: true,
+              pincode: true,
               user: { select: { id: true, fullName: true, avatarUrl: true } },
               socialAccounts: {
                 select: { platform: true, handle: true, profileUrl: true, followers: true },
@@ -103,6 +110,16 @@ export async function getForBrand(userId, campaignId) {
     },
   });
   if (!campaign) throw ApiError.notFound('Campaign not found');
+
+  // Delivery address is revealed to the brand only after the brief is sent.
+  if (!campaign.briefSentAt) {
+    for (const d of campaign.deliverables) {
+      if (d.influencer) {
+        d.influencer.shippingAddress = null;
+        d.influencer.pincode = null;
+      }
+    }
+  }
   return campaign;
 }
 
@@ -143,8 +160,31 @@ export async function updateBrief(userId, campaignId, data) {
     where: { id: campaignId },
     data: {
       ...data,
+      productLink: data.productLink === '' ? null : data.productLink,
       startDate: data.startDate ? new Date(data.startDate) : undefined,
       endDate: data.endDate ? new Date(data.endDate) : undefined,
+    },
+  });
+}
+
+// Brand "sends" the brief — requires a written brief, then reveals each
+// assigned creator's delivery address so products can be shipped.
+export async function sendBrief(userId, campaignId) {
+  const campaign = await prisma.campaign.findFirst({
+    where: { id: campaignId, order: { brandUserId: userId } },
+  });
+  if (!campaign) throw ApiError.notFound('Campaign not found');
+  if (['COMPLETED', 'CANCELLED'].includes(campaign.status)) {
+    throw ApiError.badRequest('Campaign is closed');
+  }
+  if (!campaign.brief || !campaign.brief.trim()) {
+    throw ApiError.badRequest('Add a brief before sending it');
+  }
+  return prisma.campaign.update({
+    where: { id: campaignId },
+    data: {
+      briefSentAt: campaign.briefSentAt ?? new Date(),
+      status: campaign.status === 'DRAFT' ? 'BRIEF_SENT' : campaign.status,
     },
   });
 }
