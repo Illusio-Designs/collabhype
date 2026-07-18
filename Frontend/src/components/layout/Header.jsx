@@ -10,8 +10,9 @@ import { useAuth } from '@/components/auth/AuthProvider';
 const NAV_LINKS = [
   { href: '/packages', label: 'Packages' },
   { href: '/influencers', label: 'Influencers' },
+  { href: '/join/creator', label: 'Join as Creator' },
+  { href: '/join/brand', label: 'Join as Brand' },
   { href: '/how-it-works', label: 'How it works' },
-  { href: '/about', label: 'About' },
 ];
 
 export default function Header() {
