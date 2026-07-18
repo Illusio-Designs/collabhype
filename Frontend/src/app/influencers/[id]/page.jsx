@@ -8,17 +8,35 @@ import {
   DELIVERABLE_LABEL,
   PLATFORM_LABEL,
 } from '@/lib/format';
-import { Instagram, Youtube } from 'lucide-react';
 import AddInfluencerForm from '@/components/cart/AddInfluencerForm';
 import CreatorBadge from '@/components/CreatorBadge';
 import { Badge, Breadcrumb } from '@/components/ui';
 
+// Inline brand marks — this lucide-react build doesn't ship Instagram/Youtube.
+function InstagramIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="12" cy="12" r="4.2" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="17.3" cy="6.7" r="1.25" fill="currentColor" />
+    </svg>
+  );
+}
+
+function YoutubeIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" />
+    </svg>
+  );
+}
+
 const PLATFORM_STYLE = {
   INSTAGRAM: {
-    Icon: Instagram,
+    Icon: InstagramIcon,
     bg: 'bg-gradient-to-br from-[#f09433] via-[#dc2743] to-[#bc1888]',
   },
-  YOUTUBE: { Icon: Youtube, bg: 'bg-red-600' },
+  YOUTUBE: { Icon: YoutubeIcon, bg: 'bg-red-600' },
 };
 
 async function loadInfluencer(id) {
