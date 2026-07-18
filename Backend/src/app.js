@@ -9,6 +9,7 @@ import uploadRoutes from './modules/upload/upload.routes.js';
 import { UPLOAD_DIR } from './lib/uploads.js';
 import { prisma } from './lib/prisma.js';
 import { ensureSeedData } from './lib/referenceSeed.js';
+import { runPendingMigrations } from './lib/migrate.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 const app = express();
@@ -67,10 +68,14 @@ app.use('/api/v1', routes);
 app.use(notFound);
 app.use(errorHandler);
 
-// Seed reference data (niches + packages) if the DB is empty and provision the
-// super-admin from env creds. Triggered here at module load — not only in
-// index.js — so it runs regardless of which entry file the host (e.g. cPanel
-// Passenger) boots. Idempotent, cheap on later boots, never blocks startup.
-void ensureSeedData(prisma);
+// On startup: apply any pending DB migrations (so tables like SiteContent /
+// BlogPost exist without shell access), then seed reference data + admin.
+// Triggered here at module load — not only in index.js — so it runs regardless
+// of which entry file the host (e.g. cPanel Passenger) boots. Both steps are
+// idempotent, cheap on later boots, and never block the server from starting.
+void (async () => {
+  await runPendingMigrations(prisma);
+  await ensureSeedData(prisma);
+})();
 
 export default app;

@@ -145,6 +145,8 @@ model User {
   phoneVerified Boolean  @default(false)
   isActive      Boolean  @default(true)
   lastLoginAt   DateTime?
+  // When the user accepted the Privacy Policy / Terms at signup (compliance).
+  privacyAcceptedAt DateTime?
   // Soft-delete lifecycle: deletedAt starts the 30-day recovery window; purgedAt
   // is set once the account has been anonymized (PII scrubbed, name + payment +
   // work records kept).

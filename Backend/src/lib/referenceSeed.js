@@ -121,6 +121,46 @@ export const DEFAULT_SETTINGS = [
   { key: 'tier_macro_max', value: '1000000', type: 'number' },
 ];
 
+// Default SEO / page content so the site has real metadata out of the box.
+export const DEFAULT_SITE_CONTENT = [
+  {
+    slug: 'home',
+    title: "Collabhype — India's self-serve influencer marketplace",
+    description:
+      'Buy Nano creator packs in bulk or hand-pick Micro/Macro/Mega creators. Escrow-backed payouts, transparent pricing.',
+  },
+  {
+    slug: 'about',
+    title: 'About — Collabhype',
+    description: 'Why we built Collabhype: transparent, self-serve influencer marketing for India.',
+  },
+  {
+    slug: 'how-it-works',
+    title: 'How it works — Collabhype',
+    description: 'From cart to campaign in four steps. Self-serve influencer marketing with escrow.',
+  },
+  {
+    slug: 'contact',
+    title: 'Contact — Collabhype',
+    description: "Questions, partnerships, or press — we'll reply within one business day.",
+  },
+  {
+    slug: 'terms',
+    title: 'Terms of Service — Collabhype',
+    description: 'The terms under which you use Collabhype.',
+  },
+  {
+    slug: 'privacy',
+    title: 'Privacy Policy — Collabhype',
+    description: 'How Collabhype collects, uses, and protects your data.',
+  },
+  {
+    slug: 'blog',
+    title: 'Blog — Collabhype',
+    description: 'Guides, tips, and updates on influencer marketing in India.',
+  },
+];
+
 // Upsert all reference data (idempotent). Returns counts written.
 export async function seedReferenceData(prisma) {
   for (const n of NICHES) {
@@ -132,7 +172,19 @@ export async function seedReferenceData(prisma) {
   for (const s of DEFAULT_SETTINGS) {
     await prisma.platformSettings.upsert({ where: { key: s.key }, update: {}, create: s });
   }
-  return { niches: NICHES.length, packages: NANO_PACKS.length, settings: DEFAULT_SETTINGS.length };
+  for (const c of DEFAULT_SITE_CONTENT) {
+    await prisma.siteContent.upsert({
+      where: { slug: c.slug },
+      update: {}, // never overwrite admin-edited SEO
+      create: c,
+    });
+  }
+  return {
+    niches: NICHES.length,
+    packages: NANO_PACKS.length,
+    settings: DEFAULT_SETTINGS.length,
+    content: DEFAULT_SITE_CONTENT.length,
+  };
 }
 
 // Create the super-admin from env creds if one doesn't already exist. Only runs
@@ -167,15 +219,16 @@ async function ensureAdmin(prisma) {
 export async function ensureSeedData(prisma) {
   if (String(process.env.AUTO_SEED ?? '').toLowerCase() === 'false') return;
   try {
-    const [niches, packages, settings] = await Promise.all([
+    const [niches, packages, settings, content] = await Promise.all([
       prisma.niche.count(),
       prisma.package.count(),
       prisma.platformSettings.count(),
+      prisma.siteContent.count(),
     ]);
-    if (niches === 0 || packages === 0 || settings === 0) {
+    if (niches === 0 || packages === 0 || settings === 0 || content === 0) {
       const res = await seedReferenceData(prisma);
       console.log(
-        `[seed] reference data seeded (${res.niches} niches, ${res.packages} packages, ${res.settings} settings)`,
+        `[seed] reference data seeded (${res.niches} niches, ${res.packages} packages, ${res.settings} settings, ${res.content} content)`,
       );
     }
     if (await ensureAdmin(prisma)) {
