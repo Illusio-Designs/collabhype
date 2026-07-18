@@ -159,6 +159,17 @@ export const DEFAULT_SITE_CONTENT = [
     title: 'Blog — Collabhype',
     description: 'Guides, tips, and updates on influencer marketing in India.',
   },
+  {
+    slug: 'packages',
+    title: 'Packages — Collabhype',
+    description:
+      'Bulk Nano influencer packs for high-volume campaigns. Micro / Macro / Mega creators are hand-picked.',
+  },
+  {
+    slug: 'influencers',
+    title: 'Browse influencers — Collabhype',
+    description: 'Find vetted influencers by tier, niche, city, and platform.',
+  },
 ];
 
 // Upsert all reference data (idempotent). Returns counts written.
