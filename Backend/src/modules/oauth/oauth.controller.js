@@ -29,6 +29,21 @@ function buildSocialsUrl(params) {
   return url.toString();
 }
 
+// Pull the real provider error out of an axios/API failure. Meta and Google
+// return { error: { message } }; OAuth token endpoints use error_description.
+// Falls back to the generic message so we never show an empty error.
+function providerError(err, provider) {
+  const data = err?.response?.data;
+  const detail =
+    data?.error?.message ||
+    data?.error_description ||
+    (typeof data?.error === 'string' ? data.error : null) ||
+    err?.message;
+  // Log the full detail server-side for debugging (redacted tokens aside).
+  console.error(`[oauth:${provider}] callback failed:`, detail || err);
+  return detail ? `${provider} connection failed: ${detail}` : `${provider} OAuth failed`;
+}
+
 export async function startInstagram(req, res) {
   if (!req.user) throw ApiError.unauthorized();
   const state = signState(req.user.sub, 'instagram');
@@ -54,7 +69,7 @@ export async function callbackInstagram(req, res) {
       }),
     );
   } catch (err) {
-    return res.redirect(buildSocialsUrl({ error: err.message ?? 'Instagram OAuth failed' }));
+    return res.redirect(buildSocialsUrl({ error: providerError(err, 'Instagram') }));
   }
 }
 
@@ -83,7 +98,7 @@ export async function callbackYoutube(req, res) {
       }),
     );
   } catch (err) {
-    return res.redirect(buildSocialsUrl({ error: err.message ?? 'YouTube OAuth failed' }));
+    return res.redirect(buildSocialsUrl({ error: providerError(err, 'YouTube') }));
   }
 }
 
@@ -112,6 +127,6 @@ export async function callbackTiktok(req, res) {
       }),
     );
   } catch (err) {
-    return res.redirect(buildSocialsUrl({ error: err.message ?? 'TikTok OAuth failed' }));
+    return res.redirect(buildSocialsUrl({ error: providerError(err, 'TikTok') }));
   }
 }
