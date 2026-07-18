@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { dedupedGet, invalidate } from '@/lib/apiCache';
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import MultiSelect from '@/components/MultiSelect';
+import OnboardingWizard from '@/components/dashboard/OnboardingWizard';
 import { COUNTRIES, INDIAN_STATES, LANGUAGES, citiesForState } from '@/lib/geo';
 
 export default function ProfilePage() {
@@ -156,6 +157,7 @@ function InfluencerProfileForm() {
   const [niches, setNiches] = useState([]);
   const [selectedNiches, setSelectedNiches] = useState(new Set());
   const [savingNiches, setSavingNiches] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [form, setForm] = useState({
     bio: '',
     city: '',
@@ -169,32 +171,53 @@ function InfluencerProfileForm() {
     isAvailable: true,
   });
 
+  const load = useCallback(
+    ({ force = false } = {}) => {
+      setLoading(true);
+      return Promise.all([
+        dedupedGet('/api/v1/influencers/me', { force }),
+        dedupedGet('/api/v1/niches', { force }),
+      ])
+        .then(([me, n]) => {
+          const p = me.profile;
+          setForm({
+            bio: p.bio ?? '',
+            city: p.city ?? '',
+            state: p.state ?? '',
+            country: p.country ?? 'IN',
+            languages: p.languages ?? '',
+            gender: p.gender ?? '',
+            dob: p.dob ? p.dob.slice(0, 10) : '',
+            baseRate: p.baseRate != null ? String(p.baseRate) : '',
+            upiId: p.upiId ?? '',
+            isAvailable: p.isAvailable !== false,
+          });
+          const slugs = (p.niches ?? []).map((x) => x.niche.slug);
+          setSelectedNiches(new Set(slugs));
+          setNiches(n.niches ?? []);
+          // First login: profile not set up yet (no niches) and not dismissed.
+          if (
+            typeof window !== 'undefined' &&
+            slugs.length === 0 &&
+            !localStorage.getItem('ch_onboarded')
+          ) {
+            setShowWizard(true);
+          }
+        })
+        .catch((e) => toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) }))
+        .finally(() => setLoading(false));
+    },
+    [toast],
+  );
+
   useEffect(() => {
-    Promise.all([
-      dedupedGet('/api/v1/influencers/me'),
-      dedupedGet('/api/v1/niches'),
-    ])
-      .then(([me, n]) => {
-        const p = me.profile;
-        setForm({
-          bio: p.bio ?? '',
-          city: p.city ?? '',
-          state: p.state ?? '',
-          country: p.country ?? 'IN',
-          languages: p.languages ?? '',
-          gender: p.gender ?? '',
-          dob: p.dob ? p.dob.slice(0, 10) : '',
-          baseRate: p.baseRate != null ? String(p.baseRate) : '',
-          upiId: p.upiId ?? '',
-          isAvailable: p.isAvailable !== false,
-        });
-        setSelectedNiches(new Set((p.niches ?? []).map((x) => x.niche.slug)));
-        setNiches(n.niches ?? []);
-      })
-      .catch((e) => toast.push({ variant: 'danger', title: 'Failed to load', body: apiError(e) }))
-      .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    load();
+  }, [load]);
+
+  function dismissWizard() {
+    if (typeof window !== 'undefined') localStorage.setItem('ch_onboarded', '1');
+    setShowWizard(false);
+  }
 
   function set(k, v) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -381,8 +404,23 @@ function InfluencerProfileForm() {
               options={niches.map((n) => ({ value: n.slug, label: n.name }))}
               value={[...selectedNiches]}
               onChange={(slugs) => setSelectedNiches(new Set(slugs))}
+              onCreate={async (name) => {
+                try {
+                  const { data } = await apiClient.post('/api/v1/niches', { name });
+                  const niche = data.niche;
+                  setNiches((prev) =>
+                    prev.some((n) => n.slug === niche.slug) ? prev : [...prev, niche],
+                  );
+                  setSelectedNiches((prev) => new Set(prev).add(niche.slug));
+                  return niche.slug;
+                } catch (e) {
+                  toast.push({ variant: 'danger', title: "Couldn't add niche", body: apiError(e) });
+                  return null;
+                }
+              }}
               placeholder="Add a niche…"
               allSelectedLabel="All niches added"
+              createPlaceholder="Add a niche not listed…"
             />
           </div>
         )}
@@ -392,6 +430,29 @@ function InfluencerProfileForm() {
           </Button>
         </div>
       </Card>
+
+      {showWizard && (
+        <OnboardingWizard
+          open
+          niches={niches}
+          initial={{
+            bio: form.bio,
+            country: form.country,
+            state: form.state,
+            city: form.city,
+            languages: form.languages,
+            upiId: form.upiId,
+            baseRate: form.baseRate,
+            isAvailable: form.isAvailable,
+            niches: [...selectedNiches],
+          }}
+          onClose={dismissWizard}
+          onComplete={() => {
+            dismissWizard();
+            load({ force: true });
+          }}
+        />
+      )}
     </div>
   );
 }
