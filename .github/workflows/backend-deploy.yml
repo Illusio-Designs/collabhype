@@ -5,11 +5,11 @@ name: Backend CI/CD
 # (SamKirkland/FTP-Deploy-Action keeps a sync-state file on the server, so only
 # changed files are uploaded) followed by a Phusion Passenger restart.
 #
-# Required GitHub secrets — Settings → Secrets and variables → Actions
-# (or the `production` environment):
+# Required GitHub secrets — Settings → Secrets and variables → Actions →
+# Repository secrets:
 #   FTP_SERVER      → ftp host, no ftp:// prefix   (e.g. ftp.collabhype.in)
 #   FTP_USER        → ftp username                 (e.g. collabhype)
-#   FTP_PASS        → ftp password
+#   FTP_PASSWORD        → ftp password
 #   FTP_REMOTE_DIR  → remote app dir               (e.g. /Backend/)
 #   BACKEND_ENV     → (optional) full contents of the production .env
 #
@@ -40,7 +40,6 @@ jobs:
     name: Deploy Backend to FTP
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment: production
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,7 +63,7 @@ jobs:
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
+          password: ${{ secrets.FTP_PASSWORD }}
           # Explicit FTPS over port 21 (AUTH TLS). Switch to `ftp` if your host
           # does not support TLS.
           protocol: ftps
@@ -110,7 +109,7 @@ jobs:
         env:
           FTP_HOST: ${{ secrets.FTP_SERVER }}
           FTP_USER: ${{ secrets.FTP_USER }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASS }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_BASE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
           BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
         run: |
@@ -151,7 +150,7 @@ jobs:
         env:
           FTP_HOST: ${{ secrets.FTP_SERVER }}
           FTP_USER: ${{ secrets.FTP_USER }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASS }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_BASE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
         run: |
           set -e
