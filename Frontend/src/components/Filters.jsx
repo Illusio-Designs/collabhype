@@ -63,17 +63,6 @@ export default function Filters({ niches = [], extraSorts = [] }) {
         />
       </FormField>
 
-      <FormField label="Search" hint="Press Enter to search">
-        <Input
-          type="search"
-          defaultValue={sp.get('q') ?? ''}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') update('q', e.currentTarget.value.trim());
-          }}
-          placeholder="Search…"
-        />
-      </FormField>
-
       <FormField label="Sort by">
         <Select
           value={sp.get('sort') ?? ''}

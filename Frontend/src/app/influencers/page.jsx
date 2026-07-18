@@ -1,5 +1,6 @@
 import { apiFetchSafe } from '@/lib/api';
 import InfluencerBrowserClient from '@/components/InfluencerBrowserClient';
+import InfluencerSearch from '@/components/InfluencerSearch';
 import FiltersDrawer from '@/components/FiltersDrawer';
 import Pagination from '@/components/Pagination';
 import { Breadcrumb } from '@/components/ui';
@@ -38,14 +39,19 @@ export default async function InfluencersPage({ searchParams }) {
       <div className="mb-6">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Influencers' }]} />
       </div>
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">Influencers</h1>
-          <p className="mt-2 text-zinc-600">
-            {meta?.total ?? 0} creators. Filter by tier, niche, city or platform.
-          </p>
+      <header className="mb-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">Influencers</h1>
+            <p className="mt-2 text-zinc-600">
+              {meta?.total ?? 0} creators. Filter by tier, niche, city or platform.
+            </p>
+          </div>
+          <FiltersDrawer niches={niches} extraSorts={SORTS} />
         </div>
-        <FiltersDrawer niches={niches} extraSorts={SORTS} />
+        <div className="mt-4">
+          <InfluencerSearch />
+        </div>
       </header>
 
       <InfluencerBrowserClient influencers={influencers} />

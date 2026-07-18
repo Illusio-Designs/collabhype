@@ -90,7 +90,7 @@ export default function Modal({
                 )}
               </div>
             )}
-            <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{children}</div>
             {footer && (
               <div className="flex flex-shrink-0 flex-wrap justify-end gap-2 border-t border-zinc-100 bg-zinc-50 px-6 py-4">
                 {footer}
