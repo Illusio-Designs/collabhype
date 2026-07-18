@@ -7,6 +7,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { dedupedGet, invalidate } from '@/lib/apiCache';
 import { Badge, Button, Card, Pagination, Spinner, useToast } from '@/components/ui';
+import { useConfirm } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 
@@ -16,6 +17,7 @@ export default function AdminBlogPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [posts, setPosts] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
@@ -65,7 +67,7 @@ export default function AdminBlogPage() {
   }
 
   async function remove(p) {
-    if (!confirm(`Delete "${p.title}"? This cannot be undone.`)) return;
+    if (!(await confirm({ title: 'Delete post?', body: `"${p.title}" will be permanently deleted.`, variant: 'danger', confirmText: 'Delete' }))) return;
     setBusyId(p.id);
     try {
       await apiClient.delete(`/api/v1/admin/blog/${p.id}`);

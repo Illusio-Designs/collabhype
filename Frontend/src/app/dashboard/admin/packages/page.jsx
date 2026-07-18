@@ -19,6 +19,7 @@ import {
   Textarea,
   useToast,
 } from '@/components/ui';
+import { useConfirm } from '@/components/ui';
 import { ChevronRight } from 'lucide-react';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
@@ -58,6 +59,7 @@ export default function AdminPackagesPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [packages, setPackages] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
@@ -220,6 +222,7 @@ function num(v) {
 
 function PackageEditorModal({ editing, niches, onClose, onSaved }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const isNew = editing === 'new';
   const open = !!editing;
   const [form, setForm] = useState(emptyForm);
@@ -315,7 +318,7 @@ function PackageEditorModal({ editing, niches, onClose, onSaved }) {
 
   async function remove() {
     if (isNew) return;
-    if (!confirm(`Delete package "${editing.title}"? This cannot be undone.`)) return;
+    if (!(await confirm({ title: 'Delete package?', body: `"${editing.title}" will be permanently deleted.`, variant: 'danger', confirmText: 'Delete' }))) return;
     setDeleting(true);
     try {
       await apiClient.delete(`/api/v1/admin/packages/${editing.id}`);

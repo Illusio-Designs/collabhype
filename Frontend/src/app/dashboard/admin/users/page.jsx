@@ -16,6 +16,7 @@ import {
   Spinner,
   useToast,
 } from '@/components/ui';
+import { useConfirm } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
@@ -33,6 +34,7 @@ export default function AdminUsersPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [users, setUsers] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
@@ -78,7 +80,7 @@ export default function AdminUsersPage() {
 
   async function toggleActive(u) {
     const next = !u.isActive;
-    if (!confirm(`${next ? 'Reactivate' : 'Suspend'} ${u.fullName}?`)) return;
+    if (!(await confirm({ title: `${next ? 'Reactivate' : 'Suspend'} user?`, body: `${next ? 'Reactivate' : 'Suspend'} ${u.fullName}?`, variant: next ? 'primary' : 'danger', confirmText: next ? 'Reactivate' : 'Suspend' }))) return;
     setSavingId(u.id);
     try {
       await apiClient.patch(`/api/v1/admin/users/${u.id}`, { isActive: next });
@@ -94,7 +96,7 @@ export default function AdminUsersPage() {
 
   async function changeRole(u, role) {
     if (role === u.role) return;
-    if (!confirm(`Change ${u.fullName}'s role to ${role}?`)) return;
+    if (!(await confirm({ title: 'Change role?', body: `Change ${u.fullName}'s role to ${role}?`, confirmText: 'Change role' }))) return;
     setSavingId(u.id);
     try {
       await apiClient.patch(`/api/v1/admin/users/${u.id}`, { role });
@@ -111,9 +113,12 @@ export default function AdminUsersPage() {
 
   async function removeUser(u) {
     if (
-      !confirm(
-        `Delete ${u.fullName}? This cannot be undone. Accounts with orders or payouts can't be deleted — suspend them instead.`,
-      )
+      !(await confirm({
+        title: 'Delete user?',
+        body: `Delete ${u.fullName}? This cannot be undone. Accounts with orders or payouts can't be deleted — suspend them instead.`,
+        variant: 'danger',
+        confirmText: 'Delete',
+      }))
     ) {
       return;
     }
