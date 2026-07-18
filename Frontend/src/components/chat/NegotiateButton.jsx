@@ -15,15 +15,10 @@ export default function NegotiateButton({ influencerId, className }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
 
+  // Negotiation is a brand-only action, so the button is shown only to brands.
+  if (!user || user.role !== 'BRAND') return null;
+
   async function start() {
-    if (!user) {
-      router.push(`/login?next=/influencers`);
-      return;
-    }
-    if (user.role !== 'BRAND') {
-      toast.push({ variant: 'info', title: 'Brands only', body: 'Sign in as a brand to negotiate.' });
-      return;
-    }
     setBusy(true);
     try {
       const { data } = await apiClient.post('/api/v1/chat/conversations', { influencerId });
@@ -41,9 +36,12 @@ export default function NegotiateButton({ influencerId, className }) {
   }
 
   return (
-    <Button variant="outline" onClick={start} loading={busy} className={className}>
-      <MessagesSquare className="mr-2 h-4 w-4" />
-      Negotiate rate
-    </Button>
+    <div className="mt-3">
+      <Button variant="outline" onClick={start} loading={busy} className={className}>
+        <MessagesSquare className="mr-2 h-4 w-4" />
+        Negotiate rate
+      </Button>
+      <p className="mt-2 text-center text-xs text-zinc-500">Prefer a custom rate? Negotiate directly.</p>
+    </div>
   );
 }
