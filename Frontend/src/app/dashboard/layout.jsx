@@ -69,6 +69,7 @@ const NAV = {
       label: 'Main',
       items: [
         { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+        { href: '/dashboard/tasks', label: 'Tasks', icon: ClipboardList },
         { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList },
         { href: '/dashboard/messages', label: 'Messages', icon: MessagesSquare },
         { href: '/dashboard/payouts', label: 'Payouts', icon: Wallet },

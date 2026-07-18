@@ -51,6 +51,18 @@ export async function sendBrief(req, res) {
   res.json({ campaign });
 }
 
+export async function listOpenTasks(req, res) {
+  if (!req.user) throw ApiError.unauthorized();
+  const result = await svc.listOpenTasks(req.user.sub);
+  res.json(result);
+}
+
+export async function claimTask(req, res) {
+  if (!req.user) throw ApiError.unauthorized();
+  const result = await svc.claimTask(req.user.sub, req.params.id);
+  res.json(result);
+}
+
 // --- deliverable transitions ---
 
 export async function submitDraft(req, res) {
