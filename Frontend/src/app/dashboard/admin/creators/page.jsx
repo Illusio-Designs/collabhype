@@ -16,6 +16,7 @@ import {
   Spinner,
   useToast,
 } from '@/components/ui';
+import { useConfirm } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 import { TIER_LABEL, formatCount } from '@/lib/format';
@@ -41,6 +42,7 @@ export default function AdminCreatorsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [influencers, setInfluencers] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
@@ -92,7 +94,7 @@ export default function AdminCreatorsPage() {
   }, [user, load]);
 
   async function recomputeAll() {
-    if (!confirm('Recompute badges for all creators? This may take a moment.')) return;
+    if (!(await confirm({ title: 'Recompute badges?', body: 'Recompute badges for all creators? This may take a moment.', confirmText: 'Recompute' }))) return;
     setRecomputing(true);
     try {
       const { data } = await apiClient.post('/api/v1/influencers/admin/badges/recompute');

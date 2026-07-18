@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { dedupedGet, invalidate } from '@/lib/apiCache';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useConfirm } from '@/components/ui';
 import {
   Alert,
   Badge,
@@ -27,6 +28,7 @@ import { PLATFORM_BRAND_FEE_RATE } from '@/lib/types';
 export default function CartPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const confirm = useConfirm();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -82,7 +84,7 @@ export default function CartPage() {
 
   async function clearCart() {
     if (!cart?.items?.length) return;
-    if (!confirm('Remove all items from your cart?')) return;
+    if (!(await confirm({ title: 'Clear cart?', body: 'Remove all items from your cart?', variant: 'danger', confirmText: 'Clear' }))) return;
     setClearing(true);
     setError(null);
     try {

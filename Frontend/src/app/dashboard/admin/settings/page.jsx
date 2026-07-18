@@ -18,6 +18,7 @@ import {
   Textarea,
   useToast,
 } from '@/components/ui';
+import { useConfirm } from '@/components/ui';
 import { ChevronRight } from 'lucide-react';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
@@ -41,6 +42,7 @@ export default function AdminSettingsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [entries, setEntries] = useState([]); // [{ key, value }]
   const [loading, setLoading] = useState(true);
@@ -162,10 +164,11 @@ export default function AdminSettingsPage() {
 // values in the settings table, then click this to re-classify creators.
 function RetierButton() {
   const toast = useToast();
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
 
   async function run() {
-    if (!confirm('Re-tier all creators using the current tier_* thresholds?')) return;
+    if (!(await confirm({ title: 'Re-tier all creators?', body: 'Re-classify every creator using the current tier thresholds?', confirmText: 'Re-tier' }))) return;
     setBusy(true);
     try {
       const { data } = await apiClient.post('/api/v1/admin/tiers/recompute');
@@ -190,6 +193,7 @@ function RetierButton() {
 
 function SettingEditorModal({ editing, onClose, onSaved }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const isNew = editing === 'new';
   const open = !!editing;
   const [form, setForm] = useState({ key: '', value: '', type: 'string', isSecret: false });
@@ -248,7 +252,7 @@ function SettingEditorModal({ editing, onClose, onSaved }) {
 
   async function remove() {
     if (isNew) return;
-    if (!confirm(`Delete setting "${editing.key}"? This cannot be undone.`)) return;
+    if (!(await confirm({ title: 'Delete setting?', body: `"${editing.key}" will be permanently deleted.`, variant: 'danger', confirmText: 'Delete' }))) return;
     setDeleting(true);
     try {
       await apiClient.delete(`${SETTINGS_URL}/${encodeURIComponent(editing.key)}`);

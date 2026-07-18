@@ -4,6 +4,7 @@ import { useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
 import { uploadImage } from '@/lib/apiClient';
+import { useToast } from '@/components/ui';
 
 // react-quill touches the DOM, so it must be client-only (no SSR). next/dynamic
 // doesn't forward refs, so wrap it to pass `forwardedRef` through as `ref`.
@@ -28,6 +29,7 @@ const ReactQuill = dynamic(
 // Full-featured rich text editor. `value` is HTML; `onChange(html)`.
 export default function RichTextEditor({ value, onChange, placeholder = 'Write your post…' }) {
   const quillRef = useRef(null);
+  const toast = useToast();
 
   // Upload images to our backend and insert the returned URL, instead of
   // embedding huge base64 blobs in the HTML.
@@ -46,8 +48,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Write y
           editor?.insertEmbed(range ? range.index : 0, 'image', url, 'user');
           if (range) editor.setSelection(range.index + 1);
         } catch {
-          // surfaced by the browser; keep the editor usable
-          alert('Image upload failed. Please try again.');
+          toast.push({ variant: 'danger', title: 'Image upload failed', body: 'Please try again.' });
         }
       };
       input.click();

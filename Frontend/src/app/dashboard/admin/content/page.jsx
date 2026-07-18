@@ -17,6 +17,7 @@ import {
   Textarea,
   useToast,
 } from '@/components/ui';
+import { useConfirm } from '@/components/ui';
 import { ChevronRight } from 'lucide-react';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
@@ -27,6 +28,7 @@ export default function AdminContentPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -169,6 +171,7 @@ export default function AdminContentPage() {
 
 function ContentEditorModal({ editing, onClose, onSaved }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const isNew = editing === 'new';
   const open = !!editing;
   const [form, setForm] = useState({
@@ -223,7 +226,7 @@ function ContentEditorModal({ editing, onClose, onSaved }) {
 
   async function remove() {
     if (isNew) return;
-    if (!confirm(`Delete content "${editing.slug}"? This cannot be undone.`)) return;
+    if (!(await confirm({ title: 'Delete content?', body: `"${editing.slug}" will be permanently deleted.`, variant: 'danger', confirmText: 'Delete' }))) return;
     setDeleting(true);
     try {
       await apiClient.delete(`/api/v1/admin/content/${editing.slug}`);

@@ -9,6 +9,7 @@ import {
   Award,
   Bell,
   Building2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -251,6 +252,10 @@ function Sidebar({
   onToggleCollapsed,
   unreadCount = 0,
 }) {
+  // Collapsible nav groups (dropdown/accordion) — keyed by section label.
+  const [closedGroups, setClosedGroups] = useState({});
+  const toggleGroup = (label) => setClosedGroups((g) => ({ ...g, [label]: !g[label] }));
+
   // `collapsed` only applies to the desktop sticky sidebar. The mobile drawer
   // always renders fully expanded since screen space is already constrained.
   // `isMobile` flag toggles the visible close button inside the drawer.
@@ -327,14 +332,25 @@ function Sidebar({
       )}
 
       <nav className="mt-6 flex-1 space-y-6 overflow-y-auto">
-        {nav.map((section) => (
+        {nav.map((section) => {
+          const closed = !isCollapsed && closedGroups[section.label];
+          return (
           <div key={section.label}>
             {!isCollapsed && (
-              <div className="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-800/70">
+              <button
+                type="button"
+                onClick={() => toggleGroup(section.label)}
+                className="flex w-full items-center justify-between rounded-md px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-800/70 transition hover:text-brand-900"
+              >
                 {section.label}
-              </div>
+                <ChevronDown
+                  className={clsx('h-3.5 w-3.5 transition-transform', closed && '-rotate-90')}
+                />
+              </button>
             )}
-            <div className={clsx('space-y-0.5', isCollapsed ? 'mt-0' : 'mt-2')}>
+            <div
+              className={clsx('space-y-0.5', isCollapsed ? 'mt-0' : 'mt-2', closed && 'hidden')}
+            >
               {section.items.map((item) => {
                 const isActive = item.exact
                   ? pathname === item.href
@@ -382,7 +398,8 @@ function Sidebar({
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       <div
