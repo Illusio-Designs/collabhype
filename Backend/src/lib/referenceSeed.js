@@ -113,6 +113,14 @@ export const NANO_PACKS = [
   },
 ];
 
+// Default platform settings shown/edited in Admin → Platform settings. Only
+// created when missing — an admin's edited value is never overwritten.
+export const DEFAULT_SETTINGS = [
+  { key: 'tier_nano_max', value: '1000', type: 'number' },
+  { key: 'tier_micro_max', value: '100000', type: 'number' },
+  { key: 'tier_macro_max', value: '1000000', type: 'number' },
+];
+
 // Upsert all reference data (idempotent). Returns counts written.
 export async function seedReferenceData(prisma) {
   for (const n of NICHES) {
@@ -121,7 +129,10 @@ export async function seedReferenceData(prisma) {
   for (const p of NANO_PACKS) {
     await prisma.package.upsert({ where: { slug: p.slug }, update: p, create: p });
   }
-  return { niches: NICHES.length, packages: NANO_PACKS.length };
+  for (const s of DEFAULT_SETTINGS) {
+    await prisma.platformSettings.upsert({ where: { key: s.key }, update: {}, create: s });
+  }
+  return { niches: NICHES.length, packages: NANO_PACKS.length, settings: DEFAULT_SETTINGS.length };
 }
 
 // Create the super-admin from env creds if one doesn't already exist. Only runs
@@ -156,14 +167,15 @@ async function ensureAdmin(prisma) {
 export async function ensureSeedData(prisma) {
   if (String(process.env.AUTO_SEED ?? '').toLowerCase() === 'false') return;
   try {
-    const [niches, packages] = await Promise.all([
+    const [niches, packages, settings] = await Promise.all([
       prisma.niche.count(),
       prisma.package.count(),
+      prisma.platformSettings.count(),
     ]);
-    if (niches === 0 || packages === 0) {
+    if (niches === 0 || packages === 0 || settings === 0) {
       const res = await seedReferenceData(prisma);
       console.log(
-        `[seed] reference data seeded (${res.niches} niches, ${res.packages} packages)`,
+        `[seed] reference data seeded (${res.niches} niches, ${res.packages} packages, ${res.settings} settings)`,
       );
     }
     if (await ensureAdmin(prisma)) {
