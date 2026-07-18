@@ -27,15 +27,20 @@ import {
 } from '../modules/tracking/tracking.routes.js';
 import settingsRoutes from '../routes/admin/settings.js';
 import adminRoutes from '../modules/admin/admin.routes.js';
+import { cacheControl } from '../middleware/cache.js';
 
 const router = Router();
+
+// Public catalog reads are cacheable (short TTL + stale-while-revalidate). The
+// middleware skips caching for authenticated or non-GET requests.
+const publicCatalogCache = cacheControl(60, { sMaxAge: 300, swr: 600 });
 
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/brands', brandRoutes);
-router.use('/niches', nicheRoutes);
-router.use('/packages', packageRoutes);
-router.use('/influencers', influencerRoutes);
+router.use('/niches', publicCatalogCache, nicheRoutes);
+router.use('/packages', publicCatalogCache, packageRoutes);
+router.use('/influencers', publicCatalogCache, influencerRoutes);
 router.use('/oauth', oauthRoutes);
 router.use('/cart', cartRoutes);
 router.use('/checkout', checkoutRoutes);
@@ -46,10 +51,10 @@ router.use('/notifications', notificationRoutes);
 router.use('/support', supportRoutes);
 
 // Public content (SEO + page bodies)
-router.use('/content', contentPublicRoutes);
+router.use('/content', publicCatalogCache, contentPublicRoutes);
 
 // Public blog
-router.use('/blog', blogPublicRoutes);
+router.use('/blog', publicCatalogCache, blogPublicRoutes);
 
 // Tracking — public ingest endpoint, accepts events from frontend
 router.use('/track', trackingPublicRoutes);
