@@ -180,6 +180,41 @@ async function finalizePaidOrder(order, paymentId) {
   });
 }
 
+// Auto-assign Nano creators to a purchased package. Picks up to
+// pkg.influencerCount available Nano creators, preferring the package's niche
+// (if set), spreading work fairly (creators with the fewest existing
+// deliverables first), and tie-breaking on engagement. Falls back to any niche
+// if the niche-matched pool can't fill the pack.
+async function autoAssignNanoCreators(tx, pkg) {
+  const baseWhere = {
+    tier: 'NANO',
+    isAvailable: true,
+    user: { isActive: true },
+  };
+  const orderBy = [{ deliverables: { _count: 'asc' } }, { avgEngagementRate: 'desc' }];
+
+  const pick = async (where, take) =>
+    tx.influencerProfile.findMany({ where, orderBy, take, select: { id: true } });
+
+  let chosen = [];
+  if (pkg.nicheId) {
+    chosen = await pick(
+      { ...baseWhere, niches: { some: { nicheId: pkg.nicheId } } },
+      pkg.influencerCount,
+    );
+  }
+  // Top up from the wider Nano pool if the niche didn't fill the pack.
+  if (chosen.length < pkg.influencerCount) {
+    const have = new Set(chosen.map((c) => c.id));
+    const extra = await pick(
+      { ...baseWhere, id: { notIn: [...have] } },
+      pkg.influencerCount - chosen.length,
+    );
+    chosen = [...chosen, ...extra];
+  }
+  return chosen.map((c) => c.id);
+}
+
 // One Campaign per OrderItem. For each influencer × deliverable × qty,
 // create a CampaignDeliverable with an even per-unit payout share.
 //
@@ -202,11 +237,16 @@ async function materializeCampaigns(tx, order) {
       pkg = item.packageId
         ? await tx.package.findUnique({ where: { id: item.packageId } })
         : null;
+      // Honour any creators an admin explicitly pinned to the package…
       const rows = await tx.packageInfluencer.findMany({
         where: { packageId: item.packageId },
         select: { influencerId: true },
       });
       influencerIds = rows.map((r) => r.influencerId);
+      // …otherwise auto-assign Nano creators from the pool.
+      if (influencerIds.length === 0 && pkg) {
+        influencerIds = await autoAssignNanoCreators(tx, pkg);
+      }
     } else if (item.influencerId) {
       influencerIds = [item.influencerId];
     }

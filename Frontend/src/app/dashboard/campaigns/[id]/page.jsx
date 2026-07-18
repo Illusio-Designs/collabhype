@@ -184,7 +184,7 @@ export default function CampaignDetailPage() {
                   title="No deliverables yet"
                   description={
                     isBrand
-                      ? 'An admin still needs to assign influencers to this package campaign.'
+                      ? 'Creators are being matched to this package — deliverables will appear here shortly.'
                       : 'Check back soon — the brand is still setting up.'
                   }
                 />
@@ -220,10 +220,62 @@ export default function CampaignDetailPage() {
 
 // ============================ overview ============================
 
+// Aggregate roster stats for a campaign (used for auto-assigned Nano packs
+// where listing every creator individually is overwhelming).
+function rosterSummary(deliverables = []) {
+  const byCreator = new Map();
+  for (const d of deliverables) {
+    if (!byCreator.has(d.influencerId)) byCreator.set(d.influencerId, d.influencer);
+  }
+  const creators = [...byCreator.values()];
+  const reach = creators.reduce((sum, inf) => {
+    const followers = (inf?.socialAccounts ?? []).map((a) => a.followers ?? 0);
+    return sum + (followers.length ? Math.max(...followers) : 0);
+  }, 0);
+  const isDone = (s) => ['POSTED', 'PAID'].includes(s);
+  const isApproved = (s) => ['APPROVED', 'POSTED', 'PAID'].includes(s);
+  return {
+    creatorCount: byCreator.size,
+    total: deliverables.length,
+    approved: deliverables.filter((d) => isApproved(d.status)).length,
+    posted: deliverables.filter((d) => isDone(d.status)).length,
+    reach,
+  };
+}
+
 function OverviewTab({ campaign, isBrand, onEdit }) {
+  const roster = rosterSummary(campaign.deliverables ?? []);
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-4">
+        {roster.creatorCount > 0 && (
+          <Card padding="lg">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-zinc-900">Assigned creators</h2>
+              <Badge variant="brand">{roster.creatorCount} creators</Badge>
+            </div>
+            <p className="mt-1 text-sm text-zinc-500">
+              Creators were auto-matched to this package. Track their progress below.
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <RosterStat label="Creators" value={formatCount(roster.creatorCount)} />
+              <RosterStat label="Est. reach" value={formatCount(roster.reach)} />
+              <RosterStat label="Deliverables" value={String(roster.total)} />
+              <RosterStat
+                label="Posted"
+                value={`${roster.posted}/${roster.total}`}
+              />
+            </div>
+            <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-zinc-100">
+              <div
+                className="h-full rounded-full bg-brand-600 transition-all"
+                style={{
+                  width: `${roster.total ? Math.round((roster.posted / roster.total) * 100) : 0}%`,
+                }}
+              />
+            </div>
+          </Card>
+        )}
         <Card padding="lg">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-zinc-900">Brief</h2>
@@ -300,6 +352,15 @@ function OverviewTab({ campaign, isBrand, onEdit }) {
           </Card>
         )}
       </aside>
+    </div>
+  );
+}
+
+function RosterStat({ label, value }) {
+  return (
+    <div className="rounded-xl bg-zinc-50 p-3">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">{label}</div>
+      <div className="mt-1 text-xl font-bold text-zinc-900">{value}</div>
     </div>
   );
 }
