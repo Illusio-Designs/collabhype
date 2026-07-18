@@ -3,11 +3,14 @@ import InfluencerBrowserClient from '@/components/InfluencerBrowserClient';
 import FiltersDrawer from '@/components/FiltersDrawer';
 import Pagination from '@/components/Pagination';
 import { Breadcrumb } from '@/components/ui';
+import { metadataForSlug } from '@/lib/content';
 
-export const metadata = {
-  title: 'Browse influencers — Collabhype',
-  description: 'Find vetted influencers by tier, niche, city, and platform.',
-};
+export async function generateMetadata() {
+  return metadataForSlug('influencers', {
+    title: 'Browse influencers — Collabhype',
+    description: 'Find vetted influencers by tier, niche, city, and platform.',
+  });
+}
 
 const SORTS = [
   { value: 'followers_desc', label: 'Most followers' },

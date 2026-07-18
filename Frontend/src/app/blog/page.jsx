@@ -1,11 +1,14 @@
 import Link from 'next/link';
 import { apiFetchSafe } from '@/lib/api';
+import { metadataForSlug } from '@/lib/content';
 import { Breadcrumb } from '@/components/ui';
 
-export const metadata = {
-  title: 'Blog — Collabhype',
-  description: 'Guides, tips, and updates on influencer marketing in India.',
-};
+export async function generateMetadata() {
+  return metadataForSlug('blog', {
+    title: 'Blog — Collabhype',
+    description: 'Guides, tips, and updates on influencer marketing in India.',
+  });
+}
 
 // Always render fresh so newly published posts appear without a rebuild.
 export const dynamic = 'force-dynamic';

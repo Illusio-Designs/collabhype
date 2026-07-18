@@ -1,13 +1,16 @@
 import Link from 'next/link';
 import { apiFetchSafe } from '@/lib/api';
+import { metadataForSlug } from '@/lib/content';
 import PackageCard from '@/components/PackageCard';
 import { Breadcrumb } from '@/components/ui';
 
-export const metadata = {
-  title: 'Packages — Collabhype',
-  description:
-    'Bulk Nano influencer packs for high-volume campaigns. Micro / Macro / Mega creators are hand-picked.',
-};
+export async function generateMetadata() {
+  return metadataForSlug('packages', {
+    title: 'Packages — Collabhype',
+    description:
+      'Bulk Nano influencer packs for high-volume campaigns. Micro / Macro / Mega creators are hand-picked.',
+  });
+}
 
 const TIER_TILES = [
   {

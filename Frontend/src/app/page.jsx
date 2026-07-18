@@ -13,6 +13,15 @@ import FAQSection from '@/components/home/FAQSection';
 import Newsletter from '@/components/home/Newsletter';
 import FinalCTA from '@/components/home/FinalCTA';
 import { apiFetchSafe } from '@/lib/api';
+import { metadataForSlug } from '@/lib/content';
+
+export async function generateMetadata() {
+  return metadataForSlug('home', {
+    title: "Collabhype — India's self-serve influencer marketplace",
+    description:
+      'Buy Nano creator packs in bulk or hand-pick Micro/Macro/Mega creators. Escrow-backed payouts, transparent pricing.',
+  });
+}
 
 export default async function HomePage() {
   const [packagesData, nichesData] = await Promise.all([
