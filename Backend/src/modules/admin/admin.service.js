@@ -80,7 +80,11 @@ export async function updateUser(userId, patch) {
     throw ApiError.badRequest('Admin accounts cannot be modified here');
   }
   const data = {};
-  if (patch.isActive !== undefined) data.isActive = patch.isActive;
+  if (patch.isActive !== undefined) {
+    data.isActive = patch.isActive;
+    // Reactivating within the recovery window restores the account.
+    if (patch.isActive === true) data.deletedAt = null;
+  }
   if (patch.role !== undefined) data.role = patch.role;
   return prisma.user.update({ where: { id: userId }, data, select: userSelect });
 }
