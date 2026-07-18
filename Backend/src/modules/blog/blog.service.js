@@ -41,6 +41,7 @@ const LIST_FIELDS = {
 // ---- Public ----
 
 export async function listPublished({ page = 1, limit = 12, tag } = {}) {
+  if (!prisma.blogPost) return { items: [], total: 0 }; // client not yet regenerated
   const where = { status: 'PUBLISHED' };
   if (tag) where.tags = { contains: tag };
   try {
@@ -70,6 +71,7 @@ export async function getPublishedBySlug(slug) {
 // ---- Admin ----
 
 export async function adminList({ page = 1, limit = 20, status } = {}) {
+  if (!prisma.blogPost) return { items: [], total: 0 }; // client not yet regenerated
   const where = {};
   if (status) where.status = status;
   try {
