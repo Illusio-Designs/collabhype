@@ -18,7 +18,7 @@ const schema = z.object({
 function LoginForm() {
   const router = useRouter();
   const sp = useSearchParams();
-  const next = sp.get('next') || '/dashboard';
+  const next = sp.get('next') || '/dashboard/profile';
   const justRegistered = sp.get('registered') === '1';
   const { login } = useAuth();
   const [serverError, setServerError] = useState(null);
