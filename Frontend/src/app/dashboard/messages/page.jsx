@@ -1,6 +1,6 @@
 'use client';
 
-import { PageSkeleton } from '@/components/dashboard/Skeletons';
+import { PageSkeleton, CardListSkeleton, ChatThreadSkeleton } from '@/components/dashboard/Skeletons';
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -120,7 +120,7 @@ function MessagesInner() {
           </div>
           <div className="max-h-[70vh] overflow-y-auto">
             {loadingList ? (
-              <div className="grid h-40 place-items-center"><Spinner /></div>
+              <CardListSkeleton items={6} className="p-2" />
             ) : conversations.length === 0 ? (
               <p className="p-6 text-sm text-zinc-500">
                 No conversations yet.{' '}
@@ -261,7 +261,7 @@ function ChatThread({ userId, isBrand, loading, thread, onBack, onChanged, onCon
 
       <div className="flex-1 space-y-3 overflow-y-auto bg-zinc-50/50 p-4">
         {loading && !thread ? (
-          <div className="grid h-full place-items-center"><Spinner /></div>
+          <ChatThreadSkeleton bubbles={6} />
         ) : (
           (thread?.messages ?? []).map((m) => (
             <MessageBubble
@@ -371,7 +371,7 @@ function MessageBubble({ m, mine, isBrand, onAccept, onDecline }) {
 
 export default function MessagesPage() {
   return (
-    <Suspense fallback={<div className="grid h-64 place-items-center text-brand-700"><Spinner size="lg" /></div>}>
+    <Suspense fallback={<PageSkeleton kpis={0} cards={1} />}>
       <MessagesInner />
     </Suspense>
   );
