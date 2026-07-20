@@ -1,8 +1,24 @@
-import { Tabs } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
+import { Redirect, Tabs } from 'expo-router';
 import { Bell, ClipboardList, LayoutDashboard, User, Wallet } from 'lucide-react-native';
 import { COLORS } from '@/lib/theme';
+import { useAuth } from '@/lib/auth';
 
 export default function CreatorTabsLayout() {
+  const { user, isLoading } = useAuth();
+
+  // Login-gated, like the web dashboard: no session → login; a brand who lands
+  // here is bounced to the brand tabs.
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color={COLORS.brand[700]} />
+      </View>
+    );
+  }
+  if (!user) return <Redirect href="/login" />;
+  if (user.role === 'BRAND') return <Redirect href="/(brand)" />;
+
   return (
     <Tabs
       screenOptions={{
