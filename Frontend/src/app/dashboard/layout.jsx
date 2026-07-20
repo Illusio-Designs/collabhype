@@ -261,6 +261,12 @@ function Sidebar({
   // `isMobile` flag toggles the visible close button inside the drawer.
   const renderContent = (isCollapsed, isMobile = false) => (
     <div
+      // `data-lenis-prevent` is critical: the app wraps everything in Lenis
+      // smooth-scroll, which hijacks the wheel and scrolls the page body. Without
+      // this, scrolling over the sidebar scrolls the dashboard content instead of
+      // the sidebar itself. This opts the sidebar out so native overflow scroll
+      // works here.
+      data-lenis-prevent
       className={clsx(
         'no-scrollbar flex h-screen flex-col overflow-y-auto overscroll-contain border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-brand-100 to-brand-200 p-4 transition-[width] duration-200',
         isCollapsed ? 'w-20 items-center' : 'w-72',
