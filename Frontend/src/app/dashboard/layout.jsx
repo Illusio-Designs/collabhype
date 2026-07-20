@@ -262,7 +262,7 @@ function Sidebar({
   const renderContent = (isCollapsed, isMobile = false) => (
     <div
       className={clsx(
-        'flex h-screen flex-col overflow-hidden border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-brand-100 to-brand-200 p-4 transition-[width] duration-200',
+        'no-scrollbar flex h-screen flex-col overflow-y-auto overscroll-contain border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-brand-100 to-brand-200 p-4 transition-[width] duration-200',
         isCollapsed ? 'w-20 items-center' : 'w-72',
       )}
     >
@@ -331,7 +331,7 @@ function Sidebar({
         </button>
       )}
 
-      <nav className="no-scrollbar mt-6 min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain">
+      <nav className="mt-6 shrink-0 space-y-6">
         {nav.map((section) => {
           const closed = !isCollapsed && closedGroups[section.label];
           return (
@@ -404,7 +404,7 @@ function Sidebar({
 
       <div
         className={clsx(
-          'mt-6 flex shrink-0 items-center rounded-2xl bg-zinc-950 text-white',
+          'sticky bottom-0 z-10 mt-auto flex shrink-0 items-center rounded-2xl bg-zinc-950 text-white shadow-lg',
           isCollapsed ? 'h-12 w-12 justify-center' : 'gap-3 p-3',
         )}
       >
