@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiError } from '@/lib/apiClient';
 import { dedupedGet } from '@/lib/apiCache';
-import { Avatar, Badge, Card, Select, Spinner, Stat, useToast } from '@/components/ui';
+import { Avatar, Badge, Card, Select, Stat, useToast } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
+import { TablePageSkeleton } from '@/components/dashboard/Skeletons';
 
 const RANGE_OPTIONS = [
   { value: '7', label: 'Last 7 days' },
@@ -49,11 +50,7 @@ export default function AdminTrackingPage() {
   }, [user, load]);
 
   if (isLoading || !user || user.role !== 'ADMIN' || loading) {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <TablePageSkeleton kpis={4} cols={4} />;
   }
 
   return (

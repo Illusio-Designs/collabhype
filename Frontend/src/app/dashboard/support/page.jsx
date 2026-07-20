@@ -1,5 +1,7 @@
 'use client';
 
+import { PageSkeleton } from '@/components/dashboard/Skeletons';
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -133,11 +135,7 @@ export default function SupportPage() {
   );
 
   if (isLoading || loading) {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton kpis={4} cards={2} />;
   }
 
   return (

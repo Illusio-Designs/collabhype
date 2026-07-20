@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import Spinner from './Spinner';
+import Skeleton from './Skeleton';
 import EmptyState from './EmptyState';
 
 // Generic data table. Columns are declared with `accessor` (string key or
@@ -60,14 +60,21 @@ export default function Table({
           </thead>
           <tbody className="divide-y divide-zinc-100 bg-white">
             {loading ? (
-              <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center">
-                  <div className="inline-flex items-center gap-2 text-sm text-zinc-500">
-                    <Spinner size="sm" />
-                    Loading…
-                  </div>
-                </td>
-              </tr>
+              Array.from({ length: 6 }).map((_, r) => (
+                <tr key={r}>
+                  {columns.map((col, c) => (
+                    <td
+                      key={col.key ?? col.header ?? c}
+                      className={clsx(pad, col.align === 'right' && 'text-right')}
+                    >
+                      <Skeleton
+                        variant="text"
+                        className={clsx('h-4', c === 0 ? 'w-32' : 'w-16', col.align === 'right' && 'ml-auto')}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))
             ) : data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="p-0">

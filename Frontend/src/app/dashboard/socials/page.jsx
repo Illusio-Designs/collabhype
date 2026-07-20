@@ -1,5 +1,7 @@
 'use client';
 
+import { PageSkeleton } from '@/components/dashboard/Skeletons';
+
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient, apiError } from '@/lib/apiClient';
@@ -134,11 +136,7 @@ function SocialsInner() {
   }
 
   if (isLoading || loading) {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton kpis={0} cards={2} />;
   }
 
   const byPlatform = (p) => socials.find((s) => s.platform === p);

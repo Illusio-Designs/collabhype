@@ -20,4 +20,7 @@ export class ApiError extends Error {
   static conflict(msg = 'Conflict') {
     return new ApiError(409, msg);
   }
+  static serviceUnavailable(msg = 'Service unavailable') {
+    return new ApiError(503, msg);
+  }
 }

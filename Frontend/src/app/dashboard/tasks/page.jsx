@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
-import { Badge, Button, Card, EmptyState, Spinner, useToast } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, useToast } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
+import { PageSkeleton, CardSkeleton } from '@/components/dashboard/Skeletons';
 import { DELIVERABLE_LABEL, formatINR } from '@/lib/format';
 
 export default function TasksPage() {
@@ -56,11 +57,7 @@ export default function TasksPage() {
   }
 
   if (isLoading || !user || user.role !== 'INFLUENCER') {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton kpis={0} cards={3} />;
   }
 
   return (
@@ -73,7 +70,11 @@ export default function TasksPage() {
       />
 
       {loading ? (
-        <Card padding="lg" className="grid h-40 place-items-center"><Spinner /></Card>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <CardSkeleton key={i} lines={3} />
+          ))}
+        </div>
       ) : tasks.length === 0 ? (
         <EmptyState
           title="No tasks right now"

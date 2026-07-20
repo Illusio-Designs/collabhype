@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
-import { Avatar, Badge, Button, Card, Spinner, Stat } from '@/components/ui';
+import { Avatar, Badge, Button, Card, Skeleton, Stat } from '@/components/ui';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 import PageHeader from '@/components/dashboard/PageHeader';
+import { CardSkeleton, CardListSkeleton } from '@/components/dashboard/Skeletons';
 import { formatINR, formatCount } from '@/lib/format';
 
 // Small client-side fetch helper: loading / error / data.
@@ -466,11 +467,17 @@ function SectionHead({ title, link }) {
 
 function LoadingCard() {
   return (
-    <Card padding="lg">
-      <div className="grid h-32 place-items-center text-brand-700">
-        <Spinner size="lg" />
+    <div className="grid gap-6 lg:grid-cols-3">
+      <Card padding="lg" className="min-w-0 lg:col-span-2">
+        <Skeleton variant="text" className="h-5 w-40" />
+        <div className="mt-4">
+          <CardListSkeleton items={4} />
+        </div>
+      </Card>
+      <div className="min-w-0">
+        <CardSkeleton lines={4} />
       </div>
-    </Card>
+    </div>
   );
 }
 

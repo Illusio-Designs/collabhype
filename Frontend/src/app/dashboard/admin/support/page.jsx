@@ -14,13 +14,13 @@ import {
   Modal,
   Pagination,
   Select,
-  Spinner,
   Textarea,
   useToast,
 } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
+import { TablePageSkeleton } from '@/components/dashboard/Skeletons';
 
 const PAGE_SIZE = 20;
 const ADMIN_STATS_URL = '/api/v1/support/admin/stats';
@@ -107,11 +107,7 @@ export default function AdminSupportPage() {
   }
 
   if (isLoading || !user || user.role !== 'ADMIN' || loading) {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <TablePageSkeleton kpis={4} cols={7} />;
   }
 
   const kpis = [

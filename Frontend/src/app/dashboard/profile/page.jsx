@@ -1,5 +1,7 @@
 'use client';
 
+import { PageSkeleton } from '@/components/dashboard/Skeletons';
+
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -89,11 +91,7 @@ function BrandProfileForm() {
   }
 
   if (loading) {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton kpis={0} cards={2} />;
   }
 
   return (
@@ -292,11 +290,7 @@ function InfluencerProfileForm() {
   }
 
   if (loading) {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton kpis={0} cards={2} />;
   }
 
   return (

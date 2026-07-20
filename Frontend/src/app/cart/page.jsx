@@ -1,5 +1,7 @@
 'use client';
 
+import { PageSkeleton } from '@/components/dashboard/Skeletons';
+
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -146,11 +148,7 @@ export default function CartPage() {
   }
 
   if (authLoading || loading) {
-    return (
-      <div className="grid h-[40vh] place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton kpis={0} cards={2} />;
   }
 
   if (!cart?.items?.length) {

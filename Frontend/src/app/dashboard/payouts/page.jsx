@@ -1,5 +1,7 @@
 'use client';
 
+import { TablePageSkeleton } from '@/components/dashboard/Skeletons';
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -52,11 +54,7 @@ export default function PayoutsPage() {
   }, [user]);
 
   if (loading) {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <TablePageSkeleton kpis={4} cols={5} />;
   }
 
   const summary = data.summary ?? {};

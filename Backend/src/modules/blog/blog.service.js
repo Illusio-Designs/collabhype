@@ -24,6 +24,16 @@ async function uniqueSlug(base, exceptId) {
   }
 }
 
+// The BlogPost model may be missing from a stale Prisma client (generated
+// before the model was added). List methods degrade to an empty list; the
+// single-record + write methods can't return meaningful data, so they surface
+// a clean 404/503 instead of a cryptic "cannot read properties of undefined".
+function ensureBlogModel({ write = false } = {}) {
+  if (prisma.blogPost) return;
+  if (write) throw ApiError.serviceUnavailable('Blog is temporarily unavailable. Please try again shortly.');
+  throw ApiError.notFound('Post not found');
+}
+
 const LIST_FIELDS = {
   id: true,
   slug: true,
@@ -63,6 +73,7 @@ export async function listPublished({ page = 1, limit = 12, tag } = {}) {
 }
 
 export async function getPublishedBySlug(slug) {
+  ensureBlogModel();
   const post = await prisma.blogPost.findUnique({ where: { slug } });
   if (!post || post.status !== 'PUBLISHED') throw ApiError.notFound('Post not found');
   return post;
@@ -93,6 +104,7 @@ export async function adminList({ page = 1, limit = 20, status } = {}) {
 }
 
 export async function adminGet(id) {
+  ensureBlogModel();
   const post = await prisma.blogPost.findUnique({ where: { id } });
   if (!post) throw ApiError.notFound('Post not found');
   return post;
@@ -104,6 +116,7 @@ function publishedAtFor(status, current) {
 }
 
 export async function create(input) {
+  ensureBlogModel({ write: true });
   const slug = await uniqueSlug(input.slug || input.title);
   const status = input.status === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT';
   return prisma.blogPost.create({
@@ -124,6 +137,7 @@ export async function create(input) {
 }
 
 export async function update(id, input) {
+  ensureBlogModel({ write: true });
   const existing = await prisma.blogPost.findUnique({ where: { id } });
   if (!existing) throw ApiError.notFound('Post not found');
 
@@ -151,6 +165,7 @@ export async function update(id, input) {
 }
 
 export async function remove(id) {
+  ensureBlogModel({ write: true });
   await prisma.blogPost.deleteMany({ where: { id } });
   return { ok: true };
 }

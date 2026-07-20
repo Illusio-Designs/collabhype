@@ -10,6 +10,7 @@ import { useConfirm } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
+import { TablePageSkeleton } from '@/components/dashboard/Skeletons';
 import { formatINR } from '@/lib/format';
 
 const PAGE_SIZE = 20;
@@ -100,11 +101,7 @@ export default function AdminOrdersPage() {
   }
 
   if (isLoading || !user || user.role !== 'ADMIN') {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <TablePageSkeleton kpis={4} cols={7} />;
   }
 
   const kpis = [

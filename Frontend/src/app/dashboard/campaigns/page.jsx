@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiError } from '@/lib/apiClient';
 import { dedupedGet } from '@/lib/apiCache';
-import { Badge, Card, EmptyState, Pagination, Spinner, Tabs, useToast } from '@/components/ui';
+import { Badge, Card, EmptyState, Pagination, Tabs, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
+import { PageSkeleton } from '@/components/dashboard/Skeletons';
 import { formatINR } from '@/lib/format';
 
 const PAGE_SIZE = 20;
@@ -65,11 +66,7 @@ export default function CampaignsListPage() {
   }
 
   if (isLoading || loading) {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton kpis={4} cards={2} />;
   }
 
   const tabs = [
