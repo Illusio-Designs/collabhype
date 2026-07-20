@@ -438,6 +438,8 @@ function Sidebar({
           <LogOut className="h-4 w-4" />
         </button>
       )}
+      {/* bottom breathing room (padding-bottom is unreliable in scroll containers) */}
+      <div className="h-3 shrink-0" aria-hidden />
     </div>
   );
 
