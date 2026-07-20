@@ -6,7 +6,7 @@ import { metadataForSlug } from '@/lib/content';
 const FALLBACK_METADATA = {
   title: 'How it works — Collabhype',
   description:
-    'From cart to campaign in four steps. Self-serve influencer marketing with escrow.',
+    'From booking to campaign in four steps. Self-serve influencer marketing with escrow.',
 };
 
 export function generateMetadata() {
@@ -22,7 +22,7 @@ const STEPS = [
       'Filter by tier — nano, micro, macro, mega',
       'Filter by niche — beauty, food, fitness, and more',
       'Filter by city — including Tier-2 and Tier-3',
-      'Add packages and individual creators to one cart',
+      'Add packages and individual creators to one booking',
     ],
   },
   {
@@ -86,7 +86,7 @@ export default function HowItWorksPage() {
           <div className="text-center">
           <span className="eyebrow">How it works</span>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
-            From cart to campaign in{' '}
+            From booking to campaign in{' '}
             <span className="text-brand-700">four steps</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-zinc-600">

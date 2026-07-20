@@ -86,7 +86,7 @@ export default function CartPage() {
 
   async function clearCart() {
     if (!cart?.items?.length) return;
-    if (!(await confirm({ title: 'Clear cart?', body: 'Remove all items from your cart?', variant: 'danger', confirmText: 'Clear' }))) return;
+    if (!(await confirm({ title: 'Clear booking?', body: 'Remove all items from your booking?', variant: 'danger', confirmText: 'Clear' }))) return;
     setClearing(true);
     setError(null);
     try {
@@ -160,12 +160,12 @@ export default function CartPage() {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-6">
-          <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
+          <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Booking' }]} />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Your cart</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Your booking</h1>
         <div className="mt-10">
           <EmptyState
-            title="Your cart is empty"
+            title="Your booking is empty"
             description="Add a package or pick a few creators to get started."
             action={
               <div className="flex gap-3">
@@ -186,16 +186,16 @@ export default function CartPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-6">
-        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Booking' }]} />
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Your cart</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Your booking</h1>
         <button
           onClick={clearCart}
           disabled={clearing}
           className="text-sm font-medium text-red-600 transition hover:text-red-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {clearing ? 'Clearing…' : 'Clear cart'}
+          {clearing ? 'Clearing…' : 'Clear booking'}
         </button>
       </div>
       <p className="mt-2 text-zinc-600">

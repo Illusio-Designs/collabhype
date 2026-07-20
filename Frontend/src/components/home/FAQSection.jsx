@@ -7,7 +7,7 @@ const ITEMS = [
   {
     title: 'How does pricing work?',
     content:
-      "Packages have a fixed all-in price covering all influencers and deliverables. For custom mixes, the cart prices each deliverable at the creator's published rate card. There are no platform fees on top — what you see is what you pay.",
+      "Packages have a fixed all-in price covering all influencers and deliverables. For custom mixes, your booking prices each deliverable at the creator's published rate card. There are no platform fees on top — what you see is what you pay.",
   },
   {
     title: "What if a creator doesn't deliver?",
@@ -27,7 +27,7 @@ const ITEMS = [
   {
     title: 'Can I mix tiers in one campaign?',
     content:
-      'Absolutely. The custom cart is built for this — add 10 nano creators for engagement, 2 micros for reach, and 1 macro for credibility, all in one checkout.',
+      'Absolutely. The custom booking is built for this — add 10 nano creators for engagement, 2 micros for reach, and 1 macro for credibility, all in one checkout.',
   },
   {
     title: 'What payment methods do you accept?',

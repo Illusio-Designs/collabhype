@@ -164,7 +164,7 @@ export default function InfluencerBrowserClient({ influencers }) {
                 disabled={busy || addedCount > 0}
                 size="md"
               >
-                {busy ? <Spinner size="sm" /> : 'Add all to cart'}
+                {busy ? <Spinner size="sm" /> : 'Add all to booking'}
               </Button>
             </div>
           </div>

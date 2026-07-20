@@ -52,7 +52,7 @@ const NAV = {
         { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList },
         { href: '/dashboard/messages', label: 'Messages', icon: MessagesSquare },
         { href: '/dashboard/orders', label: 'Orders', icon: Receipt },
-        { href: '/cart', label: 'Cart', icon: ShoppingCart },
+        { href: '/cart', label: 'Booking', icon: ShoppingCart },
       ],
     },
     {

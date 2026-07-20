@@ -16,7 +16,7 @@ import { Check } from 'lucide-react';
 // Deliverable so callers don't have to redefine the workflow shapes.
 
 export const ORDER_STEPS = [
-  { key: 'PLACED',     label: 'Order placed',     sub: 'Cart checked out' },
+  { key: 'PLACED',     label: 'Order placed',     sub: 'Booking checked out' },
   { key: 'PAID',       label: 'Payment confirmed', sub: 'Funds in escrow' },
   { key: 'BRIEF_SENT', label: 'Brief dispatched',  sub: 'Creators notified' },
   { key: 'IN_PROGRESS', label: 'In progress',      sub: 'Drafts + approvals' },

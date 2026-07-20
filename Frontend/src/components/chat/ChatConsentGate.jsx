@@ -9,7 +9,7 @@ import { Button, Card, useToast } from '@/components/ui';
 const RULES = [
   'Keep all communication on Collabhype — never share phone numbers, emails, or other contact details.',
   'Do not try to move the deal off-platform. Payments and delivery happen through Collabhype only.',
-  'Negotiate rates here; the creator sends an offer and the brand adds it to cart.',
+  'Negotiate rates here; the creator sends an offer and the brand adds it to booking.',
   'Sharing contact details is a policy violation and repeated attempts suspend your account.',
 ];
 
