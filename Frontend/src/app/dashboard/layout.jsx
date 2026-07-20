@@ -262,7 +262,7 @@ function Sidebar({
   const renderContent = (isCollapsed, isMobile = false) => (
     <div
       className={clsx(
-        'flex h-screen flex-col overflow-hidden border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-brand-100 to-brand-200 p-4 transition-[width] duration-200',
+        'flex h-screen flex-col overflow-y-auto overscroll-contain border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-brand-100 to-brand-200 p-4 transition-[width] duration-200 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         isCollapsed ? 'w-20 items-center' : 'w-72',
       )}
     >
@@ -331,7 +331,7 @@ function Sidebar({
         </button>
       )}
 
-      <nav className="mt-6 min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav className="mt-6 shrink-0 space-y-6">
         {nav.map((section) => {
           const closed = !isCollapsed && closedGroups[section.label];
           return (
