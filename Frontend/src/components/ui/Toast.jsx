@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react';
@@ -41,8 +41,14 @@ export function ToastProvider({ children }) {
     [remove],
   );
 
+  // Memoize the context value — a fresh object here would give every useToast()
+  // consumer a new reference on each provider render (e.g. on every toast push /
+  // auto-dismiss), which re-fires any effect that depends on `toast` and can turn
+  // one failing request into a refetch storm across the app.
+  const value = useMemo(() => ({ push, remove }), [push, remove]);
+
   return (
-    <ToastContext.Provider value={{ push, remove }}>
+    <ToastContext.Provider value={value}>
       {children}
       <div className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-full max-w-sm flex-col gap-2">
         <AnimatePresence>

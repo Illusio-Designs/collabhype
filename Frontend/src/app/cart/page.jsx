@@ -125,6 +125,9 @@ export default function CartPage() {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             });
+            // Backend empties the cart on payment — drop the client cache too so
+            // the header/cart don't show phantom items within the dedupe TTL.
+            invalidate('/api/v1/cart');
             router.push(
               `/checkout/success?order=${order.orderId}&num=${encodeURIComponent(order.orderNumber)}`,
             );

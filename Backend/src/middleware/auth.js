@@ -8,7 +8,14 @@ export const requireAuth = (req, _res, next) => {
   }
   const token = header.slice(7);
   try {
-    req.user = verifyToken(token);
+    const payload = verifyToken(token);
+    // Special-purpose tokens (e.g. password-reset, kind:'reset') are signed with
+    // the same secret but must NOT authenticate API requests. Only accept normal
+    // auth tokens (no `kind`, or an explicit auth kind).
+    if (payload.kind && payload.kind !== 'auth') {
+      return next(ApiError.unauthorized('Invalid or expired token'));
+    }
+    req.user = payload;
     next();
   } catch {
     next(ApiError.unauthorized('Invalid or expired token'));
