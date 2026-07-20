@@ -26,7 +26,7 @@ export default function AddPackageButton({ packageId, slug }) {
   if (!user) {
     return (
       <Link href={`/login?next=/packages/${slug}`} className="block">
-        <Button fullWidth>Sign in to add to cart</Button>
+        <Button fullWidth>Sign in to add to booking</Button>
       </Link>
     );
   }
@@ -61,7 +61,7 @@ export default function AddPackageButton({ packageId, slug }) {
     return (
       <>
         <Button fullWidth onClick={() => router.push('/cart')}>
-          View cart →
+          View booking →
         </Button>
         <Button variant="ghost" fullWidth size="sm" onClick={() => setAdded(false)} className="mt-2">
           Add another
@@ -73,7 +73,7 @@ export default function AddPackageButton({ packageId, slug }) {
   return (
     <>
       <Button fullWidth onClick={add} loading={busy}>
-        Add to cart
+        Add to booking
       </Button>
       {err && (
         <Alert variant="danger" className="mt-2">

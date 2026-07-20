@@ -244,7 +244,7 @@ function ChatThread({ userId, isBrand, loading, thread, onBack, onChanged, onCon
   async function actOnOffer(messageId, action) {
     try {
       await apiClient.post(`/api/v1/chat/conversations/${convo.id}/offers/${messageId}/${action}`);
-      if (action === 'accept') toast.push({ variant: 'success', title: 'Added to cart', body: 'Review it in your cart.' });
+      if (action === 'accept') toast.push({ variant: 'success', title: 'Added to booking', body: 'Review it in your booking.' });
       onChanged();
     } catch (e) {
       toast.push({ variant: 'danger', title: 'Failed', body: apiError(e) });
@@ -337,7 +337,7 @@ function MessageBubble({ m, mine, isBrand, onAccept, onDecline }) {
           <div className="text-lg font-bold text-zinc-900">{formatINR(m.price)}</div>
           {status === 'PENDING' && isBrand && (
             <div className="mt-2 flex gap-2">
-              <Button size="sm" onClick={onAccept}>Accept & add to cart</Button>
+              <Button size="sm" onClick={onAccept}>Accept & add to booking</Button>
               <Button size="sm" variant="ghost" onClick={onDecline}>Decline</Button>
             </div>
           )}

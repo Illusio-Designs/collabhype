@@ -16,7 +16,7 @@ const BENEFITS = [
   {
     icon: Users,
     title: 'Hand-pick creators',
-    body: 'Browse by tier, niche, city, and platform. Add creators to your cart in one click.',
+    body: 'Browse by tier, niche, city, and platform. Add creators to your booking in one click.',
   },
   {
     icon: ShieldCheck,

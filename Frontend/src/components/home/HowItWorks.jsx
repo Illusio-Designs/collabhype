@@ -40,7 +40,7 @@ export default function HowItWorks() {
         >
           <span className="eyebrow">How it works</span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
-            From cart to campaign in four steps
+            From booking to campaign in four steps
           </h2>
           <p className="mt-4 text-zinc-600">
             Built for speed. Designed so brands and creators never lose track of a deliverable.

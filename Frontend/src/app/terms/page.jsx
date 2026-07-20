@@ -24,7 +24,7 @@ const SECTIONS = [
   },
   {
     title: '4. How Collabhype works',
-    body: 'Brands buy bulk Nano packs (creators under 1K followers) or hand-pick Micro (1K–100K), Macro (100K–1M), and Mega (1M+) creators. When a Nano pack is purchased, matching creators are invited by niche and claim delivery slots until the pack is filled. Hand-picked creators are added to your cart at their published rate plus a platform fee. Every order is paid up front and tracked as a campaign.',
+    body: 'Brands buy bulk Nano packs (creators under 1K followers) or hand-pick Micro (1K–100K), Macro (100K–1M), and Mega (1M+) creators. When a Nano pack is purchased, matching creators are invited by niche and claim delivery slots until the pack is filled. Hand-picked creators are added to your booking at their published rate plus a platform fee. Every order is paid up front and tracked as a campaign.',
   },
   {
     title: '5. Payments, escrow and fees',

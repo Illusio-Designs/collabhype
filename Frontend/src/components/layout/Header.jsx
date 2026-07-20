@@ -70,7 +70,7 @@ export default function Header() {
                     href="/cart"
                     className="text-sm font-medium text-zinc-700 transition hover:text-brand-700"
                   >
-                    Cart
+                    Booking
                   </Link>
                 )}
                 <Link
@@ -153,7 +153,7 @@ export default function Header() {
                       href="/cart"
                       className="rounded-lg px-3 py-2.5 text-base font-medium text-zinc-800 transition hover:bg-zinc-50 hover:text-brand-700"
                     >
-                      Cart
+                      Booking
                     </Link>
                   )}
                   <Link

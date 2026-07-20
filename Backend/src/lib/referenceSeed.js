@@ -299,10 +299,9 @@ export async function ensureSeedData(prisma) {
     if (await ensureAdmin(prisma)) {
       console.log(`[seed] super-admin created from env (${process.env.ADMIN_EMAIL})`);
     }
-    // Runs unconditionally (idempotent) so the starter post lands even on an
-    // already-seeded DB where the reference-data block above is skipped.
-    const blogCreated = await ensureDefaultBlog(prisma);
-    if (blogCreated) console.log(`[seed] ${blogCreated} starter blog post(s) created`);
+    // Note: the starter blog post is NOT auto-seeded — it's published manually
+    // from Admin → Blog. (ensureDefaultBlog remains available if you ever want to
+    // seed it, but is intentionally not called here.)
   } catch (err) {
     console.error('[seed] ensureSeedData failed (continuing):', err.message);
   }

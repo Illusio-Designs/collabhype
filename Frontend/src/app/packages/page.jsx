@@ -23,7 +23,7 @@ const TIER_TILES = [
     tier: 'MACRO',
     title: 'Macro',
     range: '100K – 1M followers',
-    body: 'Established creators with broad reach. Hand-pick from our roster and bulk-add to your cart.',
+    body: 'Established creators with broad reach. Hand-pick from our roster and bulk-add to your booking.',
   },
   {
     tier: 'MEGA',
@@ -76,8 +76,8 @@ export default async function PackagesPage() {
             Hand-pick Micro, Macro & Mega creators
           </h2>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-zinc-600">
-            Browse the roster, select multiple creators, and add them to your cart in one click.
-            Cart shows each creator&apos;s rate + a flat 5% platform fee.
+            Browse the roster, select multiple creators, and add them to your booking in one click.
+            Your booking shows each creator&apos;s rate + a flat 5% platform fee.
           </p>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

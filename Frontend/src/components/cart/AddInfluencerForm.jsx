@@ -28,7 +28,7 @@ export default function AddInfluencerForm({ influencerId, influencerName, rateCa
   if (!user) {
     return (
       <Link href={`/login?next=/influencers/${influencerId}`} className="block">
-        <Button fullWidth>Sign in to add to cart</Button>
+        <Button fullWidth>Sign in to add to booking</Button>
       </Link>
     );
   }
@@ -86,10 +86,10 @@ export default function AddInfluencerForm({ influencerId, influencerName, rateCa
     return (
       <>
         <Alert variant="success" className="mb-3">
-          Added {influencerName} to your cart.
+          Added {influencerName} to your booking.
         </Alert>
         <Button fullWidth onClick={() => router.push('/cart')}>
-          View cart →
+          View booking →
         </Button>
         <Button
           variant="ghost"
@@ -186,7 +186,7 @@ export default function AddInfluencerForm({ influencerId, influencerName, rateCa
         fullWidth
         className="mt-4"
       >
-        {selectedItems.length ? 'Add to cart' : 'Pick deliverables to add'}
+        {selectedItems.length ? 'Add to booking' : 'Pick deliverables to add'}
       </Button>
       {err && (
         <Alert variant="danger" className="mt-2">
