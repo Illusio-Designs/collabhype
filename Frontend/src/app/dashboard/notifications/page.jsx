@@ -24,7 +24,7 @@ import {
 import { Badge, Button, Card, EmptyState, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
-import { PageSkeleton } from '@/components/dashboard/Skeletons';
+import { NotificationsPageSkeleton } from '@/components/dashboard/Skeletons';
 
 // 100 is the backend's max limit — this endpoint has no page param, so this is
 // the whole list, not a window into it.
@@ -120,7 +120,7 @@ export default function NotificationsPage() {
   }
 
   if (loading) {
-    return <PageSkeleton kpis={4} cards={1} />;
+    return <NotificationsPageSkeleton />;
   }
 
   const oneDayMs = 1000 * 60 * 60 * 24;
