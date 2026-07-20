@@ -35,8 +35,8 @@ export function formatCount(n: number | string | null | undefined): string {
 }
 
 export const TIER_LABEL: Record<Tier, string> = {
-  NANO: 'Nano · 1K–10K',
-  MICRO: 'Micro · 10K–100K',
+  NANO: 'Nano · Under 1K',
+  MICRO: 'Micro · 1K–100K',
   MACRO: 'Macro · 100K–1M',
   MEGA: 'Mega · 1M+',
 };

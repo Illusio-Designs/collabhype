@@ -7,13 +7,13 @@ import { StaggerContainer, StaggerItem } from '@/components/motion/Stagger';
 const TIERS = [
   {
     name: 'Nano',
-    range: '1K – 10K',
+    range: 'Under 1K',
     desc: 'Highly engaged niche audiences. Best for early-stage brand testing.',
     tier: 'NANO',
   },
   {
     name: 'Micro',
-    range: '10K – 100K',
+    range: '1K – 100K',
     desc: 'Cost-effective, trusted voices. The sweet spot for most campaigns.',
     tier: 'MICRO',
   },

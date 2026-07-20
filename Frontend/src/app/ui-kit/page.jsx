@@ -269,8 +269,8 @@ export default function UIKitPage() {
                       onChange={setTier}
                       placeholder="Pick a tier"
                       options={[
-                        { value: 'NANO', label: 'Nano', description: '1K–10K' },
-                        { value: 'MICRO', label: 'Micro', description: '10K–100K' },
+                        { value: 'NANO', label: 'Nano', description: 'Under 1K' },
+                        { value: 'MICRO', label: 'Micro', description: '1K–100K' },
                         { value: 'MACRO', label: 'Macro', description: '100K–1M' },
                         { value: 'MEGA', label: 'Mega', description: '1M+' },
                       ]}
