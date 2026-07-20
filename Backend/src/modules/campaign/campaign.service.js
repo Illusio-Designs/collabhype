@@ -276,6 +276,20 @@ export async function claimTask(userId, campaignId) {
       if (!has) throw ApiError.badRequest('This task needs a different niche');
     }
 
+    // Atomically claim one slot. The column-comparison guard in WHERE means
+    // concurrent claims serialize on the row lock and can never push slotsFilled
+    // past slotsTarget (a plain read-then-write let two claimers both pass the
+    // check and overfill). isRecruiting is computed from the pre-increment value
+    // first, then slotsFilled is incremented.
+    const claimed = await tx.$executeRaw`
+      UPDATE \`Campaign\`
+         SET \`isRecruiting\` = (\`slotsFilled\` + 1 < \`slotsTarget\`),
+             \`slotsFilled\` = \`slotsFilled\` + 1
+       WHERE \`id\` = ${campaignId}
+         AND \`isRecruiting\` = true
+         AND \`slotsFilled\` < \`slotsTarget\``;
+    if (!claimed) throw ApiError.badRequest('This task is already full');
+
     const dels = Array.isArray(campaign.taskDeliverables) ? campaign.taskDeliverables : [];
     const amount = Number(campaign.taskAmountPerUnit ?? 0);
     const payout = Number(campaign.taskPayoutPerUnit ?? 0);
@@ -295,15 +309,15 @@ export async function claimTask(userId, campaignId) {
     }
     if (rows.length) await tx.campaignDeliverable.createMany({ data: rows });
 
-    const filled = (campaign.slotsFilled ?? 0) + 1;
-    await tx.campaign.update({
+    // Status stays DRAFT until the brand actually sends a brief (sendBrief sets
+    // briefSentAt and reveals the creator's delivery address). Don't pre-flip to
+    // BRIEF_SENT here — that made the status claim a brief was sent when it
+    // wasn't, and kept briefSentAt null so the address never unlocked.
+    const fresh = await tx.campaign.findUnique({
       where: { id: campaignId },
-      data: {
-        slotsFilled: filled,
-        isRecruiting: filled < (campaign.slotsTarget ?? 0),
-        status: campaign.status === 'DRAFT' ? 'BRIEF_SENT' : campaign.status,
-      },
+      select: { slotsFilled: true, slotsTarget: true },
     });
+    const filled = fresh?.slotsFilled ?? (campaign.slotsFilled ?? 0) + 1;
 
     const order = await tx.order.findUnique({
       where: { id: campaign.orderId },

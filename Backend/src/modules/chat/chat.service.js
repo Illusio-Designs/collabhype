@@ -2,6 +2,9 @@ import { prisma } from '../../lib/prisma.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { scanForContact } from '../../utils/contactGuard.js';
 import { addNegotiatedItem } from '../cart/cart.service.js';
+import { DELIVERABLE_TYPES } from '../cart/cart.schema.js';
+
+const VALID_DELIVERABLES = new Set(DELIVERABLE_TYPES);
 
 // Sharing contact details this many times auto-suspends the account.
 const STRIKE_LIMIT = 3;
@@ -180,6 +183,10 @@ export async function sendOffer(user, conversationId, { deliverable, price }) {
   const amount = Number(price);
   if (!(amount > 0)) throw ApiError.badRequest('Enter a valid price');
   if (!deliverable) throw ApiError.badRequest('Choose a deliverable');
+  // Validate against the DeliverableType enum here — otherwise a bad value is
+  // stored on the offer, accepted into the cart, and only blows up inside the
+  // post-payment createMany transaction, stranding an already-paid order.
+  if (!VALID_DELIVERABLES.has(deliverable)) throw ApiError.badRequest('Choose a valid deliverable');
 
   const message = await prisma.chatMessage.create({
     data: {

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import InfluencerCard from '@/components/InfluencerCard';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { invalidate } from '@/lib/apiCache';
 import { Alert, Button, Spinner } from '@/components/ui';
 import { brandPriceFromCreatorRate, formatINR } from '@/lib/format';
 
@@ -70,6 +71,7 @@ export default function InfluencerBrowserClient({ influencers }) {
         });
         ok += 1;
       }
+      if (ok > 0) invalidate('/api/v1/cart');
       setAddedCount(ok);
       // Brief delay so the user sees the success state before we route.
       setTimeout(() => router.push('/cart'), 700);

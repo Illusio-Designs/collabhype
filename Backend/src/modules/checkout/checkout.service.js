@@ -233,13 +233,15 @@ async function materializeCampaigns(tx, order) {
 
       if (pinned.length) {
         const campaign = await tx.campaign.create({
-          data: { orderId: order.id, title: snap?.packageTitle ?? 'Package campaign', status: 'BRIEF_SENT' },
+          // Starts DRAFT: the brand sends a brief (which sets briefSentAt and
+          // reveals the creator's delivery address) before it becomes BRIEF_SENT.
+          data: { orderId: order.id, title: snap?.packageTitle ?? 'Package campaign', status: 'DRAFT' },
         });
         if (deliverables.length) {
           const rows = [];
           for (const infId of pinned) {
             for (const d of deliverables) {
-              for (let i = 0; i < (d.qty ?? 1) * item.qty; i++) {
+              for (let i = 0; i < (d.qty ?? 1); i++) {
                 rows.push({
                   campaignId: campaign.id,
                   influencerId: infId,
@@ -302,7 +304,9 @@ async function materializeCampaigns(tx, order) {
       data: {
         orderId: order.id,
         title: 'Custom influencer campaign',
-        status: influencerIds.length ? 'BRIEF_SENT' : 'DRAFT',
+        // DRAFT until the brand sends a brief; sendBrief flips it to BRIEF_SENT
+        // and unlocks the creator's delivery address.
+        status: 'DRAFT',
       },
     });
     if (!influencerIds.length || !deliverables.length) continue;
@@ -310,7 +314,7 @@ async function materializeCampaigns(tx, order) {
     const rows = [];
     for (const infId of influencerIds) {
       for (const d of deliverables) {
-        for (let i = 0; i < (d.qty ?? 1) * item.qty; i++) {
+        for (let i = 0; i < (d.qty ?? 1); i++) {
           rows.push({
             campaignId: campaign.id,
             influencerId: infId,

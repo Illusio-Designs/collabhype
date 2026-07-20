@@ -17,8 +17,10 @@ router.get('/', requireAuth, requireRole('ADMIN'), async (req, res) => {
 // Get single setting
 router.get('/:key', requireAuth, requireRole('ADMIN'), async (req, res) => {
   try {
-    const value = await platformSettings.getSetting(req.params.key);
-    if (!value) {
+    // getPublicSetting refuses secret keys (jwt/razorpay/meta/google secrets and
+    // any DB isSecret setting) so admins can't read raw signing/payment secrets.
+    const value = await platformSettings.getPublicSetting(req.params.key);
+    if (value === null || value === undefined) {
       return res.status(404).json({ error: 'Setting not found' });
     }
     res.json({ key: req.params.key, value });

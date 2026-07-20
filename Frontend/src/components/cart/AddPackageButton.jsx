@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { invalidate } from '@/lib/apiCache';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Alert, Button, Spinner } from '@/components/ui';
 
@@ -45,6 +46,9 @@ export default function AddPackageButton({ packageId, slug }) {
         packageId,
         qty: 1,
       });
+      // Drop the cart cache so /cart shows the new item instead of a stale
+      // (possibly empty) cached response within the dedupe TTL.
+      invalidate('/api/v1/cart');
       setAdded(true);
     } catch (e) {
       setErr(apiError(e));

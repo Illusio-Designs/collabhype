@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiClient, apiError } from '@/lib/apiClient';
+import { invalidate } from '@/lib/apiCache';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Alert, Button, Input, Spinner } from '@/components/ui';
 import { formatINR, DELIVERABLE_LABEL } from '@/lib/format';
@@ -72,6 +73,7 @@ export default function AddInfluencerForm({ influencerId, influencerName, rateCa
         deliverables,
         qty: 1,
       });
+      invalidate('/api/v1/cart');
       setAdded(true);
     } catch (e) {
       setErr(apiError(e));

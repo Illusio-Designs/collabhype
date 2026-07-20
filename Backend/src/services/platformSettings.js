@@ -1,6 +1,18 @@
 import { prisma } from '../lib/prisma.js';
 import { env } from '../config/env.js';
 
+// Keys that must NEVER be returned over the API, even to an admin — exposing
+// the JWT signing secret or a payment secret to any browser session enables
+// token forgery / payment tampering if that response is ever logged or
+// exfiltrated (XSS, shared screen, proxy).
+const SECRET_KEYS = new Set([
+  'jwt_secret',
+  'razorpay_key_secret',
+  'razorpay_webhook_secret',
+  'meta_app_secret',
+  'google_client_secret',
+]);
+
 class PlatformSettingsService {
   // In-memory cache (5 min TTL)
   constructor() {
@@ -35,6 +47,20 @@ class PlatformSettingsService {
     const value = this._parseValue(setting.value, setting.type);
     this._setCacheValue(key, value);
     return value;
+  }
+
+  // True for keys that map to a hard secret (denylist above).
+  isSecretKey(key) {
+    return SECRET_KEYS.has(String(key ?? '').toLowerCase());
+  }
+
+  // API-safe read: refuses secret keys (denylist) AND any DB setting flagged
+  // isSecret, returning null so the route can 404 without revealing existence.
+  async getPublicSetting(key) {
+    if (this.isSecretKey(key)) return null;
+    const setting = await prisma.platformSettings.findUnique({ where: { key } });
+    if (setting?.isSecret) return null;
+    return this.getSetting(key);
   }
 
   // Set setting in database
