@@ -14,13 +14,16 @@ it and publish to the Google Play Store and Apple App Store.
 - Browse packages & creators
 - **Chat / rate negotiation** (consent gate, messages, offers, accept/decline)
 - **Nano tasks** (creator claims), **Send brief** + delivery address, **Booking review**
+- **In-app checkout / payment** — Razorpay escrow checkout from the Booking
+  screen (create-order → Razorpay sheet → server-side verify). ⚠️ Uses the
+  `react-native-razorpay` **native module**, so it only runs in a dev-client /
+  EAS build — **not Expo Go** — and requires `npm install` + a fresh native
+  build (see §3–§4).
 - Socials, rate cards, support tickets
 
 **Pending before a full launch:**
-- **On-device checkout / payment** — needs the `react-native-razorpay` native
-  module + a new native build. Until then, brands complete escrow checkout on
-  the **web app**; the booking screen hands them off there.
 - (Optional) Push notifications, deep links for chat/campaign links.
+- Final app icon / splash art + store screenshots.
 
 > The app **only works after login** — the group layouts (`(brand)`, `(creator)`)
 > redirect to `/login` when there is no session, and the API layer signs the user
@@ -131,11 +134,18 @@ eas submit --profile production --platform ios --latest
 
 ## 7. What to apply before calling it "done"
 
-1. **Checkout in-app** — add `react-native-razorpay`, wire the
-   `/checkout/create-order` → Razorpay sheet → `/checkout/verify` flow on the
-   booking screen, then rebuild (native module ⇒ new EAS build).
+1. ✅ **Checkout in-app** — implemented on the Booking screen
+   (`/checkout/create-order` → Razorpay sheet → `/checkout/verify`). Because
+   `react-native-razorpay` is a **native module**, you must:
+   - `npm install` (pulls the dependency),
+   - build a **dev client** or a store build with EAS (`eas build …`) — it will
+     **not** work in Expo Go,
+   - test a real payment on a device (use Razorpay test keys first).
+   - Note: `app.json` has `newArchEnabled: true`. If the Razorpay sheet fails to
+     open on the New Architecture, set `"newArchEnabled": false` and rebuild.
 2. **Push notifications** (optional) — `expo-notifications` + register the
-   device token so chat/campaign updates reach users off-app.
+   device token so chat/campaign updates reach users off-app. (Also needs a
+   small backend sender — not built yet.)
 3. Final **icons/splash** and store screenshots.
 
-Once #1 and #3 are in, the app is store-ready.
+Once #3 is done and #1 is verified on-device, the app is store-ready.
