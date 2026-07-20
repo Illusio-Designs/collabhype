@@ -107,6 +107,34 @@ export function CardSkeleton({ lines = 4, className }) {
   );
 }
 
+// Notifications page placeholder: header + KPI strip + a list of rows shaped
+// like the real notification item (icon circle + title/body/meta + timestamp).
+export function NotificationsPageSkeleton({ rows = 6 }) {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <Skeleton variant="text" className="h-3 w-24" />
+        <Skeleton variant="text" className="h-8 w-56 max-w-full" />
+        <Skeleton variant="text" className="h-4 w-72 max-w-full" />
+      </div>
+      <KpiSkeleton count={4} />
+      <div className="divide-y divide-zinc-100 overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="flex items-start gap-4 px-6 py-4">
+            <Skeleton variant="circle" className="h-10 w-10 flex-shrink-0" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton variant="text" className="h-4 w-1/3" />
+              <Skeleton variant="text" className="h-3 w-2/3" />
+              <Skeleton variant="text" className="h-3 w-20" />
+            </div>
+            <Skeleton variant="text" className="h-3 w-12 flex-shrink-0" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Chat thread placeholder: alternating left/right message bubbles.
 export function ChatThreadSkeleton({ bubbles = 6, className }) {
   // Deterministic per-index sizing (no Math.random) so it stays stable.
