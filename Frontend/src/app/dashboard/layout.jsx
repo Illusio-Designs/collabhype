@@ -262,11 +262,11 @@ function Sidebar({
   const renderContent = (isCollapsed, isMobile = false) => (
     <div
       className={clsx(
-        'flex h-full flex-col border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-brand-100 to-brand-200 p-4 transition-[width] duration-200',
+        'flex h-full flex-col overflow-hidden border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-brand-100 to-brand-200 p-4 transition-[width] duration-200',
         isCollapsed ? 'w-20 items-center' : 'w-72',
       )}
     >
-      <div className={clsx('flex items-center', isCollapsed ? 'justify-center' : 'justify-between')}>
+      <div className={clsx('flex shrink-0 items-center', isCollapsed ? 'justify-center' : 'justify-between')}>
         <Link
           href="/"
           className={clsx(
@@ -404,7 +404,7 @@ function Sidebar({
 
       <div
         className={clsx(
-          'mt-6 flex items-center rounded-2xl bg-zinc-950 text-white',
+          'mt-6 flex shrink-0 items-center rounded-2xl bg-zinc-950 text-white',
           isCollapsed ? 'h-12 w-12 justify-center' : 'gap-3 p-3',
         )}
       >
