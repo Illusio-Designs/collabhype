@@ -49,3 +49,39 @@
     @apply text-xs font-semibold uppercase tracking-[0.2em] text-brand-700;
   }
 }
+
+@layer utilities {
+  /* Scrollable but no visible scrollbar */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE/old Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+}
+
+/* Shimmer skeleton loading */
+@keyframes ch-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: rgb(228 228 231); /* zinc-200 */
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.65),
+    transparent
+  );
+  animation: ch-shimmer 1.5s infinite;
+}

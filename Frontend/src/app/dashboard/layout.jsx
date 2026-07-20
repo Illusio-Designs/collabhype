@@ -331,7 +331,7 @@ function Sidebar({
         </button>
       )}
 
-      <nav className="mt-6 min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav className="no-scrollbar mt-6 min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain">
         {nav.map((section) => {
           const closed = !isCollapsed && closedGroups[section.label];
           return (
