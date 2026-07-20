@@ -26,17 +26,18 @@ export default function BrowsePackages() {
   const packages = useMemo(() => data ?? [], [data]);
 
   const visible = useMemo(() => {
-    if (tier === 'ALL') return packages;
-    return packages.filter((p) => p.tier === tier);
+    const list = tier === 'ALL' ? packages : packages.filter((p) => p.tier === tier);
+    // Segregate by total price (cheapest first), matching the web.
+    return [...list].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
   }, [tier, packages]);
 
-  const addToCart = async (pkg) => {
+  const addToBooking = async (pkg) => {
     setAddingId(pkg.id);
     try {
       await api.post('/cart/items', { itemType: 'PACKAGE', packageId: pkg.id, qty: 1 });
-      Alert.alert('Added to cart', `${pkg.title} was added to your cart.`);
+      Alert.alert('Added to booking', `${pkg.title} was added to your booking.`);
     } catch (e) {
-      Alert.alert("Couldn't add to cart", apiError(e));
+      Alert.alert("Couldn't add to booking", apiError(e));
     } finally {
       setAddingId(null);
     }
@@ -87,13 +88,20 @@ export default function BrowsePackages() {
                   <Text className="mt-1 text-xs leading-5 text-zinc-600">{p.description}</Text>
                 ) : null}
                 <View className="mt-3 flex-row items-center justify-between gap-3 border-t border-zinc-100 pt-3">
-                  <Text className="text-xs text-zinc-500">{p.influencerCount} creators</Text>
+                  <View>
+                    <Text className="text-xs text-zinc-500">{p.influencerCount} creators</Text>
+                    {p.pricePerInfluencer != null ? (
+                      <Text className="text-xs text-zinc-500">
+                        {formatINR(p.pricePerInfluencer)} / influencer
+                      </Text>
+                    ) : null}
+                  </View>
                   <Button
                     size="sm"
                     loading={addingId === p.id}
-                    onPress={() => addToCart(p)}
+                    onPress={() => addToBooking(p)}
                   >
-                    Add to cart
+                    Add to booking
                   </Button>
                 </View>
               </Card>
