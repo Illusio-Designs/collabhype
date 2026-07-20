@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { apiClient, apiError } from '@/lib/apiClient';
+import { apiClient, apiError, uploadImage } from '@/lib/apiClient';
 import { dedupedGet, invalidate } from '@/lib/apiCache';
 import {
   Alert,
@@ -18,12 +19,20 @@ import {
 } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import MultiSelect from '@/components/MultiSelect';
+import LogoUpload from '@/components/dashboard/LogoUpload';
 import OnboardingWizard from '@/components/dashboard/OnboardingWizard';
-import { COUNTRIES, INDIAN_STATES, LANGUAGES, citiesForState } from '@/lib/geo';
+import { COUNTRIES, INDIAN_STATES, INDUSTRIES, LANGUAGES, citiesForState } from '@/lib/geo';
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  if (!user) return null;
+  const router = useRouter();
+
+  // Admins have no personal profile form — bounce them to the overview.
+  useEffect(() => {
+    if (user && user.role === 'ADMIN') router.replace('/dashboard');
+  }, [user, router]);
+
+  if (!user || user.role === 'ADMIN') return null;
   return user.role === 'BRAND' ? <BrandProfileForm /> : <InfluencerProfileForm />;
 }
 
@@ -107,7 +116,12 @@ function BrandProfileForm() {
               <Input value={form.companyName} onChange={(e) => set('companyName', e.target.value)} required />
             </FormField>
             <FormField label="Industry">
-              <Input value={form.industry} onChange={(e) => set('industry', e.target.value)} placeholder="Beauty, Food, Tech…" />
+              <Select
+                value={form.industry}
+                onChange={(v) => set('industry', v)}
+                options={INDUSTRIES}
+                placeholder="Select an industry…"
+              />
             </FormField>
             <FormField label="Website">
               <Input type="url" value={form.website} onChange={(e) => set('website', e.target.value)} placeholder="https://yourbrand.com" />
@@ -115,8 +129,11 @@ function BrandProfileForm() {
             <FormField label="GSTIN">
               <Input value={form.gstin} onChange={(e) => set('gstin', e.target.value)} placeholder="22AAAAA0000A1Z5" />
             </FormField>
-            <FormField label="Logo URL" className="sm:col-span-2">
-              <Input type="url" value={form.logoUrl} onChange={(e) => set('logoUrl', e.target.value)} placeholder="https://…/logo.png" />
+            <FormField label="Logo" className="sm:col-span-2">
+              <LogoUpload
+                value={form.logoUrl}
+                onChange={(url) => set('logoUrl', url)}
+              />
             </FormField>
             <FormField label="About" className="sm:col-span-2">
               <Textarea
@@ -169,6 +186,8 @@ function InfluencerProfileForm() {
     baseRate: '',
     upiId: '',
     isAvailable: true,
+    shippingAddress: '',
+    pincode: '',
   });
 
   const load = useCallback(
@@ -191,6 +210,8 @@ function InfluencerProfileForm() {
             baseRate: p.baseRate != null ? String(p.baseRate) : '',
             upiId: p.upiId ?? '',
             isAvailable: p.isAvailable !== false,
+            shippingAddress: p.shippingAddress ?? '',
+            pincode: p.pincode ?? '',
           });
           const slugs = (p.niches ?? []).map((x) => x.niche.slug);
           setSelectedNiches(new Set(slugs));
@@ -238,6 +259,8 @@ function InfluencerProfileForm() {
         baseRate: form.baseRate ? Number(form.baseRate) : undefined,
         upiId: form.upiId || undefined,
         isAvailable: form.isAvailable,
+        shippingAddress: form.shippingAddress || undefined,
+        pincode: form.pincode || undefined,
       };
       await apiClient.patch('/api/v1/influencers/me', payload);
       invalidate('/api/v1/influencers/me');
@@ -360,6 +383,31 @@ function InfluencerProfileForm() {
             </FormField>
             <FormField label="Date of birth">
               <Input type="date" value={form.dob} onChange={(e) => set('dob', e.target.value)} />
+            </FormField>
+          </div>
+        </Card>
+
+        <Card padding="lg">
+          <h2 className="text-lg font-semibold text-zinc-900">Delivery address</h2>
+          <p className="mt-1 text-sm text-zinc-600">
+            Where brands ship products for reels/UGC. Shared with a brand only after they send you a
+            campaign brief.
+          </p>
+          <div className="mt-5 grid gap-5 sm:grid-cols-3">
+            <FormField label="Full address" className="sm:col-span-2">
+              <Textarea
+                rows={3}
+                value={form.shippingAddress}
+                onChange={(e) => set('shippingAddress', e.target.value)}
+                placeholder="Flat / street / area / landmark, city"
+              />
+            </FormField>
+            <FormField label="Pincode">
+              <Input
+                value={form.pincode}
+                onChange={(e) => set('pincode', e.target.value)}
+                placeholder="400001"
+              />
             </FormField>
           </div>
         </Card>

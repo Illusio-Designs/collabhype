@@ -5,6 +5,7 @@ import LayoutChrome from '@/components/layout/LayoutChrome';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import SmoothScroll from '@/components/motion/SmoothScroll';
 import { ToastProvider } from '@/components/ui/Toast';
+import { ConfirmProvider } from '@/components/ui/Confirm';
 import PageViewTracker from '@/components/analytics/PageViewTracker';
 import CookieConsent from '@/components/CookieConsent';
 
@@ -28,9 +29,11 @@ export default function RootLayout({ children }) {
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <SmoothScroll>
           <ToastProvider>
-            <AuthProvider>
-              <LayoutChrome>{children}</LayoutChrome>
-            </AuthProvider>
+            <ConfirmProvider>
+              <AuthProvider>
+                <LayoutChrome>{children}</LayoutChrome>
+              </AuthProvider>
+            </ConfirmProvider>
           </ToastProvider>
         </SmoothScroll>
 

@@ -1,4 +1,5 @@
 import * as svc from './admin.service.js';
+import { recomputeAllTiers } from '../influencer/influencer.service.js';
 import {
   listOrdersQuery,
   listUsersQuery,
@@ -49,6 +50,12 @@ export async function updateUser(req, res) {
 
 export async function deleteUser(req, res) {
   const result = await svc.deleteUser(req.params.id);
+  res.json(result);
+}
+
+// Re-tier all creators using the current (admin-configured) thresholds.
+export async function recomputeTiers(_req, res) {
+  const result = await recomputeAllTiers();
   res.json(result);
 }
 

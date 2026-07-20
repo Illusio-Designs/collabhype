@@ -6,6 +6,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { dedupedGet, invalidate } from '@/lib/apiCache';
 import { Avatar, Badge, Card, Pagination, Select, Spinner, useToast } from '@/components/ui';
+import { useConfirm } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
 import { formatINR } from '@/lib/format';
@@ -32,6 +33,7 @@ export default function AdminPayoutsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [payouts, setPayouts] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
@@ -75,9 +77,11 @@ export default function AdminPayoutsPage() {
     }
     if (
       status === 'PAID' &&
-      !confirm(
-        `Mark this payout as PAID? This records the status only — it does NOT send money via Razorpay.`,
-      )
+      !(await confirm({
+        title: 'Mark payout as PAID?',
+        body: 'This records the status only — it does NOT send money via Razorpay.',
+        confirmText: 'Mark paid',
+      }))
     ) {
       return;
     }

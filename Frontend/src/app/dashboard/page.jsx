@@ -49,16 +49,20 @@ function BrandOverview({ user }) {
     return {
       campaigns: campaigns.data.campaigns ?? [],
       orders: orders.data.orders ?? [],
+      // Lifetime totals from the API — never derived from the 5-row preview.
+      campaignSummary: campaigns.data.summary ?? {},
+      orderSummary: orders.data.summary ?? {},
     };
   });
 
   const campaigns = data?.campaigns ?? [];
   const orders = data?.orders ?? [];
-  const activeCampaigns = campaigns.filter((c) =>
-    ['BRIEF_SENT', 'IN_PROGRESS', 'REVIEW'].includes(c.status),
-  ).length;
-  const liveDeliverables = campaigns.reduce((s, c) => s + (c._count?.deliverables ?? 0), 0);
-  const spend = orders.reduce((s, o) => s + Number(o.total ?? 0), 0);
+  const campaignSummary = data?.campaignSummary ?? {};
+  const orderSummary = data?.orderSummary ?? {};
+  const activeCampaigns = campaignSummary.active ?? 0;
+  const totalCampaigns = campaignSummary.count ?? 0;
+  const totalOrders = orderSummary.count ?? 0;
+  const spend = orderSummary.totalSpent ?? 0;
 
   return (
     <div className="space-y-6">
@@ -77,9 +81,9 @@ function BrandOverview({ user }) {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Active campaigns" value={String(activeCampaigns)} />
-        <Stat label="Live deliverables" value={String(liveDeliverables)} />
-        <Stat label="Recent orders" value={String(orders.length)} />
-        <Stat label="Recent spend" value={formatINR(spend)} />
+        <Stat label="Total campaigns" value={String(totalCampaigns)} />
+        <Stat label="Total orders" value={String(totalOrders)} />
+        <Stat label="Total spend" value={formatINR(spend)} />
       </div>
 
       {loading ? (
@@ -166,12 +170,15 @@ function CreatorOverview({ user }) {
       summary: payouts.data.summary ?? {},
       payouts: payouts.data.payouts ?? [],
       campaigns: campaigns.data.campaigns ?? [],
+      campaignSummary: campaigns.data.summary ?? {},
       notifications: notifs.data.notifications ?? [],
     };
   });
 
   const summary = data?.summary ?? {};
   const campaigns = data?.campaigns ?? [];
+  const campaignSummary = data?.campaignSummary ?? {};
+  const activeCampaigns = campaignSummary.active ?? 0;
   const payouts = data?.payouts ?? [];
   const notifications = data?.notifications ?? [];
 
@@ -191,8 +198,8 @@ function CreatorOverview({ user }) {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="Active campaigns" value={String(activeCampaigns)} />
         <Stat label="Total followers" value={formatCount(profile.totalFollowers ?? 0)} />
-        <Stat label="Avg engagement" value={`${(profile.avgEngagementRate ?? 0).toFixed(1)}%`} />
         <Stat label="Paid out" value={formatINR(summary.paid ?? 0)} />
         <Stat label="Pending payout" value={formatINR(summary.pending ?? 0)} />
       </div>
@@ -205,7 +212,7 @@ function CreatorOverview({ user }) {
         <>
           <div className="grid gap-6 lg:grid-cols-3">
             <Card padding="lg" className="min-w-0 lg:col-span-2">
-              <SectionHead title="Active campaigns" link="/dashboard/campaigns" />
+              <SectionHead title="Recent campaigns" link="/dashboard/campaigns" />
               <div className="mt-4 space-y-3">
                 {campaigns.length === 0 ? (
                   <Empty>No campaigns yet.</Empty>

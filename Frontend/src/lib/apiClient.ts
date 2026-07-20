@@ -29,6 +29,23 @@ apiClient.interceptors.response.use(
   },
 );
 
+// Read a File into a base64 data URL (used for image uploads).
+export function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+// Upload an image file to the backend and return its hosted URL.
+export async function uploadImage(file: File, folder = 'misc'): Promise<string> {
+  const dataUrl = await fileToDataUrl(file);
+  const { data } = await apiClient.post('/api/v1/uploads/image', { dataUrl, folder });
+  return data.url as string;
+}
+
 export function apiError(err: unknown): string {
   if (typeof err === 'object' && err !== null) {
     const ax = err as AxiosError<{ message?: string }>;

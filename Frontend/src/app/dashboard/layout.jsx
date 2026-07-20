@@ -9,9 +9,11 @@ import {
   Award,
   Bell,
   Building2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  FileText,
   SlidersHorizontal,
   HelpCircle,
   LayoutDashboard,
@@ -20,6 +22,7 @@ import {
   Link as LinkIconLucide,
   LogOut,
   Menu,
+  MessagesSquare,
   Package,
   Receipt,
   Search,
@@ -31,19 +34,23 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { apiClient } from '@/lib/apiClient';
 import { Avatar, Spinner, Tooltip } from '@/components/ui';
 
 // ============================================================================
 // Role-aware sidebar configurations
 // ============================================================================
 
+// Nav is static config; live counters (unread notifications) are layered on at
+// render time from real API data — never hardcoded here.
 const NAV = {
   BRAND: [
     {
       label: 'Main',
       items: [
         { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
-        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList, badge: '12' },
+        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList },
+        { href: '/dashboard/messages', label: 'Messages', icon: MessagesSquare },
         { href: '/dashboard/orders', label: 'Orders', icon: Receipt },
         { href: '/cart', label: 'Cart', icon: ShoppingCart },
       ],
@@ -52,7 +59,7 @@ const NAV = {
       label: 'Account',
       items: [
         { href: '/dashboard/profile', label: 'Brand profile', icon: Building2 },
-        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell, dot: true },
+        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
         { href: '/dashboard/support', label: 'Help & disputes', icon: LifeBuoy },
         { href: '/dashboard/settings', label: 'Settings', icon: Settings },
       ],
@@ -63,7 +70,9 @@ const NAV = {
       label: 'Main',
       items: [
         { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
-        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList, badge: '3' },
+        { href: '/dashboard/tasks', label: 'Tasks', icon: ClipboardList },
+        { href: '/dashboard/campaigns', label: 'Campaigns', icon: ClipboardList },
+        { href: '/dashboard/messages', label: 'Messages', icon: MessagesSquare },
         { href: '/dashboard/payouts', label: 'Payouts', icon: Wallet },
       ],
     },
@@ -78,7 +87,7 @@ const NAV = {
     {
       label: 'Account',
       items: [
-        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell, dot: true },
+        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
         { href: '/dashboard/support', label: 'Help & disputes', icon: LifeBuoy },
         { href: '/dashboard/settings', label: 'Settings', icon: Settings },
       ],
@@ -89,7 +98,7 @@ const NAV = {
       label: 'Platform',
       items: [
         { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
-        { href: '/dashboard/admin/users', label: 'Users', icon: Users, badge: '1.2K' },
+        { href: '/dashboard/admin/users', label: 'Users', icon: Users },
         { href: '/dashboard/admin/creators', label: 'Creators & badges', icon: Award },
         { href: '/dashboard/admin/packages', label: 'Packages', icon: Package },
         { href: '/dashboard/admin/orders', label: 'All orders', icon: Receipt },
@@ -99,6 +108,7 @@ const NAV = {
     {
       label: 'Marketing',
       items: [
+        { href: '/dashboard/admin/blog', label: 'Blog', icon: FileText },
         { href: '/dashboard/admin/content', label: 'SEO & content', icon: ClipboardList },
         { href: '/dashboard/admin/tracking', label: 'Tracking', icon: LineChart },
       ],
@@ -112,18 +122,21 @@ const NAV = {
     {
       label: 'Support',
       items: [
-        { href: '/dashboard/admin/support', label: 'Support queue', icon: LifeBuoy, dot: true },
+        { href: '/dashboard/admin/support', label: 'Support queue', icon: LifeBuoy },
       ],
     },
     {
       label: 'Account',
       items: [
-        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell, dot: true },
+        { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
         { href: '/dashboard/settings', label: 'Settings', icon: Settings },
       ],
     },
   ],
 };
+
+// The one live counter the sidebar/topbar surface: unread notifications.
+const NOTIFICATIONS_HREF = '/dashboard/notifications';
 
 // ============================================================================
 // Layout
@@ -137,6 +150,27 @@ export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Real unread-notification count drives the bell/sidebar dot — no dot when 0.
+  // Re-fetches on navigation and whenever the notifications page marks items
+  // read (via the 'ch:notifications-updated' event), so the badge updates live.
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    const refetch = () => {
+      apiClient
+        .get('/api/v1/notifications', { params: { limit: 1 } })
+        .then((res) => active && setUnreadCount(res.data.unreadCount ?? 0))
+        .catch(() => active && setUnreadCount(0));
+    };
+    refetch();
+    window.addEventListener('ch:notifications-updated', refetch);
+    return () => {
+      active = false;
+      window.removeEventListener('ch:notifications-updated', refetch);
+    };
+  }, [user, pathname]);
 
   // Hydrate the collapsed flag from localStorage so the layout doesn't
   // visually jump on every reload.
@@ -187,12 +221,14 @@ export default function DashboardLayout({ children }) {
         onMobileClose={() => setMobileOpen(false)}
         collapsed={collapsed}
         onToggleCollapsed={toggleCollapsed}
+        unreadCount={unreadCount}
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar
           user={user}
           roleLabel={roleLabel}
           onMobileMenu={() => setMobileOpen(true)}
+          unreadCount={unreadCount}
         />
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
@@ -214,7 +250,12 @@ function Sidebar({
   onMobileClose,
   collapsed,
   onToggleCollapsed,
+  unreadCount = 0,
 }) {
+  // Collapsible nav groups (dropdown/accordion) — keyed by section label.
+  const [closedGroups, setClosedGroups] = useState({});
+  const toggleGroup = (label) => setClosedGroups((g) => ({ ...g, [label]: !g[label] }));
+
   // `collapsed` only applies to the desktop sticky sidebar. The mobile drawer
   // always renders fully expanded since screen space is already constrained.
   // `isMobile` flag toggles the visible close button inside the drawer.
@@ -291,19 +332,33 @@ function Sidebar({
       )}
 
       <nav className="mt-6 flex-1 space-y-6 overflow-y-auto">
-        {nav.map((section) => (
+        {nav.map((section) => {
+          const closed = !isCollapsed && closedGroups[section.label];
+          return (
           <div key={section.label}>
             {!isCollapsed && (
-              <div className="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-800/70">
+              <button
+                type="button"
+                onClick={() => toggleGroup(section.label)}
+                className="flex w-full items-center justify-between rounded-md px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-800/70 transition hover:text-brand-900"
+              >
                 {section.label}
-              </div>
+                <ChevronDown
+                  className={clsx('h-3.5 w-3.5 transition-transform', closed && '-rotate-90')}
+                />
+              </button>
             )}
-            <div className={clsx('space-y-0.5', isCollapsed ? 'mt-0' : 'mt-2')}>
+            <div
+              className={clsx('space-y-0.5', isCollapsed ? 'mt-0' : 'mt-2', closed && 'hidden')}
+            >
               {section.items.map((item) => {
                 const isActive = item.exact
                   ? pathname === item.href
                   : pathname.startsWith(item.href);
                 const Icon = item.icon;
+                // Only the notifications item shows a dot, and only when there
+                // are genuinely unread notifications.
+                const showDot = item.href === NOTIFICATIONS_HREF && unreadCount > 0;
                 return (
                   <Link
                     key={item.href}
@@ -329,21 +384,13 @@ function Sidebar({
                       />
                       {!isCollapsed && item.label}
                     </span>
-                    {!isCollapsed && item.badge && (
-                      <span
-                        className={clsx(
-                          'rounded-full px-2 py-0.5 text-[10px] font-semibold',
-                          isActive ? 'bg-brand-100 text-brand-800' : 'bg-white/70 text-brand-800',
-                        )}
-                      >
-                        {item.badge}
+                    {!isCollapsed && showDot && (
+                      <span className="inline-flex min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                        {unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     )}
-                    {!isCollapsed && item.dot && !item.badge && (
-                      <span className="h-2 w-2 rounded-full bg-red-500" />
-                    )}
-                    {/* Dot indicator when collapsed but the item has a notification */}
-                    {isCollapsed && item.dot && (
+                    {/* Dot indicator when collapsed but there are unread items */}
+                    {isCollapsed && showDot && (
                       <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
                     )}
                   </Link>
@@ -351,7 +398,8 @@ function Sidebar({
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       <div
@@ -412,7 +460,7 @@ function Sidebar({
 // Top bar
 // ============================================================================
 
-function TopBar({ user, onMobileMenu }) {
+function TopBar({ user, onMobileMenu, unreadCount = 0 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/90 backdrop-blur-lg">
       <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4">
@@ -459,7 +507,11 @@ function TopBar({ user, onMobileMenu }) {
             aria-label="Notifications"
           >
             <Bell className="h-4 w-4" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </Link>
         </div>
       </div>

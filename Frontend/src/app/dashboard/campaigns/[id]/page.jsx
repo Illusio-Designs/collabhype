@@ -26,6 +26,7 @@ import Milestone, {
   DELIVERABLE_STEPS,
   deliverableActiveKey,
 } from '@/components/dashboard/Milestone';
+import MultiImageUpload from '@/components/dashboard/MultiImageUpload';
 import { DELIVERABLE_LABEL, formatCount, formatINR, PLATFORM_LABEL } from '@/lib/format';
 
 const CAMPAIGN_BADGE = {
@@ -99,6 +100,20 @@ export default function CampaignDetailPage() {
     }
   }
 
+  async function sendBrief() {
+    try {
+      await apiClient.post(`/api/v1/campaigns/${id}/send-brief`);
+      toast.push({
+        variant: 'success',
+        title: 'Brief sent',
+        body: 'Creators can see it and their delivery addresses are now visible.',
+      });
+      await reload();
+    } catch (e) {
+      toast.push({ variant: 'danger', title: 'Failed', body: apiError(e) });
+    }
+  }
+
   async function releasePayment(deliv) {
     try {
       await apiClient.post(`/api/v1/deliverables/${deliv.id}/release-payment`);
@@ -166,6 +181,7 @@ export default function CampaignDetailPage() {
                   campaign={campaign}
                   isBrand={isBrand}
                   onEdit={() => setBriefOpen(true)}
+                  onSendBrief={sendBrief}
                 />
               ),
             },
@@ -184,7 +200,7 @@ export default function CampaignDetailPage() {
                   title="No deliverables yet"
                   description={
                     isBrand
-                      ? 'An admin still needs to assign influencers to this package campaign.'
+                      ? 'Creators are being matched to this package — deliverables will appear here shortly.'
                       : 'Check back soon — the brand is still setting up.'
                   }
                 />
@@ -220,10 +236,95 @@ export default function CampaignDetailPage() {
 
 // ============================ overview ============================
 
-function OverviewTab({ campaign, isBrand, onEdit }) {
+// Aggregate roster stats for a campaign (used for auto-assigned Nano packs
+// where listing every creator individually is overwhelming).
+function rosterSummary(deliverables = []) {
+  const byCreator = new Map();
+  for (const d of deliverables) {
+    if (!byCreator.has(d.influencerId)) byCreator.set(d.influencerId, d.influencer);
+  }
+  const creators = [...byCreator.values()];
+  const reach = creators.reduce((sum, inf) => {
+    const followers = (inf?.socialAccounts ?? []).map((a) => a.followers ?? 0);
+    return sum + (followers.length ? Math.max(...followers) : 0);
+  }, 0);
+  const isDone = (s) => ['POSTED', 'PAID'].includes(s);
+  const isApproved = (s) => ['APPROVED', 'POSTED', 'PAID'].includes(s);
+  return {
+    creatorCount: byCreator.size,
+    total: deliverables.length,
+    approved: deliverables.filter((d) => isApproved(d.status)).length,
+    posted: deliverables.filter((d) => isDone(d.status)).length,
+    reach,
+  };
+}
+
+function OverviewTab({ campaign, isBrand, onEdit, onSendBrief }) {
+  const roster = rosterSummary(campaign.deliverables ?? []);
+  const refImages = Array.isArray(campaign.referenceImages) ? campaign.referenceImages : [];
+  const briefSent = !!campaign.briefSentAt;
+  // Unique creators on this campaign (for the delivery-address list).
+  const creators = [];
+  const seen = new Set();
+  for (const d of campaign.deliverables ?? []) {
+    if (d.influencer && !seen.has(d.influencerId)) {
+      seen.add(d.influencerId);
+      creators.push(d.influencer);
+    }
+  }
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-4">
+        {campaign.slotsTarget != null && (
+          <Card padding="lg">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-zinc-900">Creator recruiting</h2>
+              <Badge variant={campaign.isRecruiting ? 'warning' : 'success'}>
+                {campaign.isRecruiting ? 'Recruiting' : 'Filled'}
+              </Badge>
+            </div>
+            <p className="mt-1 text-sm text-zinc-500">
+              {campaign.slotsFilled ?? 0} of {campaign.slotsTarget} creators have accepted this
+              package. Matching creators are notified automatically.
+            </p>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-zinc-100">
+              <div
+                className="h-full rounded-full bg-brand-600"
+                style={{
+                  width: `${campaign.slotsTarget ? Math.round(((campaign.slotsFilled ?? 0) / campaign.slotsTarget) * 100) : 0}%`,
+                }}
+              />
+            </div>
+          </Card>
+        )}
+        {roster.creatorCount > 0 && (
+          <Card padding="lg">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-zinc-900">Assigned creators</h2>
+              <Badge variant="brand">{roster.creatorCount} creators</Badge>
+            </div>
+            <p className="mt-1 text-sm text-zinc-500">
+              Creators were auto-matched to this package. Track their progress below.
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <RosterStat label="Creators" value={formatCount(roster.creatorCount)} />
+              <RosterStat label="Est. reach" value={formatCount(roster.reach)} />
+              <RosterStat label="Deliverables" value={String(roster.total)} />
+              <RosterStat
+                label="Posted"
+                value={`${roster.posted}/${roster.total}`}
+              />
+            </div>
+            <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-zinc-100">
+              <div
+                className="h-full rounded-full bg-brand-600 transition-all"
+                style={{
+                  width: `${roster.total ? Math.round((roster.posted / roster.total) * 100) : 0}%`,
+                }}
+              />
+            </div>
+          </Card>
+        )}
         <Card padding="lg">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-zinc-900">Brief</h2>
@@ -261,8 +362,93 @@ function OverviewTab({ campaign, isBrand, onEdit }) {
                 </div>
               )}
             </div>
+            {(campaign.productLink || refImages.length > 0) && (
+              <div className="space-y-3 border-t border-zinc-100 pt-4">
+                {campaign.productLink && (
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                      Product link
+                    </div>
+                    <a
+                      href={campaign.productLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 block truncate text-sm text-brand-700 hover:underline"
+                    >
+                      {campaign.productLink}
+                    </a>
+                  </div>
+                )}
+                {refImages.length > 0 && (
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                      Reference images
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {refImages.map((url) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                          <img src={url} alt="" className="h-20 w-20 rounded-lg border border-zinc-200 object-cover" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </Card>
+
+        {/* Brand: send the brief to unlock delivery addresses */}
+        {isBrand && (
+          <Card padding="lg">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold text-zinc-900">Send brief to creators</h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  {briefSent
+                    ? `Sent ${dateStr(campaign.briefSentAt)}. Delivery addresses are unlocked below.`
+                    : 'Add your brief, product link and images, then send it to reveal delivery addresses for shipping.'}
+                </p>
+              </div>
+              <Button onClick={onSendBrief} variant={briefSent ? 'outline' : 'primary'}>
+                {briefSent ? 'Resend brief' : 'Send brief'}
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Delivery addresses — visible to the brand only after the brief is sent */}
+        {isBrand && briefSent && creators.length > 0 && (
+          <Card padding="lg">
+            <h2 className="text-base font-semibold text-zinc-900">Delivery addresses</h2>
+            <p className="mt-1 text-sm text-zinc-500">Ship products for the reel/UGC to these creators.</p>
+            <div className="mt-4 space-y-3">
+              {creators.map((c) => (
+                <div key={c.id} className="rounded-xl border border-zinc-100 p-3">
+                  <div className="flex items-center gap-2">
+                    <Avatar src={c.user?.avatarUrl} name={c.user?.fullName ?? 'Creator'} size="sm" />
+                    <div className="text-sm font-semibold text-zinc-900">
+                      {c.user?.fullName ?? 'Creator'}
+                    </div>
+                  </div>
+                  {c.shippingAddress ? (
+                    <div className="mt-2 text-sm text-zinc-700">
+                      {c.shippingAddress}
+                      {c.city ? `, ${c.city}` : ''}
+                      {c.state ? `, ${c.state}` : ''}
+                      {c.pincode ? ` — ${c.pincode}` : ''}
+                    </div>
+                  ) : (
+                    <div className="mt-2 text-sm italic text-zinc-400">
+                      No delivery address on file yet.
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
       </div>
 
       <aside className="space-y-4">
@@ -300,6 +486,15 @@ function OverviewTab({ campaign, isBrand, onEdit }) {
           </Card>
         )}
       </aside>
+    </div>
+  );
+}
+
+function RosterStat({ label, value }) {
+  return (
+    <div className="rounded-xl bg-zinc-50 p-3">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">{label}</div>
+      <div className="mt-1 text-xl font-bold text-zinc-900">{value}</div>
     </div>
   );
 }
@@ -444,6 +639,8 @@ function EditBriefModal({ open, campaign, onClose, onSaved }) {
     hashtags: '',
     doList: '',
     dontList: '',
+    productLink: '',
+    referenceImages: [],
     startDate: '',
     endDate: '',
   });
@@ -456,6 +653,8 @@ function EditBriefModal({ open, campaign, onClose, onSaved }) {
         hashtags: campaign.hashtags ?? '',
         doList: campaign.doList ?? '',
         dontList: campaign.dontList ?? '',
+        productLink: campaign.productLink ?? '',
+        referenceImages: campaign.referenceImages ?? [],
         startDate: campaign.startDate ? campaign.startDate.slice(0, 10) : '',
         endDate: campaign.endDate ? campaign.endDate.slice(0, 10) : '',
       });
@@ -471,6 +670,8 @@ function EditBriefModal({ open, campaign, onClose, onSaved }) {
         hashtags: form.hashtags || undefined,
         doList: form.doList || undefined,
         dontList: form.dontList || undefined,
+        productLink: form.productLink || '',
+        referenceImages: form.referenceImages,
         startDate: form.startDate ? new Date(form.startDate).toISOString() : undefined,
         endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined,
       });
@@ -520,6 +721,20 @@ function EditBriefModal({ open, campaign, onClose, onSaved }) {
             value={form.hashtags}
             onChange={(e) => setForm((f) => ({ ...f, hashtags: e.target.value }))}
             placeholder="#brandname #campaign2026"
+          />
+        </FormField>
+        <FormField label="Product link" hint="Link to the product for the reel/post.">
+          <Input
+            type="url"
+            value={form.productLink}
+            onChange={(e) => setForm((f) => ({ ...f, productLink: e.target.value }))}
+            placeholder="https://yourbrand.com/product"
+          />
+        </FormField>
+        <FormField label="Reference images" hint="Product photos / examples for the creator.">
+          <MultiImageUpload
+            value={form.referenceImages}
+            onChange={(urls) => setForm((f) => ({ ...f, referenceImages: urls }))}
           />
         </FormField>
         <div className="grid gap-4 sm:grid-cols-2">

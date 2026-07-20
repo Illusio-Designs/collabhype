@@ -108,6 +108,30 @@ export async function addItem(userId, input) {
   });
 }
 
+// Add an INFLUENCER item at a negotiated rate agreed in chat (bypasses the
+// rate card). `price` is the creator-side rate for one unit of `deliverable`.
+export async function addNegotiatedItem(userId, { influencerId, deliverable, price }) {
+  const cart = await getOrCreateCart(userId);
+  const influencer = await prisma.influencerProfile.findUnique({ where: { id: influencerId } });
+  if (!influencer) throw ApiError.notFound('Influencer not found');
+  const creatorRate = Number(price);
+  if (!(creatorRate > 0)) throw ApiError.badRequest('Invalid negotiated price');
+  const platformFee = creatorRate * PLATFORM_BRAND_FEE_RATE;
+  const unitPrice = creatorRate + platformFee;
+  return prisma.cartItem.create({
+    data: {
+      cartId: cart.id,
+      itemType: 'INFLUENCER',
+      influencerId,
+      deliverables: [{ type: deliverable, qty: 1 }],
+      qty: 1,
+      price: unitPrice,
+      creatorRate,
+      platformFee,
+    },
+  });
+}
+
 export async function updateItem(userId, itemId, qty) {
   const item = await prisma.cartItem.findUnique({
     where: { id: itemId },

@@ -15,10 +15,19 @@ const schema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+// Where each role lands after signing in. Admins go to the platform overview
+// (the profile page only knows Brand vs Creator); brands and creators go
+// straight to their profile.
+function homeForRole(role) {
+  return role === 'ADMIN' ? '/dashboard' : '/dashboard/profile';
+}
+
 function LoginForm() {
   const router = useRouter();
   const sp = useSearchParams();
-  const next = sp.get('next') || '/dashboard/profile';
+  // Honour an explicit deep-link (e.g. redirected here from a protected page);
+  // otherwise pick a clean, role-based destination once we know who logged in.
+  const next = sp.get('next');
   const justRegistered = sp.get('registered') === '1';
   const { login } = useAuth();
   const [serverError, setServerError] = useState(null);
@@ -31,8 +40,8 @@ function LoginForm() {
   async function onSubmit(values) {
     setServerError(null);
     try {
-      await login(values.email, values.password);
-      router.push(next);
+      const user = await login(values.email, values.password);
+      router.push(next || homeForRole(user?.role));
     } catch (err) {
       setServerError(apiError(err));
     }

@@ -18,6 +18,8 @@ export async function register(input) {
       passwordHash,
       fullName: input.fullName,
       role: input.role,
+      // Consent is required by the schema, so stamp the acceptance time.
+      privacyAcceptedAt: new Date(),
       ...(input.role === 'INFLUENCER' && {
         influencerProfile: {
           create: { city: input.city },

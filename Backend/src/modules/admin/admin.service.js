@@ -85,7 +85,29 @@ export async function updateUser(userId, patch) {
     // Reactivating within the recovery window restores the account.
     if (patch.isActive === true) data.deletedAt = null;
   }
-  if (patch.role !== undefined) data.role = patch.role;
+
+  // Role change: switching Brand ↔ Creator must provision the matching profile,
+  // otherwise the app breaks (e.g. /influencers/me 404s). Existing profiles are
+  // kept so switching back restores the old data.
+  if (patch.role !== undefined && patch.role !== user.role) {
+    if (patch.role === 'ADMIN') {
+      throw ApiError.badRequest('Promote to admin via the seed script, not here');
+    }
+    data.role = patch.role;
+    if (patch.role === 'INFLUENCER') {
+      data.influencerProfile = {
+        upsert: { create: {}, update: {} },
+      };
+    } else if (patch.role === 'BRAND') {
+      data.brandProfile = {
+        upsert: {
+          create: { companyName: user.fullName || 'My brand' },
+          update: {},
+        },
+      };
+    }
+  }
+
   return prisma.user.update({ where: { id: userId }, data, select: userSelect });
 }
 

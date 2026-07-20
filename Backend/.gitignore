@@ -9,3 +9,7 @@ coverage
 .idea
 .vscode
 prisma/migrations/dev.db*
+
+# Runtime-uploaded files (brand logos, etc.) — keep the dir, ignore contents
+uploads/*
+!uploads/.gitkeep

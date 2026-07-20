@@ -4,9 +4,10 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Button, FormField, Input, Select } from '@/components/ui';
 import { TIER_LABEL } from '@/lib/format';
 
+// Nano creators are sold only in bulk packages (auto-assigned on purchase), so
+// they're not hand-pickable here and Nano is intentionally omitted.
 const TIER_OPTIONS = [
   { value: '', label: 'All tiers' },
-  { value: 'NANO', label: TIER_LABEL.NANO },
   { value: 'MICRO', label: TIER_LABEL.MICRO },
   { value: 'MACRO', label: TIER_LABEL.MACRO },
   { value: 'MEGA', label: TIER_LABEL.MEGA },
@@ -59,17 +60,6 @@ export default function Filters({ niches = [], extraSorts = [] }) {
           value={sp.get('nicheSlug') ?? ''}
           onChange={(v) => update('nicheSlug', v)}
           options={nicheOptions}
-        />
-      </FormField>
-
-      <FormField label="Search" hint="Press Enter to search">
-        <Input
-          type="search"
-          defaultValue={sp.get('q') ?? ''}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') update('q', e.currentTarget.value.trim());
-          }}
-          placeholder="Search…"
         />
       </FormField>
 

@@ -127,13 +127,13 @@ export default function AboutPage() {
           <p className="mt-3 text-brand-100">No demos. No sales calls. Just book and go.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
-              href="/register?role=brand"
+              href="/register/brand"
               className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-brand-800 hover:bg-brand-50"
             >
               I&apos;m a brand
             </Link>
             <Link
-              href="/register?role=influencer"
+              href="/register/creator"
               className="rounded-lg border border-white/40 bg-transparent px-6 py-3 text-sm font-semibold text-white hover:bg-white/10"
             >
               I&apos;m a creator

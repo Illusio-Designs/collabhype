@@ -45,7 +45,7 @@ export default function JoinCreatorPage() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/register?role=influencer"
+              href="/register/creator"
               className="rounded-full bg-brand-700 px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800"
             >
               Create creator account
@@ -80,7 +80,7 @@ export default function JoinCreatorPage() {
               Create your profile in minutes, connect your Instagram, and start getting booked.
             </p>
             <Link
-              href="/register?role=influencer"
+              href="/register/creator"
               className="mt-6 inline-block rounded-full bg-white px-7 py-3 text-sm font-semibold text-brand-700 shadow-sm transition hover:bg-brand-50"
             >
               Join as a creator

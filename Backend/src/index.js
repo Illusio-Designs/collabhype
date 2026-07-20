@@ -3,6 +3,8 @@ import { env } from './config/env.js';
 import { prisma } from './lib/prisma.js';
 
 async function bootstrap() {
+  // Note: reference-data + admin seeding is triggered in app.js (on module
+  // load) so it runs regardless of the host's entry file.
   const server = app.listen(env.PORT, () => {
     console.log(`[collabhype-api] ready on http://localhost:${env.PORT} (${env.NODE_ENV})`);
   });

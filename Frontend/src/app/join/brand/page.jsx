@@ -45,7 +45,7 @@ export default function JoinBrandPage() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/register?role=brand"
+              href="/register/brand"
               className="rounded-full bg-brand-700 px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800"
             >
               Create brand account
@@ -80,7 +80,7 @@ export default function JoinBrandPage() {
               Create a brand account, pick a package or creators, and go live in minutes.
             </p>
             <Link
-              href="/register?role=brand"
+              href="/register/brand"
               className="mt-6 inline-block rounded-full bg-white px-7 py-3 text-sm font-semibold text-brand-700 shadow-sm transition hover:bg-brand-50"
             >
               Join as a brand

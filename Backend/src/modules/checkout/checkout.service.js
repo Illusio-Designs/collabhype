@@ -190,61 +190,127 @@ async function finalizePaidOrder(order, paymentId) {
 //   - PACKAGE (Nano)  : flat per-influencer-per-deliverable payout taken from
 //                       Package.nanoPayPerInfluencer (split across the pack's
 //                       deliverable units so each unit is consistent).
+async function notifyAssigned(tx, influencerIds, campaignId) {
+  const users = await tx.influencerProfile.findMany({
+    where: { id: { in: influencerIds } },
+    select: { userId: true },
+  });
+  if (!users.length) return;
+  await tx.notification.createMany({
+    data: users.map((u) => ({
+      userId: u.userId,
+      type: 'campaign.assigned',
+      title: 'New campaign assigned',
+      body: 'You have been assigned to a new campaign.',
+      link: `/dashboard/campaigns/${campaignId}`,
+    })),
+  });
+}
+
 async function materializeCampaigns(tx, order) {
   for (const item of order.items) {
     const snap = item.snapshot;
-    const isPackage = item.itemType === 'PACKAGE';
     const deliverables = Array.isArray(snap?.deliverables) ? snap.deliverables : [];
+    const totalDelivUnits = deliverables.reduce((s, d) => s + (d.qty ?? 1), 0) || 1;
+    const lineTotal = Number(item.price) * item.qty;
 
-    let influencerIds = [];
-    let pkg = null;
-    if (isPackage) {
-      pkg = item.packageId
+    if (item.itemType === 'PACKAGE') {
+      const pkg = item.packageId
         ? await tx.package.findUnique({ where: { id: item.packageId } })
         : null;
-      const rows = await tx.packageInfluencer.findMany({
-        where: { packageId: item.packageId },
-        select: { influencerId: true },
+      const target = Math.max(1, pkg?.influencerCount ?? 1);
+      const perInfluencer = lineTotal / target;
+      const amountPerUnit = perInfluencer / totalDelivUnits;
+      const payoutPerUnit = Number(pkg?.nanoPayPerInfluencer ?? 0) / totalDelivUnits;
+
+      // Admin-pinned creators → assign directly (no recruiting).
+      const pinned = (
+        await tx.packageInfluencer.findMany({
+          where: { packageId: item.packageId },
+          select: { influencerId: true },
+        })
+      ).map((r) => r.influencerId);
+
+      if (pinned.length) {
+        const campaign = await tx.campaign.create({
+          data: { orderId: order.id, title: snap?.packageTitle ?? 'Package campaign', status: 'BRIEF_SENT' },
+        });
+        if (deliverables.length) {
+          const rows = [];
+          for (const infId of pinned) {
+            for (const d of deliverables) {
+              for (let i = 0; i < (d.qty ?? 1) * item.qty; i++) {
+                rows.push({
+                  campaignId: campaign.id,
+                  influencerId: infId,
+                  deliverable: d.type,
+                  qty: 1,
+                  amountPayable: amountPerUnit,
+                  creatorPayout: payoutPerUnit,
+                  platformFee: amountPerUnit - payoutPerUnit,
+                });
+              }
+            }
+          }
+          if (rows.length) await tx.campaignDeliverable.createMany({ data: rows });
+          await notifyAssigned(tx, pinned, campaign.id);
+        }
+        continue;
+      }
+
+      // Recruiting: open the campaign for matching Nano creators to claim slots.
+      const campaign = await tx.campaign.create({
+        data: {
+          orderId: order.id,
+          title: snap?.packageTitle ?? 'Package campaign',
+          status: 'DRAFT',
+          isRecruiting: true,
+          slotsTarget: target,
+          taskNicheId: pkg?.nicheId ?? null,
+          taskDeliverables: deliverables,
+          taskAmountPerUnit: amountPerUnit,
+          taskPayoutPerUnit: payoutPerUnit,
+        },
       });
-      influencerIds = rows.map((r) => r.influencerId);
-    } else if (item.influencerId) {
-      influencerIds = [item.influencerId];
+
+      // Invite matching Nano creators (by niche) — they accept to fill slots.
+      const where = { tier: 'NANO', isAvailable: true, user: { isActive: true } };
+      if (pkg?.nicheId) where.niches = { some: { nicheId: pkg.nicheId } };
+      const matches = await tx.influencerProfile.findMany({ where, select: { userId: true }, take: 200 });
+      if (matches.length) {
+        await tx.notification.createMany({
+          data: matches.map((m) => ({
+            userId: m.userId,
+            type: 'task.available',
+            title: 'New paid task available',
+            body: `${snap?.packageTitle ?? 'A brand'} is looking for creators. Tap to accept.`,
+            link: '/dashboard/tasks',
+          })),
+        });
+      }
+      continue;
     }
 
-    const lineTotal = Number(item.price) * item.qty;
-    const perInfluencer = influencerIds.length ? lineTotal / influencerIds.length : 0;
-    const totalDelivUnits = deliverables.reduce((s, d) => s + (d.qty ?? 1), 0) || 1;
-    const perUnit = perInfluencer / totalDelivUnits;
-
-    // Creator payout per unit
-    let payoutPerUnit;
-    if (isPackage) {
-      const nanoPay = Number(pkg?.nanoPayPerInfluencer ?? 0);
-      payoutPerUnit = nanoPay / totalDelivUnits;
-    } else {
-      // Back out creator rate from brand-side perUnit and apply the 10% commission.
-      const creatorRatePerUnit = perUnit / (1 + PLATFORM_BRAND_FEE_RATE);
-      payoutPerUnit = creatorRatePerUnit * (1 - PLATFORM_CREATOR_COMMISSION_RATE);
-    }
+    // INFLUENCER item (hand-picked or negotiated in chat).
+    const influencerIds = item.influencerId ? [item.influencerId] : [];
+    const perUnit = influencerIds.length ? lineTotal / influencerIds.length / totalDelivUnits : 0;
+    const creatorRatePerUnit = perUnit / (1 + PLATFORM_BRAND_FEE_RATE);
+    const payoutPerUnit = creatorRatePerUnit * (1 - PLATFORM_CREATOR_COMMISSION_RATE);
     const platformFeePerUnit = perUnit - payoutPerUnit;
 
     const campaign = await tx.campaign.create({
       data: {
         orderId: order.id,
-        title: isPackage ? snap?.packageTitle ?? 'Package campaign' : 'Custom influencer campaign',
+        title: 'Custom influencer campaign',
         status: influencerIds.length ? 'BRIEF_SENT' : 'DRAFT',
       },
     });
-
-    // If a package was bought but no influencers are assigned yet, leave the
-    // campaign in DRAFT so an admin can assign and then generate deliverables.
     if (!influencerIds.length || !deliverables.length) continue;
 
     const rows = [];
     for (const infId of influencerIds) {
       for (const d of deliverables) {
-        const unitsForThisDeliv = (d.qty ?? 1) * item.qty;
-        for (let i = 0; i < unitsForThisDeliv; i++) {
+        for (let i = 0; i < (d.qty ?? 1) * item.qty; i++) {
           rows.push({
             campaignId: campaign.id,
             influencerId: infId,
@@ -258,22 +324,6 @@ async function materializeCampaigns(tx, order) {
       }
     }
     if (rows.length) await tx.campaignDeliverable.createMany({ data: rows });
-
-    // Notify each assigned influencer
-    const users = await tx.influencerProfile.findMany({
-      where: { id: { in: influencerIds } },
-      select: { userId: true },
-    });
-    if (users.length) {
-      await tx.notification.createMany({
-        data: users.map((u) => ({
-          userId: u.userId,
-          type: 'campaign.assigned',
-          title: 'New campaign assigned',
-          body: `You have been assigned to a new campaign.`,
-          link: `/dashboard/campaigns/${campaign.id}`,
-        })),
-      });
-    }
+    await notifyAssigned(tx, influencerIds, campaign.id);
   }
 }

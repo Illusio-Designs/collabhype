@@ -6,6 +6,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { dedupedGet, invalidate } from '@/lib/apiCache';
 import { Badge, Card, Pagination, Select, Spinner, useToast } from '@/components/ui';
+import { useConfirm } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
@@ -36,6 +37,7 @@ export default function AdminOrdersPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [orders, setOrders] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
@@ -74,9 +76,12 @@ export default function AdminOrdersPage() {
     if (status === order.status) return;
     if (
       (status === 'CANCELLED' || status === 'REFUNDED') &&
-      !confirm(
-        `Mark order ${order.orderNumber} as ${status}? This records the status only — it does NOT trigger a Razorpay refund.`,
-      )
+      !(await confirm({
+        title: `Mark ${status.toLowerCase()}?`,
+        body: `Mark order ${order.orderNumber} as ${status}? This records the status only — it does NOT trigger a Razorpay refund.`,
+        variant: 'danger',
+        confirmText: 'Confirm',
+      }))
     ) {
       return;
     }
