@@ -54,6 +54,12 @@ export default function CreatorOverview() {
           ]}
         />
 
+        <View className="mt-4">
+          <Button variant="outline" fullWidth onPress={() => router.push('/tasks')}>
+            Find paid tasks
+          </Button>
+        </View>
+
         {loading && !data ? (
           <Loader />
         ) : error ? (

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { Badge, Button, Card, EmptyState, Loader } from '@/components/ui';
@@ -15,11 +15,37 @@ export default function CampaignDetail() {
   const { user } = useAuth();
   const isBrand = user?.role === 'BRAND';
   const [busyId, setBusyId] = useState(null);
+  const [briefText, setBriefText] = useState('');
+  const [sendingBrief, setSendingBrief] = useState(false);
 
   const { data: campaign, loading, error, refetch } = useFetch(
     async () => (await api.get(`/campaigns/${id}`)).data.campaign,
     [id],
   );
+
+  // Prefill the brief box with any saved draft (before it's sent).
+  useEffect(() => {
+    if (campaign && !campaign.briefSentAt && campaign.brief) setBriefText(campaign.brief);
+  }, [campaign?.id]);
+
+  const sendBrief = async () => {
+    const text = briefText.trim();
+    if (!text) {
+      Alert.alert('Add a brief first');
+      return;
+    }
+    setSendingBrief(true);
+    try {
+      await api.patch(`/campaigns/${id}`, { brief: text });
+      await api.post(`/campaigns/${id}/send-brief`);
+      Alert.alert('Brief sent', 'Creators were notified. Their delivery address is now visible.');
+      await refetch();
+    } catch (e) {
+      Alert.alert("Couldn't send brief", apiError(e));
+    } finally {
+      setSendingBrief(false);
+    }
+  };
 
   const act = async (delivId, action) => {
     setBusyId(delivId + action);
@@ -81,14 +107,43 @@ export default function CampaignDetail() {
           <StatusBadge status={campaign.status} />
         </View>
 
-        {campaign.brief ? (
+        {campaign.briefSentAt ? (
+          campaign.brief ? (
+            <Card>
+              <Text className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                Brief
+              </Text>
+              <Text className="mt-2 text-sm leading-6 text-zinc-700">{campaign.brief}</Text>
+            </Card>
+          ) : null
+        ) : isBrand ? (
           <Card>
             <Text className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-              Brief
+              Send the brief
             </Text>
-            <Text className="mt-2 text-sm leading-6 text-zinc-700">{campaign.brief}</Text>
+            <Text className="mt-1 text-xs text-zinc-500">
+              Describe the campaign and any product to ship. Sending it notifies the creators and
+              unlocks their delivery address.
+            </Text>
+            <TextInput
+              value={briefText}
+              onChangeText={setBriefText}
+              placeholder="What should creators make? Include product, key messages, do's and don'ts…"
+              multiline
+              className="mt-3 min-h-[96px] rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900"
+              textAlignVertical="top"
+            />
+            <Button className="mt-3" fullWidth loading={sendingBrief} onPress={sendBrief}>
+              Send brief
+            </Button>
           </Card>
-        ) : null}
+        ) : (
+          <Card>
+            <Text className="text-sm text-zinc-600">
+              Waiting for the brand to send the campaign brief.
+            </Text>
+          </Card>
+        )}
 
         {campaign.order?.total != null ? (
           <Card className="mt-3">
@@ -127,6 +182,12 @@ export default function CampaignDetail() {
                       {creatorName ? `${creatorName} · ` : ''}
                       {d.dueDate ? `Due ${formatDate(d.dueDate)}` : formatINR(d.amountPayable)}
                     </Text>
+                    {isBrand && d.influencer?.shippingAddress ? (
+                      <Text className="mt-1 text-[11px] text-zinc-500">
+                        Ship to: {d.influencer.shippingAddress}
+                        {d.influencer.pincode ? ` – ${d.influencer.pincode}` : ''}
+                      </Text>
+                    ) : null}
                   </View>
                   <Badge variant={meta.variant}>{meta.label}</Badge>
                 </View>
