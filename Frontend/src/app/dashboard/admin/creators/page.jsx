@@ -19,7 +19,7 @@ import {
 import { useConfirm } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
-import { TablePageSkeleton } from '@/components/dashboard/Skeletons';
+import { TablePageSkeleton, TableRowsSkeleton } from '@/components/dashboard/Skeletons';
 import { TIER_LABEL, formatCount } from '@/lib/format';
 
 const PAGE_SIZE = 20;
@@ -174,13 +174,7 @@ export default function AdminCreatorsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 text-sm">
-              {loading && (
-                <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center">
-                    <Spinner />
-                  </td>
-                </tr>
-              )}
+              {loading && <TableRowsSkeleton rows={8} cols={5} pad="px-3 py-3 sm:px-6" />}
               {!loading && influencers.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-sm text-zinc-500">

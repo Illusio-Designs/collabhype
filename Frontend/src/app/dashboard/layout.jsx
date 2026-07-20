@@ -231,8 +231,44 @@ export default function DashboardLayout({ children }) {
           unreadCount={unreadCount}
         />
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <DashboardFooter />
       </div>
     </div>
+  );
+}
+
+// ============================================================================
+// Footer
+// ============================================================================
+
+function DashboardFooter() {
+  const year = new Date().getFullYear();
+  return (
+    <footer className="border-t border-zinc-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col items-center justify-between gap-3 text-xs text-zinc-500 sm:flex-row">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-zinc-700">Collabhype</span>
+          <span>© {year}. All rights reserved.</span>
+        </div>
+        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <Link href="/about" className="transition hover:text-brand-700">
+            About
+          </Link>
+          <Link href="/how-it-works" className="transition hover:text-brand-700">
+            How it works
+          </Link>
+          <Link href="/dashboard/support" className="transition hover:text-brand-700">
+            Support
+          </Link>
+          <Link href="/terms" className="transition hover:text-brand-700">
+            Terms
+          </Link>
+          <Link href="/privacy" className="transition hover:text-brand-700">
+            Privacy
+          </Link>
+        </nav>
+      </div>
+    </footer>
   );
 }
 
@@ -272,7 +308,15 @@ function Sidebar({
         isCollapsed ? 'w-20 items-center' : 'w-72',
       )}
     >
-      <div className={clsx('flex shrink-0 items-center', isCollapsed ? 'justify-center' : 'justify-between')}>
+      {/* Logo header pinned to the top of the scrolling sidebar. Negative
+          margins + padding let its background cover the container's top padding
+          so nav items scroll cleanly underneath it. */}
+      <div
+        className={clsx(
+          'sticky top-0 z-20 -mx-4 -mt-4 flex shrink-0 items-center bg-brand-50/95 px-4 pb-3 pt-4 backdrop-blur',
+          isCollapsed ? 'justify-center' : 'justify-between',
+        )}
+      >
         <Link
           href="/"
           className={clsx(

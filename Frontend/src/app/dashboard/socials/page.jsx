@@ -340,7 +340,7 @@ function ConnectCard({ brand, title, desc, account, onConnect, onDisconnect, bus
 
 export default function SocialsPage() {
   return (
-    <Suspense fallback={<Spinner size="lg" className="mx-auto my-16 text-brand-700" />}>
+    <Suspense fallback={<PageSkeleton kpis={0} cards={2} />}>
       <SocialsInner />
     </Suspense>
   );

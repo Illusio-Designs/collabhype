@@ -107,6 +107,27 @@ export function CardSkeleton({ lines = 4, className }) {
   );
 }
 
+// Chat thread placeholder: alternating left/right message bubbles.
+export function ChatThreadSkeleton({ bubbles = 6, className }) {
+  // Deterministic per-index sizing (no Math.random) so it stays stable.
+  const widths = ['60%', '45%', '72%', '38%', '55%', '66%'];
+  return (
+    <div className={clsx('space-y-3', className)}>
+      {Array.from({ length: bubbles }).map((_, i) => {
+        const mine = i % 2 === 1;
+        return (
+          <div key={i} className={clsx('flex', mine ? 'justify-end' : 'justify-start')}>
+            <Skeleton
+              className="h-10 rounded-2xl"
+              style={{ width: widths[i % widths.length] }}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // Full-page dashboard skeleton: header block + KPI strip + a couple of cards.
 // This is the drop-in replacement for the old full-page <Spinner size="lg" />.
 export function PageSkeleton({ kpis = 4, cards = 2 }) {

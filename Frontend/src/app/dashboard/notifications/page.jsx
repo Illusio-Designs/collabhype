@@ -4,6 +4,23 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { dedupedGet, invalidate } from '@/lib/apiCache';
+import {
+  Bell,
+  CheckCircle2,
+  ClipboardList,
+  FileText,
+  IndianRupee,
+  LifeBuoy,
+  Megaphone,
+  MessageCircle,
+  MessageSquare,
+  PenLine,
+  RotateCcw,
+  Tag,
+  ThumbsUp,
+  UserCheck,
+  Zap,
+} from 'lucide-react';
 import { Badge, Button, Card, EmptyState, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
@@ -26,15 +43,26 @@ function timeAgo(d) {
   });
 }
 
+// Flat Lucide icons per notification type (no emoji / 3D glyphs), each with a
+// tone matching its meaning. Falls back to a bell.
 const TYPE_ICON = {
-  'order.paid': '✅',
-  'campaign.assigned': '📋',
-  'deliverable.draft': '📝',
-  'deliverable.revision': '↩️',
-  'deliverable.approved': '👍',
-  'deliverable.posted': '📣',
-  'deliverable.paid': '💰',
+  'order.paid': { Icon: CheckCircle2, tone: 'bg-green-50 text-green-600' },
+  'campaign.assigned': { Icon: ClipboardList, tone: 'bg-brand-50 text-brand-600' },
+  'campaign.brief': { Icon: FileText, tone: 'bg-brand-50 text-brand-600' },
+  'task.available': { Icon: Zap, tone: 'bg-amber-50 text-amber-600' },
+  'task.claimed': { Icon: UserCheck, tone: 'bg-green-50 text-green-600' },
+  'chat.message': { Icon: MessageSquare, tone: 'bg-sky-50 text-sky-600' },
+  'chat.offer': { Icon: Tag, tone: 'bg-purple-50 text-purple-600' },
+  'support.opened': { Icon: LifeBuoy, tone: 'bg-sky-50 text-sky-600' },
+  'support.replied': { Icon: MessageCircle, tone: 'bg-sky-50 text-sky-600' },
+  'deliverable.draft': { Icon: PenLine, tone: 'bg-sky-50 text-sky-600' },
+  'deliverable.approved': { Icon: ThumbsUp, tone: 'bg-green-50 text-green-600' },
+  'deliverable.revision': { Icon: RotateCcw, tone: 'bg-amber-50 text-amber-600' },
+  'deliverable.posted': { Icon: Megaphone, tone: 'bg-purple-50 text-purple-600' },
+  'deliverable.paid': { Icon: IndianRupee, tone: 'bg-green-50 text-green-600' },
 };
+
+const DEFAULT_ICON = { Icon: Bell, tone: 'bg-zinc-100 text-zinc-500' };
 
 export default function NotificationsPage() {
   const toast = useToast();
@@ -144,9 +172,16 @@ export default function NotificationsPage() {
                     n.isRead ? 'bg-white' : 'bg-brand-50/40'
                   }`}
                 >
-                  <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-zinc-100 text-lg">
-                    {TYPE_ICON[n.type] ?? '🔔'}
-                  </div>
+                  {(() => {
+                    const { Icon, tone } = TYPE_ICON[n.type] ?? DEFAULT_ICON;
+                    return (
+                      <div
+                        className={`grid h-10 w-10 flex-shrink-0 place-items-center rounded-full ${tone}`}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </div>
+                    );
+                  })()}
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold text-zinc-900">{n.title}</h3>

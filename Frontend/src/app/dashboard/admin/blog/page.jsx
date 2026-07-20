@@ -10,7 +10,7 @@ import { Badge, Button, Card, Pagination, Spinner, useToast } from '@/components
 import { useConfirm } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
-import { TablePageSkeleton } from '@/components/dashboard/Skeletons';
+import { TablePageSkeleton, TableRowsSkeleton } from '@/components/dashboard/Skeletons';
 
 const PAGE_SIZE = 20;
 
@@ -116,13 +116,7 @@ export default function AdminBlogPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 text-sm">
-              {loading && (
-                <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center">
-                    <Spinner />
-                  </td>
-                </tr>
-              )}
+              {loading && <TableRowsSkeleton rows={8} cols={4} pad="px-3 py-3 sm:px-6" />}
               {!loading && posts.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-6 py-8 text-center text-sm text-zinc-500">
