@@ -17,7 +17,6 @@ import {
   FormField,
   Input,
   Modal,
-  Spinner,
   Tabs,
   Textarea,
   useToast,
@@ -27,6 +26,7 @@ import Milestone, {
   deliverableActiveKey,
 } from '@/components/dashboard/Milestone';
 import MultiImageUpload from '@/components/dashboard/MultiImageUpload';
+import { PageSkeleton } from '@/components/dashboard/Skeletons';
 import { DELIVERABLE_LABEL, formatCount, formatINR, PLATFORM_LABEL } from '@/lib/format';
 
 const CAMPAIGN_BADGE = {
@@ -128,11 +128,7 @@ export default function CampaignDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton kpis={0} cards={2} />;
   }
   if (!campaign) return null;
 

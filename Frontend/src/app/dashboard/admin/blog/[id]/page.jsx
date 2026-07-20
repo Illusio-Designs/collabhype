@@ -5,8 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { invalidate } from '@/lib/apiCache';
-import { Button, Card, FormField, Input, Spinner, Switch, Textarea, useToast } from '@/components/ui';
+import { Button, Card, FormField, Input, Switch, Textarea, useToast } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
+import { PageSkeleton } from '@/components/dashboard/Skeletons';
 import RichTextEditor from '@/components/RichTextEditor';
 import LogoUpload from '@/components/dashboard/LogoUpload';
 
@@ -104,11 +105,7 @@ export default function BlogEditorPage() {
   }
 
   if (isLoading || !user || user.role !== 'ADMIN' || loading) {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton kpis={0} cards={2} />;
   }
 
   return (

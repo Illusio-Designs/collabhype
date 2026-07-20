@@ -1,5 +1,7 @@
 'use client';
 
+import { PageSkeleton } from '@/components/dashboard/Skeletons';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -64,11 +66,7 @@ export default function OrderDetailPage() {
   }, [user, params.id]);
 
   if (loading) {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <PageSkeleton kpis={0} cards={2} />;
   }
   if (!order) return null;
 

@@ -19,6 +19,7 @@ import {
 import { useConfirm } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';
+import { TablePageSkeleton } from '@/components/dashboard/Skeletons';
 import { TIER_LABEL, formatCount } from '@/lib/format';
 
 const PAGE_SIZE = 20;
@@ -131,11 +132,7 @@ export default function AdminCreatorsPage() {
   }
 
   if (isLoading || !user || user.role !== 'ADMIN') {
-    return (
-      <div className="grid h-64 place-items-center text-brand-700">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <TablePageSkeleton kpis={0} cols={5} />;
   }
 
   return (
