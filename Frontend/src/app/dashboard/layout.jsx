@@ -331,7 +331,7 @@ function Sidebar({
         </button>
       )}
 
-      <nav className="mt-6 flex-1 space-y-6 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav className="mt-6 min-h-0 flex-1 space-y-6 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {nav.map((section) => {
           const closed = !isCollapsed && closedGroups[section.label];
           return (
