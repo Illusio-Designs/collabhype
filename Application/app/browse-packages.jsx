@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Badge, Button, Card, EmptyState, Loader, Tabs } from '@/components/ui';
 import BackHeader from '@/components/BackHeader';
 import { api, apiError } from '@/lib/api';
@@ -35,7 +36,10 @@ export default function BrowsePackages() {
     setAddingId(pkg.id);
     try {
       await api.post('/cart/items', { itemType: 'PACKAGE', packageId: pkg.id, qty: 1 });
-      Alert.alert('Added to booking', `${pkg.title} was added to your booking.`);
+      Alert.alert('Added to booking', `${pkg.title} was added to your booking.`, [
+        { text: 'Keep browsing', style: 'cancel' },
+        { text: 'View booking', onPress: () => router.push('/booking') },
+      ]);
     } catch (e) {
       Alert.alert("Couldn't add to booking", apiError(e));
     } finally {
@@ -45,7 +49,14 @@ export default function BrowsePackages() {
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-50" edges={['top']}>
-      <BackHeader title="Packages" />
+      <BackHeader
+        title="Packages"
+        right={
+          <Button size="sm" variant="ghost" onPress={() => router.push('/booking')}>
+            Booking
+          </Button>
+        }
+      />
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}

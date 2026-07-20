@@ -68,6 +68,15 @@ export default function BrandOverview() {
           ]}
         />
 
+        <View className="mt-4 flex-row gap-2">
+          <Button variant="outline" className="flex-1" onPress={() => router.push('/browse-creators')}>
+            Browse creators
+          </Button>
+          <Button variant="outline" className="flex-1" onPress={() => router.push('/booking')}>
+            View booking
+          </Button>
+        </View>
+
         {loading && !data ? (
           <Loader />
         ) : error ? (
