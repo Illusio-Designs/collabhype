@@ -308,15 +308,7 @@ function Sidebar({
         isCollapsed ? 'w-20 items-center' : 'w-72',
       )}
     >
-      {/* Logo header pinned to the top of the scrolling sidebar. Negative
-          margins + padding let its background cover the container's top padding
-          so nav items scroll cleanly underneath it. */}
-      <div
-        className={clsx(
-          'sticky top-0 z-20 -mx-4 -mt-4 flex shrink-0 items-center bg-brand-50/95 px-4 pb-3 pt-4 backdrop-blur',
-          isCollapsed ? 'justify-center' : 'justify-between',
-        )}
-      >
+      <div className={clsx('flex shrink-0 items-center', isCollapsed ? 'justify-center' : 'justify-between')}>
         <Link
           href="/"
           className={clsx(
