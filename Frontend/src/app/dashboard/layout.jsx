@@ -435,7 +435,7 @@ function Sidebar({
           title="Sign out"
           aria-label="Sign out"
         >
-          <SignOutIcon className="h-4 w-4" />
+          <LogOut className="h-4 w-4" />
         </button>
       )}
     </div>
