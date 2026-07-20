@@ -10,6 +10,7 @@ import ForBrandsAndCreators from '@/components/home/ForBrandsAndCreators';
 import Niches from '@/components/home/Niches';
 import Testimonials from '@/components/home/Testimonials';
 import FAQSection from '@/components/home/FAQSection';
+import LatestBlog from '@/components/home/LatestBlog';
 import Newsletter from '@/components/home/Newsletter';
 import FinalCTA from '@/components/home/FinalCTA';
 import { apiFetchSafe } from '@/lib/api';
@@ -24,12 +25,17 @@ export async function generateMetadata() {
 }
 
 export default async function HomePage() {
-  const [packagesData, nichesData] = await Promise.all([
+  const [packagesData, nichesData, blogData] = await Promise.all([
     apiFetchSafe('/api/v1/packages?limit=8', null),
     apiFetchSafe('/api/v1/niches', null),
+    apiFetchSafe('/api/v1/blog?limit=3', null),
   ]);
-  const featured = packagesData?.packages ?? [];
+  // Segregate featured packs by total price (cheapest first).
+  const featured = [...(packagesData?.packages ?? [])].sort(
+    (a, b) => (a.price ?? 0) - (b.price ?? 0),
+  );
   const niches = nichesData?.niches ?? [];
+  const posts = blogData?.posts ?? [];
 
   return (
     <>
@@ -44,6 +50,7 @@ export default async function HomePage() {
       <ForBrandsAndCreators />
       <Niches niches={niches} />
       <Testimonials />
+      <LatestBlog posts={posts} />
       <FAQSection />
       <Newsletter />
       <FinalCTA />

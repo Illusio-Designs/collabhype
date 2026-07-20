@@ -172,6 +172,41 @@ export const DEFAULT_SITE_CONTENT = [
   },
 ];
 
+// A starter published blog post so the /blog page and the homepage blog rail
+// aren't empty on a fresh install. Upserted by slug and never overwrites an
+// admin edit (update: {}), so editing it in the dashboard sticks.
+export const DEFAULT_BLOG_POSTS = [
+  {
+    slug: 'nano-vs-micro-influencers',
+    title: 'Nano vs Micro influencers: which tier fits your budget?',
+    excerpt:
+      'Nano and Micro creators cost a fraction of celebrity deals but often out-convert them. Here is how to pick the right tier for your next campaign.',
+    coverImageUrl: '/blog/nano-vs-micro-influencers.svg',
+    tags: 'strategy,creators,budget',
+    authorName: 'Team Collabhype',
+    status: 'PUBLISHED',
+    seoTitle: 'Nano vs Micro influencers in India — which tier should you pick?',
+    seoDescription:
+      'A practical breakdown of Nano (under 1K) and Micro (1K–100K) creators: cost, reach, engagement, and when to use each on Collabhype.',
+    content: `
+<p>Not every campaign needs a million-follower celebrity. In India's creator economy, the fastest-growing brands are winning with <strong>Nano</strong> and <strong>Micro</strong> influencers — creators who cost a fraction of a big-name deal and often drive higher engagement and conversions.</p>
+<h2>The tiers at a glance</h2>
+<ul>
+  <li><strong>Nano — under 1K followers.</strong> Highly engaged, hyper-local audiences. Perfect for early-stage brand testing and authentic word-of-mouth.</li>
+  <li><strong>Micro — 1K to 100K followers.</strong> Trusted niche voices and the sweet spot for most campaigns: strong reach without losing that personal, credible feel.</li>
+  <li><strong>Macro — 100K to 1M followers.</strong> Broad reach with credibility, great for launches and awareness.</li>
+  <li><strong>Mega — 1M+ followers.</strong> Mass reach and cultural moments, reserved for hero campaigns.</li>
+</ul>
+<h2>When to go Nano</h2>
+<p>Buy a bulk Nano pack when you want volume — dozens of authentic posts across a niche, at a low per-influencer cost. On Collabhype, package purchases automatically invite matching Nano creators, and each accepted task is delivered against the pack you paid for.</p>
+<h2>When to go Micro</h2>
+<p>Hand-pick Micro creators when a specific voice matters. Browse the roster, negotiate rates directly in chat, and check out with escrow-backed payments — funds are only released once deliverables are approved.</p>
+<h2>The bottom line</h2>
+<p>Start Nano to test, layer in Micro for reach, and reserve Macro/Mega for the moments that deserve them. Mix tiers in a single campaign and let the data tell you where to double down.</p>
+`.trim(),
+  },
+];
+
 // Upsert all reference data (idempotent). Returns counts written.
 export async function seedReferenceData(prisma) {
   for (const n of NICHES) {
@@ -196,6 +231,25 @@ export async function seedReferenceData(prisma) {
     settings: DEFAULT_SETTINGS.length,
     content: DEFAULT_SITE_CONTENT.length,
   };
+}
+
+// Ensure the starter blog post exists. Idempotent (upsert by slug) and guarded
+// against a stale Prisma client that predates the BlogPost model. Runs on every
+// boot so an already-seeded install still gets the post, but never clobbers an
+// admin edit.
+export async function ensureDefaultBlog(prisma) {
+  if (!prisma.blogPost) return 0;
+  let created = 0;
+  for (const post of DEFAULT_BLOG_POSTS) {
+    const existing = await prisma.blogPost.findUnique({ where: { slug: post.slug }, select: { id: true } });
+    await prisma.blogPost.upsert({
+      where: { slug: post.slug },
+      update: {}, // never overwrite an admin edit
+      create: { ...post, publishedAt: post.status === 'PUBLISHED' ? new Date() : null },
+    });
+    if (!existing) created += 1;
+  }
+  return created;
 }
 
 // Create the super-admin from env creds if one doesn't already exist. Only runs
@@ -245,6 +299,10 @@ export async function ensureSeedData(prisma) {
     if (await ensureAdmin(prisma)) {
       console.log(`[seed] super-admin created from env (${process.env.ADMIN_EMAIL})`);
     }
+    // Runs unconditionally (idempotent) so the starter post lands even on an
+    // already-seeded DB where the reference-data block above is skipped.
+    const blogCreated = await ensureDefaultBlog(prisma);
+    if (blogCreated) console.log(`[seed] ${blogCreated} starter blog post(s) created`);
   } catch (err) {
     console.error('[seed] ensureSeedData failed (continuing):', err.message);
   }

@@ -36,12 +36,8 @@ export default function PackageCard({ pkg }) {
               {formatINR(pkg.mrp)}
             </span>
           ) : null}
-          <span className="text-3xl font-bold text-zinc-900">
-            {pkg.pricePerInfluencer != null
-              ? formatINR(pkg.pricePerInfluencer)
-              : formatINR(pkg.price)}
-          </span>
-          <span className="text-xs text-zinc-500">per influencer</span>
+          <span className="text-3xl font-bold text-zinc-900">{formatINR(pkg.price)}</span>
+          <span className="text-xs text-zinc-500">total</span>
         </div>
         {pkg.subtitle && (
           <p className="mt-2 text-sm text-zinc-600">{pkg.subtitle}</p>
@@ -88,9 +84,9 @@ export default function PackageCard({ pkg }) {
       <div className="mt-auto border-t border-zinc-100 pt-4">
         <div className="flex items-end justify-between">
           <div>
-            <div className="text-xs text-zinc-500">Total</div>
+            <div className="text-xs text-zinc-500">Per influencer</div>
             <div className="text-2xl font-bold text-zinc-900">
-              {formatINR(pkg.price)}
+              {formatINR(pkg.pricePerInfluencer ?? pkg.price)}
             </div>
           </div>
           <Link

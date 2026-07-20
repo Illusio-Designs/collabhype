@@ -16,7 +16,7 @@ const TIER_TILES = [
   {
     tier: 'MICRO',
     title: 'Micro',
-    range: '10K – 100K followers',
+    range: '1K – 100K followers',
     body: 'Hand-pick creators with strong niche credibility. Pay each creator’s rate + 5% platform fee at checkout.',
   },
   {
@@ -35,7 +35,8 @@ const TIER_TILES = [
 
 export default async function PackagesPage() {
   const data = await apiFetchSafe('/api/v1/packages?tier=NANO', null);
-  const packages = data?.packages ?? [];
+  // Segregate by total price (cheapest pack first), not by per-influencer rate.
+  const packages = [...(data?.packages ?? [])].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
