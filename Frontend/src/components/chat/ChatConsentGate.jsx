@@ -9,11 +9,11 @@ import { Button, Card, useToast } from '@/components/ui';
 const RULES = [
   'Keep all communication on Collabhype — never share phone numbers, emails, or other contact details.',
   'Do not try to move the deal off-platform. Payments and delivery happen through Collabhype only.',
-  'Negotiate rates here; the creator sends an offer and the brand adds it to booking.',
+  'Message about rates here; the creator sends an offer and the brand adds it to booking.',
   'Sharing contact details is a policy violation and repeated attempts suspend your account.',
 ];
 
-// Consent screen shown before a user can use negotiation chat. Records consent
+// Consent screen shown before a user can use messaging. Records consent
 // via POST /chat/consent.
 export default function ChatConsentGate({ onAccepted }) {
   const toast = useToast();
@@ -38,7 +38,7 @@ export default function ChatConsentGate({ onAccepted }) {
       </div>
       <h2 className="mt-4 text-lg font-semibold text-zinc-900">Before you start chatting</h2>
       <p className="mt-1 text-sm text-zinc-600">
-        Negotiation chat lets brands and creators agree rates directly. To keep everyone protected,
+        Messaging lets brands and creators agree rates directly. To keep everyone protected,
         please agree to the rules below.
       </p>
       <ul className="mt-4 space-y-2">

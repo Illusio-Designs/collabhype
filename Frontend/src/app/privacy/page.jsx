@@ -20,7 +20,7 @@ const SECTIONS = [
   },
   {
     title: '3. In-platform messages',
-    body: 'Negotiation happens in Collabhype chat. To enforce our no-contact-sharing policy, our systems automatically screen message content for personal contact details (phone numbers, emails, external handles, off-site links). This screening is used only for policy enforcement and platform safety — not for advertising, and we do not sell it.',
+    body: 'Messaging happens in Collabhype chat. To enforce our no-contact-sharing policy, our systems automatically screen message content for personal contact details (phone numbers, emails, external handles, off-site links). This screening is used only for policy enforcement and platform safety — not for advertising, and we do not sell it.',
   },
   {
     title: '4. Social account tokens',

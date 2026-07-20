@@ -9,8 +9,8 @@ import { useAuth } from '@/lib/auth';
 import { formatDate } from '@/lib/format';
 
 // Conversations list + the one-time chat consent gate. Mirrors the web
-// /dashboard/messages screen: brands and creators negotiate rates here, and the
-// no-contact-sharing rules must be accepted before the first message.
+// /dashboard/messages screen: brands and creators message about rates here, and
+// the no-contact-sharing rules must be accepted before the first message.
 export default function MessagesList() {
   const { user } = useAuth();
   const isBrand = user?.role === 'BRAND';
@@ -84,7 +84,7 @@ export default function MessagesList() {
           <Card>
             <Text className="text-lg font-bold text-zinc-900">Before you start chatting</Text>
             <Text className="mt-2 text-sm leading-6 text-zinc-600">
-              Negotiate rates here — but keep everything on Collabhype. Sharing phone numbers,
+              Message about rates here — but keep everything on Collabhype. Sharing phone numbers,
               emails, or off-platform links is not allowed, and repeated attempts suspend your
               account. All payments run through Collabhype with escrow protection.
             </Text>
@@ -106,7 +106,7 @@ export default function MessagesList() {
         refreshControl={<RefreshControl refreshing={loading} onRefresh={loadList} />}
       >
         <Text className="text-[11px] font-semibold uppercase tracking-[0.15em] text-brand-700">
-          Negotiate
+          Inbox
         </Text>
         <Text className="mt-1 text-2xl font-bold text-zinc-900">Messages</Text>
         <Text className="mt-1 text-sm text-zinc-600">
@@ -128,7 +128,7 @@ export default function MessagesList() {
               description={
                 isBrand
                   ? 'Start one from a creator in Browse creators.'
-                  : 'Brands will reach out to negotiate your rates.'
+                  : 'Brands will reach out to message you about rates.'
               }
               action={
                 isBrand ? (

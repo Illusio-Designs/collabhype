@@ -80,7 +80,7 @@ export async function startConversation(user, influencerId) {
   });
   if (!influencer || !influencer.user?.isActive) throw ApiError.notFound('Creator not found');
   if (!CHATTABLE_TIERS.includes(influencer.tier)) {
-    throw ApiError.badRequest('This creator is not available for direct negotiation');
+    throw ApiError.badRequest('This creator is not available for direct messaging');
   }
 
   const existing = await prisma.conversation.findUnique({

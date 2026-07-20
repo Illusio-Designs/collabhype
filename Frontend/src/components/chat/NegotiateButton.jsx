@@ -39,9 +39,9 @@ export default function NegotiateButton({ influencerId, className }) {
     <div className="mt-3">
       <Button variant="outline" onClick={start} loading={busy} className={className}>
         <MessagesSquare className="mr-2 h-4 w-4" />
-        Negotiate rate
+        Message
       </Button>
-      <p className="mt-2 text-center text-xs text-zinc-500">Prefer a custom rate? Negotiate directly.</p>
+      <p className="mt-2 text-center text-xs text-zinc-500">Prefer a custom rate? Message the creator directly.</p>
     </div>
   );
 }

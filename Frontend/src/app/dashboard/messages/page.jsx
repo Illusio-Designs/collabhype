@@ -94,7 +94,7 @@ function MessagesInner() {
   if (!consented) {
     return (
       <div className="space-y-6">
-        <PageHeader eyebrow="Messages" title="Negotiate rates" subtitle="Chat directly with creators or brands." />
+        <PageHeader eyebrow="Inbox" title="Messages" subtitle="Chat directly with creators or brands." />
         <ChatConsentGate onAccepted={() => setConsented(true)} />
       </div>
     );
@@ -110,7 +110,7 @@ function MessagesInner() {
 
   return (
     <div className="space-y-4">
-      <PageHeader eyebrow="Messages" title="Negotiate rates" subtitle="Never share personal contact details — it's against policy." />
+      <PageHeader eyebrow="Inbox" title="Messages" subtitle="Never share personal contact details — it's against policy." />
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Conversation list */}

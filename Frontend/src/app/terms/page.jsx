@@ -31,8 +31,8 @@ const SECTIONS = [
     body: 'Brands pay via Razorpay. Funds are held in escrow and are only released once the campaign\'s deliverables are approved and completed. Hand-picked creator bookings include a platform fee (currently 5%) that is shown to you at checkout before you pay. Creator payouts are issued to the UPI ID or bank account on file after approval. Prices are in INR and inclusive of applicable taxes unless stated otherwise.',
   },
   {
-    title: '6. Negotiation and on-platform communication',
-    body: 'Micro, Macro, and Mega creators may negotiate rates with brands through Collabhype\'s in-platform chat. All communication and payment must stay on the platform. Sharing or soliciting personal contact details — phone numbers, email addresses, external social handles, or links intended to move the conversation off-site — is strictly prohibited. Our systems automatically screen messages for this; repeated violations (three strikes) result in automatic account suspension. Attempting to take a transaction off-platform to avoid fees or escrow is a serious breach of these Terms.',
+    title: '6. Messaging and on-platform communication',
+    body: 'Micro, Macro, and Mega creators may message brands about rates through Collabhype\'s in-platform chat. All communication and payment must stay on the platform. Sharing or soliciting personal contact details — phone numbers, email addresses, external social handles, or links intended to move the conversation off-site — is strictly prohibited. Our systems automatically screen messages for this; repeated violations (three strikes) result in automatic account suspension. Attempting to take a transaction off-platform to avoid fees or escrow is a serious breach of these Terms.',
   },
   {
     title: '7. Briefs, shipping and delivery',

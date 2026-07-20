@@ -119,7 +119,7 @@ export default function BrowseCreators() {
                       loading={startingId === inf.id}
                       onPress={() => startChat(inf)}
                     >
-                      Message / negotiate
+                      Message
                     </Button>
                   </View>
                 ) : null}
