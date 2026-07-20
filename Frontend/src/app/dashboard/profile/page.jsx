@@ -14,7 +14,6 @@ import {
   FormField,
   Input,
   Select,
-  Spinner,
   Switch,
   Textarea,
   useToast,
@@ -57,7 +56,7 @@ function BrandProfileForm() {
   useEffect(() => {
     dedupedGet('/api/v1/brands/me')
       .then((data) => {
-        const p = data.profile;
+        const p = data.profile ?? {};
         setForm({
           companyName: p.companyName ?? '',
           website: p.website ?? '',
@@ -196,7 +195,7 @@ function InfluencerProfileForm() {
         dedupedGet('/api/v1/niches', { force }),
       ])
         .then(([me, n]) => {
-          const p = me.profile;
+          const p = me.profile ?? {};
           setForm({
             bio: p.bio ?? '',
             city: p.city ?? '',

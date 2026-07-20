@@ -543,14 +543,20 @@ async function recomputeCampaignStatus(campaignId, tx) {
     select: { status: true, influencerId: true },
   });
   if (!ds.length) return; // leave DRAFT — admin still needs to assign
-  let newStatus;
-  if (ds.every((d) => d.status === 'PAID')) newStatus = 'COMPLETED';
-  else if (ds.some((d) => d.status !== 'PENDING')) newStatus = 'IN_PROGRESS';
-  else newStatus = 'BRIEF_SENT';
   const previous = await tx.campaign.findUnique({
     where: { id: campaignId },
-    select: { status: true },
+    select: { status: true, isRecruiting: true, slotsTarget: true, slotsFilled: true },
   });
+  // A recruiting campaign that hasn't filled its paid slots must not COMPLETE —
+  // the brand paid for slotsTarget creators, not only the ones who claimed. Cap
+  // at IN_PROGRESS until the slots fill (isRecruiting flips false when full).
+  const underFilled =
+    Boolean(previous?.isRecruiting) ||
+    (previous?.slotsTarget != null && (previous.slotsFilled ?? 0) < previous.slotsTarget);
+  let newStatus;
+  if (ds.every((d) => d.status === 'PAID')) newStatus = underFilled ? 'IN_PROGRESS' : 'COMPLETED';
+  else if (ds.some((d) => d.status !== 'PENDING')) newStatus = 'IN_PROGRESS';
+  else newStatus = 'BRIEF_SENT';
   await tx.campaign.update({ where: { id: campaignId }, data: { status: newStatus } });
 
   // Bump completedCampaigns once per influencer the first time we transition
@@ -573,6 +579,14 @@ async function maybeReleaseEscrow(orderId, tx) {
   });
   if (!ds.length) return;
   if (!ds.every((d) => d.status === 'PAID')) return;
+  // Never release while any campaign on the order is still recruiting (i.e. its
+  // paid slots aren't filled). Otherwise a partially-claimed package (10 of 50)
+  // would release the full escrow once those 10 finish.
+  const stillRecruiting = await tx.campaign.findFirst({
+    where: { orderId, isRecruiting: true },
+    select: { id: true },
+  });
+  if (stillRecruiting) return;
   await tx.escrowHold.updateMany({
     where: { orderId, status: 'HELD' },
     data: { status: 'RELEASED', releasedAt: new Date() },

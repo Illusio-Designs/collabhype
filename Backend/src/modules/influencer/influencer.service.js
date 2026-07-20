@@ -10,10 +10,16 @@ export async function getTierThresholds() {
     platformSettings.getSetting('tier_micro_max'),
     platformSettings.getSetting('tier_macro_max'),
   ]);
+  // Fall back only when unset/non-numeric — an explicit 0 must be respected,
+  // not silently replaced by the default (`Number(0) || default` did that).
+  const num = (v, fallback) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
   return {
-    nanoMax: Number(nanoMax) || DEFAULT_TIER_THRESHOLDS.nanoMax,
-    microMax: Number(microMax) || DEFAULT_TIER_THRESHOLDS.microMax,
-    macroMax: Number(macroMax) || DEFAULT_TIER_THRESHOLDS.macroMax,
+    nanoMax: num(nanoMax, DEFAULT_TIER_THRESHOLDS.nanoMax),
+    microMax: num(microMax, DEFAULT_TIER_THRESHOLDS.microMax),
+    macroMax: num(macroMax, DEFAULT_TIER_THRESHOLDS.macroMax),
   };
 }
 

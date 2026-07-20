@@ -4,11 +4,14 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 
-export default function Tabs({ tabs, defaultIndex = 0, onChange, variant = 'underline' }) {
-  const [active, setActive] = useState(defaultIndex);
+export default function Tabs({ tabs, defaultIndex = 0, activeIndex, onChange, variant = 'underline' }) {
+  const [internal, setInternal] = useState(defaultIndex);
+  // Controlled when `activeIndex` is provided (so the selection survives a
+  // parent re-mount, e.g. a loading skeleton); uncontrolled otherwise.
+  const active = activeIndex != null ? activeIndex : internal;
 
   function select(i) {
-    setActive(i);
+    if (activeIndex == null) setInternal(i);
     onChange?.(i);
   }
 

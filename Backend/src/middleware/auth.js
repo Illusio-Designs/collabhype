@@ -22,6 +22,22 @@ export const requireAuth = (req, _res, next) => {
   }
 };
 
+// Attaches req.user when a valid auth token is present, but never rejects —
+// for endpoints that work anonymously yet want to attribute logged-in users
+// (e.g. analytics ingest).
+export const optionalAuth = (req, _res, next) => {
+  const header = req.headers.authorization;
+  if (header?.startsWith('Bearer ')) {
+    try {
+      const payload = verifyToken(header.slice(7));
+      if (!payload.kind || payload.kind === 'auth') req.user = payload;
+    } catch {
+      /* ignore — treat as anonymous */
+    }
+  }
+  next();
+};
+
 export const requireRole =
   (...roles) =>
   (req, _res, next) => {

@@ -19,7 +19,41 @@ const ticketInclude = {
 
 // ---------- create -------------------------------------------------------
 
+// A ticket may reference an order/campaign/deliverable, but only ones the user
+// is a party to — otherwise the ticket's `include` would echo a stranger's
+// order total / deliverable payout back to them.
+async function assertOwnsLinks(userId, { orderId, campaignId, deliverableId }) {
+  if (orderId) {
+    const o = await prisma.order.findFirst({
+      where: { id: orderId, brandUserId: userId },
+      select: { id: true },
+    });
+    if (!o) throw ApiError.forbidden('You cannot link that order');
+  }
+  if (campaignId) {
+    const c = await prisma.campaign.findFirst({
+      where: {
+        id: campaignId,
+        OR: [{ order: { brandUserId: userId } }, { deliverables: { some: { influencer: { userId } } } }],
+      },
+      select: { id: true },
+    });
+    if (!c) throw ApiError.forbidden('You cannot link that campaign');
+  }
+  if (deliverableId) {
+    const d = await prisma.campaignDeliverable.findFirst({
+      where: {
+        id: deliverableId,
+        OR: [{ campaign: { order: { brandUserId: userId } } }, { influencer: { userId } }],
+      },
+      select: { id: true },
+    });
+    if (!d) throw ApiError.forbidden('You cannot link that deliverable');
+  }
+}
+
 export async function createTicket(userId, role, input) {
+  await assertOwnsLinks(userId, input);
   const ticket = await prisma.supportTicket.create({
     data: {
       ticketNumber: newTicketNumber(),

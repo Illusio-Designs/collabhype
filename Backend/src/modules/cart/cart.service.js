@@ -114,6 +114,12 @@ export async function addNegotiatedItem(userId, { influencerId, deliverable, pri
   const cart = await getOrCreateCart(userId);
   const influencer = await prisma.influencerProfile.findUnique({ where: { id: influencerId } });
   if (!influencer) throw ApiError.notFound('Influencer not found');
+  // Re-check at accept time — the creator may have gone unavailable or dropped
+  // below the negotiable (Micro+) tier since the offer was made in chat.
+  if (!influencer.isAvailable) throw ApiError.badRequest('This creator is no longer available');
+  if (!['MICRO', 'MACRO', 'MEGA'].includes(influencer.tier)) {
+    throw ApiError.badRequest('This creator can no longer be booked at a negotiated rate');
+  }
   const creatorRate = Number(price);
   if (!(creatorRate > 0)) throw ApiError.badRequest('Invalid negotiated price');
   const platformFee = creatorRate * PLATFORM_BRAND_FEE_RATE;
