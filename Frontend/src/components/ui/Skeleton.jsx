@@ -5,7 +5,7 @@ export default function Skeleton({ variant = 'rect', className, ...rest }) {
     variant === 'circle' ? 'rounded-full' : variant === 'text' ? 'h-4 rounded' : 'rounded-lg';
   return (
     <div
-      className={clsx('animate-pulse bg-zinc-200', shape, className)}
+      className={clsx('skeleton', shape, className)}
       aria-hidden
       {...rest}
     />
