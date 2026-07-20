@@ -1,11 +1,15 @@
 import { useMemo, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Avatar, Badge, Button, Card, EmptyState, Loader, Tabs } from '@/components/ui';
 import BackHeader from '@/components/BackHeader';
-import { api } from '@/lib/api';
+import { api, apiError } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { useFetch } from '@/lib/useFetch';
 import { formatCount, TIER_LABEL } from '@/lib/format';
+
+const CHATTABLE_TIERS = ['MICRO', 'MACRO', 'MEGA'];
 
 const TIER_FILTERS = [
   { label: 'All',   value: 'ALL' },
@@ -22,13 +26,32 @@ function nicheNames(inf) {
 }
 
 export default function BrowseCreators() {
+  const { user } = useAuth();
+  const isBrand = user?.role === 'BRAND';
   const [tier, setTier] = useState('ALL');
+  const [startingId, setStartingId] = useState(null);
 
   const { data, loading, error, refetch } = useFetch(
     async () => (await api.get('/influencers', { params: { limit: 100 } })).data.influencers ?? [],
     [],
   );
   const influencers = useMemo(() => data ?? [], [data]);
+
+  // Brand → Micro+ creator: open (or reopen) a negotiation chat. A missing
+  // consent bounces to the Messages screen where the gate is shown.
+  const startChat = async (inf) => {
+    setStartingId(inf.id);
+    try {
+      const { data: res } = await api.post('/chat/conversations', { influencerId: inf.id });
+      router.push(`/messages/${res.conversation.id}`);
+    } catch (e) {
+      const msg = apiError(e);
+      if (/chat rules|consent/i.test(msg)) router.push('/messages');
+      else Alert.alert("Couldn't start chat", msg);
+    } finally {
+      setStartingId(null);
+    }
+  };
 
   const visible = useMemo(() => {
     if (tier === 'ALL') return influencers;
@@ -88,6 +111,18 @@ export default function BrowseCreators() {
                     </View>
                   </View>
                 </View>
+                {isBrand && CHATTABLE_TIERS.includes(inf.tier) ? (
+                  <View className="mt-3 border-t border-zinc-100 pt-3">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      loading={startingId === inf.id}
+                      onPress={() => startChat(inf)}
+                    >
+                      Message / negotiate
+                    </Button>
+                  </View>
+                ) : null}
               </Card>
             ))}
           </View>

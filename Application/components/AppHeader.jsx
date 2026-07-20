@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Bell } from 'lucide-react-native';
+import { Bell, MessageSquare } from 'lucide-react-native';
 import { COLORS } from '@/lib/theme';
 import { useAuth } from '@/lib/auth';
 
@@ -29,6 +29,14 @@ export default function AppHeader({ rightAction, unreadCount = 0 }) {
       </View>
 
       {rightAction}
+
+      <Pressable
+        onPress={() => router.push('/messages')}
+        className="h-9 w-9 items-center justify-center rounded-full bg-zinc-100 active:bg-zinc-200"
+        accessibilityLabel="Messages"
+      >
+        <MessageSquare size={16} color={COLORS.zinc[700]} />
+      </Pressable>
 
       <Pressable
         onPress={() => router.push(inboxRoute)}

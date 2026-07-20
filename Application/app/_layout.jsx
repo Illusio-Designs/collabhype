@@ -25,6 +25,8 @@ export default function RootLayout() {
           <Stack.Screen name="socials" options={{ presentation: 'card' }} />
           <Stack.Screen name="browse-packages" options={{ presentation: 'card' }} />
           <Stack.Screen name="browse-creators" options={{ presentation: 'card' }} />
+          <Stack.Screen name="messages/index" options={{ presentation: 'card' }} />
+          <Stack.Screen name="messages/[id]" options={{ presentation: 'card' }} />
         </Stack>
       </AuthProvider>
     </SafeAreaProvider>
