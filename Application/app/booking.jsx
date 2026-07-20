@@ -2,9 +2,11 @@ import { useCallback, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import RazorpayCheckout from 'react-native-razorpay';
 import { Button, Card, EmptyState, Loader } from '@/components/ui';
 import BackHeader from '@/components/BackHeader';
 import { api, apiError } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { useFetch } from '@/lib/useFetch';
 import { DELIVERABLE_LABEL, formatINR } from '@/lib/format';
 
@@ -12,8 +14,10 @@ import { DELIVERABLE_LABEL, formatINR } from '@/lib/format';
 // itself runs on the web app for now (Razorpay), so this screen focuses on
 // review + a clear hand-off.
 export default function Booking() {
+  const { user } = useAuth();
   const [busyId, setBusyId] = useState(null);
   const [clearing, setClearing] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   const { data, loading, error, refetch } = useFetch(
     async () => (await api.get('/cart')).data.cart,
@@ -21,6 +25,60 @@ export default function Booking() {
   );
   const cart = data ?? null;
   const items = cart?.items ?? [];
+
+  // Escrow checkout: create the order, open the Razorpay sheet, then verify the
+  // signature server-side. The native module only exists in a dev-client / EAS
+  // build (not Expo Go), so a missing module is surfaced clearly.
+  const checkout = useCallback(async () => {
+    if (!items.length) return;
+    setCheckingOut(true);
+    try {
+      if (!RazorpayCheckout || typeof RazorpayCheckout.open !== 'function') {
+        throw new Error('In-app payment needs the latest app build. Please update the app.');
+      }
+      const { data: order } = await api.post('/checkout/create-order');
+      const options = {
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency || 'INR',
+        name: 'Collabhype',
+        description: `Order ${order.orderNumber}`,
+        order_id: order.razorpayOrderId,
+        prefill: {
+          name: user?.fullName || '',
+          email: user?.email || '',
+          contact: user?.phone || '',
+        },
+        theme: { color: '#6d28d9' },
+      };
+
+      let pay;
+      try {
+        pay = await RazorpayCheckout.open(options);
+      } catch (rzpErr) {
+        // Razorpay rejects with { code, description } on cancel/failure.
+        const desc = rzpErr?.description || rzpErr?.error?.description;
+        Alert.alert('Payment not completed', desc || 'You cancelled the payment.');
+        return;
+      }
+
+      await api.post('/checkout/verify', {
+        razorpay_order_id: pay.razorpay_order_id,
+        razorpay_payment_id: pay.razorpay_payment_id,
+        razorpay_signature: pay.razorpay_signature,
+      });
+      Alert.alert(
+        'Payment successful',
+        `Order ${order.orderNumber} is confirmed. Funds are held in escrow until deliverables are approved.`,
+      );
+      router.replace('/(brand)/orders');
+    } catch (e) {
+      Alert.alert('Checkout failed', apiError(e));
+    } finally {
+      setCheckingOut(false);
+      refetch();
+    }
+  }, [items.length, user, refetch]);
 
   const remove = useCallback(
     async (itemId) => {
@@ -130,14 +188,18 @@ export default function Booking() {
                   {formatINR(cart?.subtotal ?? 0)}
                 </Text>
               </View>
-            </Card>
-
-            <View className="mt-3 rounded-xl bg-brand-50 px-4 py-3">
-              <Text className="text-xs leading-5 text-brand-800">
-                Secure checkout with escrow-backed payment is available on the Collabhype web app.
-                Sign in on the web to complete payment for this booking.
+              <Button
+                className="mt-4"
+                fullWidth
+                loading={checkingOut}
+                onPress={checkout}
+              >
+                Pay {formatINR(cart?.subtotal ?? 0)}
+              </Button>
+              <Text className="mt-2 text-center text-[11px] text-zinc-500">
+                Secured by Razorpay · funds held in escrow until deliverables are approved.
               </Text>
-            </View>
+            </Card>
           </>
         )}
       </ScrollView>
