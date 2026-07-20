@@ -262,7 +262,7 @@ function Sidebar({
   const renderContent = (isCollapsed, isMobile = false) => (
     <div
       className={clsx(
-        'flex h-full flex-col overflow-hidden border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-brand-100 to-brand-200 p-4 transition-[width] duration-200',
+        'flex h-screen flex-col overflow-hidden border-r border-zinc-200 bg-gradient-to-b from-brand-50 via-brand-100 to-brand-200 p-4 transition-[width] duration-200',
         isCollapsed ? 'w-20 items-center' : 'w-72',
       )}
     >
