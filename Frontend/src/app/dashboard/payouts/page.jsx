@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiError } from '@/lib/apiClient';
 import { dedupedGet } from '@/lib/apiCache';
-import { Badge, Card, EmptyState, Spinner, useToast } from '@/components/ui';
+import { Badge, Card, EmptyState, useToast } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ScrollTable from '@/components/dashboard/ScrollTable';

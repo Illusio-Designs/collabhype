@@ -105,6 +105,7 @@ export default function CampaignsListPage() {
       <div>
         <Tabs
           variant="pills"
+          activeIndex={Math.max(0, tabs.findIndex((t) => t.value === filter))}
           tabs={tabs.map((t) => ({
             label: t.label,
             content: <CampaignsList campaigns={campaigns} role={user?.role} />,

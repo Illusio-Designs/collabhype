@@ -15,7 +15,6 @@ import {
   Checkbox,
   FormField,
   Input,
-  Spinner,
   useToast,
 } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
@@ -50,7 +49,7 @@ export default function RatesPage() {
       .then((data) => {
         const next = { ...rates };
         for (const d of DELIVERABLES) next[d] = { active: false, price: '' };
-        for (const r of data.profile.rateCards ?? []) {
+        for (const r of data.profile?.rateCards ?? []) {
           next[r.deliverable] = { active: true, price: String(r.price) };
         }
         setRates(next);

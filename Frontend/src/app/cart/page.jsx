@@ -105,10 +105,12 @@ export default function CartPage() {
     setCheckingOut(true);
     setError(null);
     try {
-      const { data: order } = await apiClient.post('/api/v1/checkout/create-order');
+      // Check the SDK is present BEFORE creating the order — otherwise a failed
+      // load leaves an orphaned PENDING order the brand can never pay.
       if (typeof window === 'undefined' || !window.Razorpay) {
         throw new Error('Razorpay SDK failed to load. Please refresh and try again.');
       }
+      const { data: order } = await apiClient.post('/api/v1/checkout/create-order');
       const options = {
         key: order.keyId,
         amount: order.amount,

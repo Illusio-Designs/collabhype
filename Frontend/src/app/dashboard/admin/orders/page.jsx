@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
 import { dedupedGet, invalidate } from '@/lib/apiCache';
-import { Badge, Card, Pagination, Select, Spinner, useToast } from '@/components/ui';
+import { Badge, Card, Pagination, Select, useToast } from '@/components/ui';
 import { useConfirm } from '@/components/ui';
 import KpiStrip from '@/components/dashboard/KpiStrip';
 import PageHeader from '@/components/dashboard/PageHeader';

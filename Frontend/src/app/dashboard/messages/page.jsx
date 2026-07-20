@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { apiClient, apiError } from '@/lib/apiClient';
-import { Avatar, Badge, Button, Card, Input, Select, Spinner, useToast } from '@/components/ui';
+import { Avatar, Badge, Button, Card, Input, Select, useToast } from '@/components/ui';
 import PageHeader from '@/components/dashboard/PageHeader';
 import ChatConsentGate from '@/components/chat/ChatConsentGate';
 import { DELIVERABLE_LABEL, formatINR } from '@/lib/format';
