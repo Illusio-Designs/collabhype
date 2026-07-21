@@ -1,29 +1,47 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { apiFetchSafe } from '@/lib/api';
-import { metadataForSlug } from '@/lib/content';
+import { apiClient, apiError } from '@/lib/apiClient';
 import { Breadcrumb } from '@/components/ui';
-
-export async function generateMetadata() {
-  return metadataForSlug('blog', {
-    title: 'Blog — Collabhype',
-    description: 'Guides, tips, and updates on influencer marketing in India.',
-  });
-}
-
-// Always render fresh so newly published posts appear without a rebuild.
-export const dynamic = 'force-dynamic';
 
 function fmtDate(s) {
   if (!s) return '';
   return new Date(s).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-export default async function BlogListPage({ searchParams }) {
-  const sp = (await searchParams) ?? {};
-  const page = Number(sp.page) || 1;
-  const data = await apiFetchSafe(`/api/v1/blog?page=${page}&limit=12`, null);
-  const posts = data?.posts ?? [];
-  const meta = data?.meta ?? { totalPages: 1, page };
+// Blog list — fetches GET /api/v1/blog directly from the browser via apiClient,
+// so the call is visible/inspectable in the Network tab (like /auth/me).
+export default function BlogListPage() {
+  const [page, setPage] = useState(1);
+  const [posts, setPosts] = useState([]);
+  const [meta, setMeta] = useState({ totalPages: 1, page: 1 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    apiClient
+      .get(`/api/v1/blog?page=${page}&limit=12`)
+      .then(({ data }) => {
+        if (!active) return;
+        setPosts(data?.posts ?? []);
+        setMeta(data?.meta ?? { totalPages: 1, page });
+      })
+      .catch((e) => {
+        if (!active) return;
+        setError(apiError(e));
+        setPosts([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [page]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -35,7 +53,24 @@ export default async function BlogListPage({ searchParams }) {
         <p className="mt-2 text-zinc-600">Guides, tips, and updates from the Collabhype team.</p>
       </header>
 
-      {posts.length === 0 ? (
+      {loading ? (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+              <div className="aspect-[16/9] animate-pulse bg-zinc-100" />
+              <div className="flex flex-1 flex-col gap-3 p-5">
+                <div className="h-3 w-24 animate-pulse rounded bg-zinc-100" />
+                <div className="h-5 w-3/4 animate-pulse rounded bg-zinc-100" />
+                <div className="h-4 w-full animate-pulse rounded bg-zinc-100" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="rounded-2xl border border-dashed border-red-200 bg-red-50 p-12 text-center text-red-600">
+          Couldn&apos;t load posts: {error}
+        </div>
+      ) : posts.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-200 p-12 text-center text-zinc-500">
           No posts yet. Check back soon.
         </div>
@@ -79,9 +114,10 @@ export default async function BlogListPage({ searchParams }) {
       {(meta.totalPages ?? 1) > 1 && (
         <div className="mt-10 flex justify-center gap-2">
           {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((n) => (
-            <Link
+            <button
               key={n}
-              href={`/blog?page=${n}`}
+              type="button"
+              onClick={() => setPage(n)}
               className={`grid h-9 w-9 place-items-center rounded-lg border text-sm font-medium ${
                 n === (meta.page ?? page)
                   ? 'border-brand-600 bg-brand-600 text-white'
@@ -89,7 +125,7 @@ export default async function BlogListPage({ searchParams }) {
               }`}
             >
               {n}
-            </Link>
+            </button>
           ))}
         </div>
       )}

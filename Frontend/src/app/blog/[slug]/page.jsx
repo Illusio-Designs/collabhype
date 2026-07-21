@@ -1,35 +1,80 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { apiFetchSafe } from '@/lib/api';
+import { useParams } from 'next/navigation';
+import { apiClient } from '@/lib/apiClient';
 import { Breadcrumb } from '@/components/ui';
-
-export const dynamic = 'force-dynamic';
-
-async function loadPost(slug) {
-  const data = await apiFetchSafe(`/api/v1/blog/${slug}`, null);
-  return data?.post ?? null;
-}
-
-export async function generateMetadata({ params }) {
-  const { slug } = await params;
-  const post = await loadPost(slug);
-  if (!post) return { title: 'Blog — Collabhype' };
-  return {
-    title: `${post.seoTitle || post.title} — Collabhype`,
-    description: post.seoDescription || post.excerpt || undefined,
-    openGraph: post.coverImageUrl ? { images: [post.coverImageUrl] } : undefined,
-  };
-}
 
 function fmtDate(s) {
   if (!s) return '';
   return new Date(s).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-export default async function BlogPostPage({ params }) {
-  const { slug } = await params;
-  const post = await loadPost(slug);
-  if (!post) notFound();
+// Blog detail — fetches GET /api/v1/blog/:slug directly from the browser via
+// apiClient, so the call is visible/inspectable in the Network tab.
+export default function BlogPostPage() {
+  const params = useParams();
+  const slug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
+
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    if (!slug) return undefined;
+    let active = true;
+    setLoading(true);
+    setMissing(false);
+    apiClient
+      .get(`/api/v1/blog/${slug}`)
+      .then(({ data }) => {
+        if (!active) return;
+        const p = data?.post ?? null;
+        setPost(p);
+        if (!p) setMissing(true);
+        else document.title = `${p.seoTitle || p.title} — Collabhype`;
+      })
+      .catch(() => {
+        if (!active) return;
+        setPost(null);
+        setMissing(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="h-4 w-40 animate-pulse rounded bg-zinc-100" />
+        <div className="mt-8 h-10 w-3/4 animate-pulse rounded bg-zinc-100" />
+        <div className="mt-4 h-4 w-48 animate-pulse rounded bg-zinc-100" />
+        <div className="mt-8 aspect-[16/9] w-full animate-pulse rounded-2xl bg-zinc-100" />
+        <div className="mt-8 space-y-3">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="h-4 w-full animate-pulse rounded bg-zinc-100" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (missing || !post) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 lg:px-8">
+        <h1 className="text-2xl font-bold text-zinc-900">Post not found</h1>
+        <p className="mt-2 text-zinc-600">This post may have been unpublished or the link is incorrect.</p>
+        <Link href="/blog" className="mt-6 inline-block text-sm font-semibold text-brand-700 hover:underline">
+          ← Back to blog
+        </Link>
+      </div>
+    );
+  }
 
   const tags = (post.tags ?? '').split(',').map((t) => t.trim()).filter(Boolean);
 
