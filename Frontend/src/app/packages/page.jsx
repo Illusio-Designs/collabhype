@@ -1,16 +1,10 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { apiFetchSafe } from '@/lib/api';
-import { metadataForSlug } from '@/lib/content';
+import { apiClient } from '@/lib/apiClient';
 import PackageCard from '@/components/PackageCard';
 import { Breadcrumb } from '@/components/ui';
-
-export async function generateMetadata() {
-  return metadataForSlug('packages', {
-    title: 'Packages — Collabhype',
-    description:
-      'Bulk Nano influencer packs for high-volume campaigns. Micro / Macro / Mega creators are hand-picked.',
-  });
-}
 
 const TIER_TILES = [
   {
@@ -33,10 +27,32 @@ const TIER_TILES = [
   },
 ];
 
-export default async function PackagesPage() {
-  const data = await apiFetchSafe('/api/v1/packages?tier=NANO', null);
-  // Segregate by total price (cheapest pack first), not by per-influencer rate.
-  const packages = [...(data?.packages ?? [])].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+// Fetches packages from the browser (GET /api/v1/packages?tier=NANO) so the
+// call is visible in the Network tab. Segregated by total price (cheapest first).
+export default function PackagesPage() {
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    document.title = 'Packages — Collabhype';
+    let active = true;
+    setLoading(true);
+    apiClient
+      .get('/api/v1/packages?tier=NANO')
+      .then(({ data }) => {
+        if (!active) return;
+        setPackages([...(data?.packages ?? [])].sort((a, b) => (a.price ?? 0) - (b.price ?? 0)));
+      })
+      .catch(() => {
+        if (active) setPackages([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -54,7 +70,13 @@ export default async function PackagesPage() {
         </p>
       </header>
 
-      {packages.length === 0 ? (
+      {loading ? (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="h-72 animate-pulse rounded-2xl border border-zinc-200 bg-white" />
+          ))}
+        </div>
+      ) : packages.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-200 bg-white px-6 py-16 text-center">
           <p className="text-base font-semibold text-zinc-900">No packages available yet</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-zinc-600">

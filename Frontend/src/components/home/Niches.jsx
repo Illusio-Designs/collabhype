@@ -1,10 +1,31 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { StaggerContainer, StaggerItem } from '@/components/motion/Stagger';
+import { apiClient } from '@/lib/apiClient';
 
-export default function Niches({ niches = [] }) {
+// Fetches its own data from the browser (GET /api/v1/niches) so the call is
+// visible in the Network tab.
+export default function Niches() {
+  const [niches, setNiches] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    apiClient
+      .get('/api/v1/niches')
+      .then(({ data }) => {
+        if (active) setNiches(data?.niches ?? []);
+      })
+      .catch(() => {
+        if (active) setNiches([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   if (!niches.length) return null;
   return (
     <section className="bg-zinc-50 py-24">

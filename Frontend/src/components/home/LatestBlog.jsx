@@ -1,13 +1,35 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { apiClient } from '@/lib/apiClient';
 
 function fmtDate(s) {
   if (!s) return '';
   return new Date(s).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// "Latest from the blog" home section. Renders up to 3 published posts; hides
-// itself entirely when there are none so the homepage never shows an empty rail.
-export default function LatestBlog({ posts = [] }) {
+// "Latest from the blog" home section. Fetches its own data from the browser
+// (GET /api/v1/blog) so the call is visible in the Network tab. Renders up to 3
+// published posts; hides itself entirely when there are none.
+export default function LatestBlog() {
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    apiClient
+      .get('/api/v1/blog?limit=3')
+      .then(({ data }) => {
+        if (active) setPosts(data?.posts ?? []);
+      })
+      .catch(() => {
+        if (active) setPosts([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   if (!posts.length) return null;
 
   return (

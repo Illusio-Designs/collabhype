@@ -1,11 +1,12 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
+import { useParams } from 'next/navigation';
+import { apiClient } from '@/lib/apiClient';
 import {
-  formatINR,
   formatCount,
   TIER_LABEL,
-  DELIVERABLE_LABEL,
   PLATFORM_LABEL,
 } from '@/lib/format';
 import AddInfluencerForm from '@/components/cart/AddInfluencerForm';
@@ -42,29 +43,72 @@ const PLATFORM_STYLE = {
   YOUTUBE: { Icon: YoutubeIcon, bg: 'bg-red-600' },
 };
 
-async function loadInfluencer(id) {
-  try {
-    const data = await apiFetch(`/api/v1/influencers/${id}`);
-    return data.profile;
-  } catch {
-    return null;
+// Fetches the profile from the browser (GET /api/v1/influencers/:id) so the
+// call is visible in the Network tab.
+export default function InfluencerDetailPage() {
+  const params = useParams();
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
+
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    if (!id) return undefined;
+    let active = true;
+    setLoading(true);
+    setMissing(false);
+    apiClient
+      .get(`/api/v1/influencers/${id}`)
+      .then(({ data }) => {
+        if (!active) return;
+        const p = data?.profile ?? null;
+        setProfile(p);
+        if (!p) setMissing(true);
+        else document.title = `${p.user?.fullName ?? 'Influencer'} — Collabhype`;
+      })
+      .catch(() => {
+        if (!active) return;
+        setProfile(null);
+        setMissing(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="h-4 w-64 animate-pulse rounded bg-zinc-100" />
+        <div className="mt-8 grid gap-10 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
+            <div className="flex items-center gap-4">
+              <div className="h-20 w-20 animate-pulse rounded-full bg-zinc-100" />
+              <div className="h-8 w-56 animate-pulse rounded bg-zinc-100" />
+            </div>
+            <div className="h-24 w-full animate-pulse rounded bg-zinc-100" />
+          </div>
+          <div className="h-72 animate-pulse rounded-2xl bg-zinc-100" />
+        </div>
+      </div>
+    );
   }
-}
 
-export async function generateMetadata({ params }) {
-  const { id } = await params;
-  const profile = await loadInfluencer(id);
-  if (!profile) return { title: 'Influencer — Collabhype' };
-  return {
-    title: `${profile.user?.fullName ?? 'Influencer'} — Collabhype`,
-    description: profile.bio ?? undefined,
-  };
-}
-
-export default async function InfluencerDetailPage({ params }) {
-  const { id } = await params;
-  const profile = await loadInfluencer(id);
-  if (!profile) notFound();
+  if (missing || !profile) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 lg:px-8">
+        <h1 className="text-2xl font-bold text-zinc-900">Influencer not found</h1>
+        <p className="mt-2 text-zinc-600">This creator profile may no longer be available.</p>
+        <Link href="/influencers" className="mt-6 inline-block text-sm font-semibold text-brand-700 hover:underline">
+          ← Back to influencers
+        </Link>
+      </div>
+    );
+  }
 
   const name = profile.user?.fullName ?? 'Influencer';
   const socials = profile.socialAccounts ?? [];

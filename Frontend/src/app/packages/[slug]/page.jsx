@@ -1,33 +1,76 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
+import { useParams } from 'next/navigation';
+import { apiClient } from '@/lib/apiClient';
 import { formatINR, formatCount, TIER_LABEL, DELIVERABLE_LABEL, PLATFORM_LABEL } from '@/lib/format';
 import AddPackageButton from '@/components/cart/AddPackageButton';
-import { Badge, Breadcrumb, Card } from '@/components/ui';
+import { Badge, Breadcrumb } from '@/components/ui';
 
-async function loadPackage(slug) {
-  try {
-    const data = await apiFetch(`/api/v1/packages/${slug}`);
-    return data.package;
-  } catch {
-    return null;
+// Fetches the package from the browser (GET /api/v1/packages/:slug) so the call
+// is visible in the Network tab.
+export default function PackageDetailPage() {
+  const params = useParams();
+  const slug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
+
+  const [pkg, setPkg] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    if (!slug) return undefined;
+    let active = true;
+    setLoading(true);
+    setMissing(false);
+    apiClient
+      .get(`/api/v1/packages/${slug}`)
+      .then(({ data }) => {
+        if (!active) return;
+        const p = data?.package ?? null;
+        setPkg(p);
+        if (!p) setMissing(true);
+        else document.title = `${p.title} — Collabhype`;
+      })
+      .catch(() => {
+        if (!active) return;
+        setPkg(null);
+        setMissing(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="h-4 w-64 animate-pulse rounded bg-zinc-100" />
+        <div className="mt-8 grid gap-10 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
+            <div className="h-10 w-3/4 animate-pulse rounded bg-zinc-100" />
+            <div className="h-24 w-full animate-pulse rounded bg-zinc-100" />
+          </div>
+          <div className="h-72 animate-pulse rounded-2xl bg-zinc-100" />
+        </div>
+      </div>
+    );
   }
-}
 
-export async function generateMetadata({ params }) {
-  const { slug } = await params;
-  const pkg = await loadPackage(slug);
-  if (!pkg) return { title: 'Package — Collabhype' };
-  return {
-    title: `${pkg.title} — Collabhype`,
-    description: pkg.description ?? undefined,
-  };
-}
-
-export default async function PackageDetailPage({ params }) {
-  const { slug } = await params;
-  const pkg = await loadPackage(slug);
-  if (!pkg) notFound();
+  if (missing || !pkg) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 lg:px-8">
+        <h1 className="text-2xl font-bold text-zinc-900">Package not found</h1>
+        <p className="mt-2 text-zinc-600">This package may no longer be available.</p>
+        <Link href="/packages" className="mt-6 inline-block text-sm font-semibold text-brand-700 hover:underline">
+          ← Back to packages
+        </Link>
+      </div>
+    );
+  }
 
   const deliverables = Array.isArray(pkg.deliverables) ? pkg.deliverables : [];
   const influencers = (pkg.influencers ?? []).map((pi) => pi.influencer).filter(Boolean);

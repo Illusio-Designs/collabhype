@@ -1,11 +1,33 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { StaggerContainer, StaggerItem } from '@/components/motion/Stagger';
 import PackageCard from '@/components/PackageCard';
+import { apiClient } from '@/lib/apiClient';
 
-export default function FeaturedPackages({ packages = [] }) {
+// Fetches its own data from the browser (GET /api/v1/packages) so the call is
+// visible in the Network tab. Segregated by total price (cheapest first).
+export default function FeaturedPackages() {
+  const [packages, setPackages] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    apiClient
+      .get('/api/v1/packages?limit=8')
+      .then(({ data }) => {
+        if (!active) return;
+        setPackages([...(data?.packages ?? [])].sort((a, b) => (a.price ?? 0) - (b.price ?? 0)));
+      })
+      .catch(() => {
+        if (active) setPackages([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   if (!packages.length) return null;
 
   return (

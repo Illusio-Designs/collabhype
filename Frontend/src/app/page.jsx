@@ -13,7 +13,6 @@ import FAQSection from '@/components/home/FAQSection';
 import LatestBlog from '@/components/home/LatestBlog';
 import Newsletter from '@/components/home/Newsletter';
 import FinalCTA from '@/components/home/FinalCTA';
-import { apiFetchSafe } from '@/lib/api';
 import { metadataForSlug } from '@/lib/content';
 
 export async function generateMetadata() {
@@ -24,19 +23,10 @@ export async function generateMetadata() {
   });
 }
 
-export default async function HomePage() {
-  const [packagesData, nichesData, blogData] = await Promise.all([
-    apiFetchSafe('/api/v1/packages?limit=8', null),
-    apiFetchSafe('/api/v1/niches', null),
-    apiFetchSafe('/api/v1/blog?limit=3', null),
-  ]);
-  // Segregate featured packs by total price (cheapest first).
-  const featured = [...(packagesData?.packages ?? [])].sort(
-    (a, b) => (a.price ?? 0) - (b.price ?? 0),
-  );
-  const niches = nichesData?.niches ?? [];
-  const posts = blogData?.posts ?? [];
-
+// The data-driven sections (FeaturedPackages, Niches, LatestBlog) fetch their
+// own data from the browser via apiClient, so those calls are visible in the
+// Network tab. This page stays a server component only to emit SEO metadata.
+export default function HomePage() {
   return (
     <>
       <Hero />
@@ -46,11 +36,11 @@ export default async function HomePage() {
       <HowItWorks />
       <Tiers />
       <CreatorReels />
-      <FeaturedPackages packages={featured} />
+      <FeaturedPackages />
       <ForBrandsAndCreators />
-      <Niches niches={niches} />
+      <Niches />
       <Testimonials />
-      <LatestBlog posts={posts} />
+      <LatestBlog />
       <FAQSection />
       <Newsletter />
       <FinalCTA />
